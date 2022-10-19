@@ -1,0 +1,202 @@
+html {
+	height: 100%;
+	/*
+	margin: 0px;
+	padding: 0px;
+	*/
+}
+
+body {
+	height: 100%;
+	overflow: hidden;
+	margin: 0px;
+	padding: 0px;
+	font-family: Palatino, serif;
+	font-size: 11px;
+}
+
+#wrapper {
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+	padding: 0px;
+	margin: 0px;
+	background: #fff;
+	/*background-image:url("background.png");*/
+	/*background-origin: content-box;*/
+	background-image:
+		linear-gradient(rgba(225, 225, 225, .2) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(225, 225, 225, .2) 1px, transparent 1px);
+	background-size: 10px 10px;
+}
+
+.plane {
+	position: absolute;
+	width: 10px;
+	height: 10px;
+}
+
+.pad {
+	position: absolute;
+}
+
+/* svg bs */
+
+.svgcont {
+	position: absolute;
+	overflow: visible;
+	width: 5px;
+	height: 5px;
+}
+
+/* nodes */
+
+.node {
+	position:absolute;
+	background-color: #f5f5f5;
+}
+
+.nodename {
+	font-size: 11px;
+	font-family: Helvetica, sans-serif;
+	width: 100px;
+	padding-left: 5px;
+	padding-top: 5px;
+	transform-origin: 0 0;
+	transform: rotate(-90deg);
+}
+
+.nodenamebus {
+	font-size: 11px;
+	font-family: Helvetica, sans-serif;
+	width: 100px;
+	padding-left: 5px;
+	padding-top: 5px;
+	transform-origin: 0 0;
+	transform: translate(70px);
+}
+
+/* vPorts */
+
+.vPort {
+	position: absolute;
+	background-color: #ebebeb;
+	border-left: 2px solid black;
+	border-right: 2px solid black;
+}
+
+.vPortname {
+	font-size: 11px;
+	font-family: Helvetica, sans-serif;
+	width: 120px;
+	padding-left: 5px;
+	padding-top: 3px;
+	transform-origin: 0 0;
+	transform: rotate(-90deg) translate(-110px, 0px);
+}
+
+/* interactive */
+
+.inputwrap{
+	background-color: #f5f5f5;
+	font-family: 'Courier New', Courier, monospace;
+	font-size: 11px;
+}
+
+.button {
+	background-color: #f5f5f5;
+	font-family: 'Courier New', Courier, monospace;
+	display:flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 11px;
+	text-align: center;
+	padding: 3px;
+}
+
+.btnText {
+	margin: auto;
+	text-align: center;
+	display: flex;
+}
+
+.button:hover{
+	background-color: #ebebeb;
+	cursor: pointer;
+}
+
+.textBlock {
+	background-color: #f5f5f5;
+	font-family: 'Courier New', Courier, monospace;
+	display:flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 11px;
+	text-align: center;
+	padding: 3px;
+}
+
+/* s/o https://brm.io/dat-gui-light-theme/ */
+
+.dg.main.taller-than-window .close-button {
+    border-top: 1px solid #ddd;
+}
+
+.dg.main .close-button {
+    background-color: #ccc;
+}
+
+.dg.main .close-button:hover {
+    background-color: #ddd;
+}
+
+.dg {
+    color: #555;
+    text-shadow: none !important;
+}
+
+.dg.main::-webkit-scrollbar {
+    background: #fafafa;
+}
+
+.dg.main::-webkit-scrollbar-thumb {
+    background: #bbb;
+}
+
+.dg li:not(.folder) {
+    background: #fafafa;
+    border-bottom: 1px solid #ddd;
+}
+
+.dg li.save-row .button {
+    text-shadow: none !important;
+}
+
+.dg li.title {
+    background: #e8e8e8 url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 6px 10px no-repeat;
+}
+
+.dg .cr.function:hover,.dg .cr.boolean:hover {
+    background: #fff;
+}
+
+.dg .c input[type=text] {
+    background: #e9e9e9;
+}
+
+.dg .c input[type=text]:hover {
+    background: #eee;
+}
+
+.dg .c input[type=text]:focus {
+    background: #eee;
+    color: #555;
+}
+
+.dg .c .slider {
+    background: #e9e9e9;
+}
+
+.dg .c .slider:hover {
+    background: #eee;
+}
