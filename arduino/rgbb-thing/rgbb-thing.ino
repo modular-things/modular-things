@@ -1,3 +1,4 @@
+// C:\Users\jaker\AppData\Local\Arduino15\libraries\osap
 #include <osap.h>
 #include <vt_endpoint.h>
 #include <vp_arduinoSerial.h>
@@ -12,7 +13,7 @@
 OSAP osap("rgbb-thing");
 
 // ---------------------------------------------- OSAP USB Serial
-VPort_ArduinoSerial vp_arduinoSerial(&osap, "vp_usbSerial", &Serial);
+VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
 
 // ---------------------------------------------- RGB Inputs Endpoint 
 EP_ONDATA_RESPONSES onRGBData(uint8_t* data, uint16_t len){
@@ -28,6 +29,9 @@ Endpoint rgbEndpoint(&osap, "rgbValues", onRGBData);
 Endpoint buttonEndpoint(&osap, "buttonState");
 
 void setup() {
+  // run the commos 
+  vp_arduinoSerial.begin();
+  // "hardware"
   analogWriteResolution(8);
   pinMode(PIN_R, OUTPUT);
   pinMode(PIN_G, OUTPUT);

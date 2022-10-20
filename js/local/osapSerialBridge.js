@@ -77,7 +77,7 @@ WSSPipe.start().then((ws) => {
 // we'd like to periodically poke around and find new ports... 
 // these are "product IDs" that belong to the circuits we would want to hook up... 
 let pidCandidates = [
-  '801E', '80CB', '8031', '80CD', '800B', "4557"
+  '801E', '80CB', '8031', '80CD', '800B', '4557'
 ]
 let activePorts = []
 let portSweeper = () => {
