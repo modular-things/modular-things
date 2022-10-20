@@ -37,7 +37,7 @@ export default function VPortSerial(osap, portName, debug = false) {
   // track la, 
   this.portName = portName
   // make the vport object (will auto attach to osap)
-  let vport = osap.vPort(`vport_${this.portName}`)
+  let vport = osap.vPort(`${this.portName}`)
   vport.maxSegLength = 255
   // open the port itself, 
   if (debug) console.log(`SERPORT contact at ${this.portName}, opening`)

@@ -51,8 +51,8 @@ export default function NetRunner(osap) {
 
   this.getLatestSweep = async (freshness = 750) => {
     try {
-      if (TIME.getTimeStamp() - latestSweep.runTime > freshness) {
-        console.warn(`Refreshing sweep...`)
+      if (TIME.getTimeStamp() - latestSweep.runTime > freshness || freshness == 0) {
+        console.warn(`SWEEP refreshing...`)
         let graph = await this.sweep()
         latestSweep = {
           runTime: TIME.getTimeStamp(),

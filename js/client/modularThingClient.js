@@ -1,13 +1,13 @@
 /*
-clank-client.js
+modularThingClient.js
 
-clank controller client side
+modular-things client 
 
-Jake Read at the Center for Bits and Atoms
-(c) Massachusetts Institute of Technology 2020
+Jake Read, Leo McElroy and Quentin Bolsee at the Center for Bits and Atoms
+(c) Massachusetts Institute of Technology 2022
 
 This work may be reproduced, modified, distributed, performed, and
-displayed for any purpose, but must acknowledge the open systems assembly protocol (OSAP) project.
+displayed for any purpose, but must acknowledge the open systems assembly protocol (OSAP) and modular-things projects.
 Copyright is retained and must be preserved. The work is provided as is;
 no warranty is provided, and users accept all liability.
 */
@@ -16,7 +16,10 @@ no warranty is provided, and users accept all liability.
 
 // core elements 
 import OSAP from '../osapjs/core/osap.js'
+import PK from '../osapjs/core/packets.js'
 import TIME from '../osapjs/core/time.js'
+
+import rgbbThing from '../virtualThings/rgbbThing.js'
 
 console.log(`------------------------------------------`)
 console.log("hello modular-things")
@@ -29,23 +32,54 @@ let wscVPort = osap.vPort("wscVPort")
 
 // -------------------------------------------------------- Like, Application Code ? 
 
+// a list of constructors, 
+let constructors = { rgbbThing: rgbbThing }
+
 // a list of virtual machines, 
-let vms = []
+let things = []
 
 let rescan = async () => {
   try {
     let graph = await osap.nr.sweep()
     let usbBridge = await osap.nr.find("rt_local-usb-bridge", graph)
     // console.log(usbBridge)
-    for(let ch of usbBridge.children){
+    for (let ch of usbBridge.children) {
       // ignore pipe up to us, 
-      if(ch.name.includes("wss")) continue
+      if (ch.name.includes("wss")) continue
       // peep across usb ports, 
-      if(ch.reciprocal){
-        if(ch.reciprocal.type == "unreachable"){
+      if (ch.reciprocal) {
+        if (ch.reciprocal.type == "unreachable") {
           console.warn(`${ch.name}'s partner is unreachable...`)
+          continue
+        }
+        // scrape the "rt_" osap-ness from the name of the thing, 
+        let firmwareName = ch.reciprocal.parent.name.slice(3)
+        console.log(`found a... "${firmwareName}" module via usb "${ch.name}"`)
+        // do we already have this one in our list ?
+        if (things.find(elem => { elem.vPortName == ch.name })) {
+          console.warn(`this "${firmwareName}" is already setup...`)
+          continue
+        } 
+        // do we have any of the same firmwares ?
+        // ... 
+        // if not, check if we have a matching code for it... 
+        if (constructors[firmwareName]) {
+          // we need ~ to guarantee unique names also (!) 
+          // constructor it & add to this global list
+          let thing = {
+            vPortName: ch.name,
+            vThing: new constructors[firmwareName](osap, ch.reciprocal.parent, firmwareName)
+          }
+          // set it up... this will do some plumbing, likely, 
+          await thing.vThing.setup()
+          // add to our global ist, then we're done ! 
+          things.push(thing)
+          console.log(`added a ${firmwareName}, now we have...`, things)
+          // and we can do this hack for now, 
+          window[firmwareName] = thing.vThing 
         } else {
-          console.log(`found a... ${ch.reciprocal.parent.name} module`)
+          // here is where we could roll up an "auto-object" type, if we can't find one:
+          console.error(`no constructor found for the ${firmwareName} thing...`)
         }
       }
     }
