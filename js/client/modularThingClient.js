@@ -29,17 +29,32 @@ let wscVPort = osap.vPort("wscVPort")
 
 // -------------------------------------------------------- Like, Application Code ? 
 
-let scan = async () => {
+// a list of virtual machines, 
+let vms = []
+
+let rescan = async () => {
   try {
     let graph = await osap.nr.sweep()
     let usbBridge = await osap.nr.find("rt_local-usb-bridge", graph)
-    console.log(usbBridge)
+    // console.log(usbBridge)
+    for(let ch of usbBridge.children){
+      // ignore pipe up to us, 
+      if(ch.name.includes("wss")) continue
+      // peep across usb ports, 
+      if(ch.reciprocal){
+        if(ch.reciprocal.type == "unreachable"){
+          console.warn(`${ch.name}'s partner is unreachable...`)
+        } else {
+          console.log(`found a... ${ch.reciprocal.parent.name} module`)
+        }
+      }
+    }
   } catch (err) {
     console.error(err)
   }
 }
 
-setTimeout(scan, 1000)
+setTimeout(rescan, 1500)
 
 // -------------------------------------------------------- Initializing the WSC Port 
 
