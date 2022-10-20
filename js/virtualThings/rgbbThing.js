@@ -15,7 +15,7 @@ no warranty is provided, and users accept all liability.
 import { TS } from "../osapjs/core/ts.js"
 import PK from "../osapjs/core/packets.js"
 
-export default function rggbThing(osap, vt, name) {
+export default function rgbbThing(osap, vt, name) {
   // ---------------------------------- Programmer-Facing things, 
   // methods... ~ outputs, i.e. we invoke 'em whenever, 
   this.methods = {
