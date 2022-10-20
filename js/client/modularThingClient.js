@@ -84,10 +84,10 @@ let rescan = async () => {
             firmwareName: firmwareName,
             vThing: new constructors[firmwareName](osap, ch.reciprocal.parent, thingName)
           }
-          // set it up... this will do some plumbing, likely, 
-          await thing.vThing.setup()
           // add to our global ist, then we're done ! 
           things.push(thing)
+          // set it up... this will do some plumbing, likely, 
+          await thing.vThing.setup()
           console.log(`added a ${firmwareName}, now we have...`, things)
           // and we can do this hack for now, 
           window.things[thingName] = thing.vThing 
