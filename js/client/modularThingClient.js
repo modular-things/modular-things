@@ -32,11 +32,20 @@ let wscVPort = osap.vPort("wscVPort")
 
 // -------------------------------------------------------- Like, Application Code ? 
 
+// and endpoint that tells us to rescan;
+let rescanEndpoint = osap.endpoint("browserRescan")
+rescanEndpoint.onData = () => {
+  console.log('triggered a rescan...')
+  rescan()
+}
+
 // a list of constructors, 
 let constructors = { rgbbThing: rgbbThing }
 
 // a list of virtual machines, 
 let things = []
+// and window-scoped handles 
+window.things = {}
 
 let rescan = async () => {
   try {
@@ -56,19 +65,24 @@ let rescan = async () => {
         let firmwareName = ch.reciprocal.parent.name.slice(3)
         console.log(`found a... "${firmwareName}" module via usb "${ch.name}"`)
         // do we already have this one in our list ?
-        if (things.find(elem => { elem.vPortName == ch.name })) {
+        if (things.find(elem => elem.vPortName == ch.name )) {
           console.warn(`this "${firmwareName}" is already setup...`)
           continue
         } 
-        // do we have any of the same firmwares ?
-        // ... 
+        // unique name by instance count... future will do unique-name write to flashmem 
+        let instanceCount = 0 
+        for(let t = 0; t < things.length; t ++){
+          if(things[t].firmwareName == firmwareName) instanceCount ++ 
+        }
+        let thingName = `${firmwareName}_${instanceCount}`
         // if not, check if we have a matching code for it... 
         if (constructors[firmwareName]) {
           // we need ~ to guarantee unique names also (!) 
           // constructor it & add to this global list
           let thing = {
             vPortName: ch.name,
-            vThing: new constructors[firmwareName](osap, ch.reciprocal.parent, firmwareName)
+            firmwareName: firmwareName,
+            vThing: new constructors[firmwareName](osap, ch.reciprocal.parent, thingName)
           }
           // set it up... this will do some plumbing, likely, 
           await thing.vThing.setup()
@@ -76,7 +90,7 @@ let rescan = async () => {
           things.push(thing)
           console.log(`added a ${firmwareName}, now we have...`, things)
           // and we can do this hack for now, 
-          window[firmwareName] = thing.vThing 
+          window.things[thingName] = thing.vThing 
         } else {
           // here is where we could roll up an "auto-object" type, if we can't find one:
           console.error(`no constructor found for the ${firmwareName} thing...`)
@@ -88,7 +102,7 @@ let rescan = async () => {
   }
 }
 
-setTimeout(rescan, 1500)
+setTimeout(rescan, 1000)
 
 // -------------------------------------------------------- Initializing the WSC Port 
 
