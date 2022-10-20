@@ -10,13 +10,14 @@
 #define PIN_BUT 7
 
 // ---------------------------------------------- OSAP central-nugget 
-OSAP osap("rgbb-thing");
+OSAP osap("rgbbThing");
 
-// ---------------------------------------------- OSAP USB Serial
+// ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
 
-// ---------------------------------------------- RGB Inputs Endpoint 
+// ---------------------------------------------- 1th Vertex: RGB Inputs Endpoint 
 EP_ONDATA_RESPONSES onRGBData(uint8_t* data, uint16_t len){
+  // we did the float -> int conversion in js 
   analogWrite(PIN_R, data[0]);
   analogWrite(PIN_G, data[1]);
   analogWrite(PIN_B, data[2]);
@@ -25,7 +26,7 @@ EP_ONDATA_RESPONSES onRGBData(uint8_t* data, uint16_t len){
 
 Endpoint rgbEndpoint(&osap, "rgbValues", onRGBData);
 
-// ---------------------------------------------- Button Endpoint 
+// ---------------------------------------------- 2nd Vertex: Button Endpoint 
 Endpoint buttonEndpoint(&osap, "buttonState");
 
 void setup() {
@@ -67,4 +68,5 @@ void loop() {
 // 17712 (+ osap w/ no vertices)
 // 18956 (+ serial vport)
 // 21280 (+ 2x endpoints)
-// 21492 (+ handlers and button code)
+// 21960 (+ handlers and button code)
+// 23944 (+ readFloat)

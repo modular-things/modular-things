@@ -429,7 +429,7 @@ export default function OMVC(osap) {
           if (data[0]) {
             resolve()
           } else {
-            reject(`badness error code ${data[ptr + 1]} from endpoint, on try-to-delete-route`)
+            reject(`badness error code ${data[0]} from endpoint, on try-to-delete-route`)
           }
         }
       })
