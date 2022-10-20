@@ -104,6 +104,16 @@ let rescan = async () => {
 
 setTimeout(rescan, 1000)
 
+/*
+things.rgbbThing_0.handlers.onButtonStateChange = (state) => {
+  if(state){
+    things.rgbbThing_1.methods.setRGB(0.5, 0.5, 0.1)
+  } else {
+    things.rgbbThing_1.methods.setRGB(0,0,0)
+  }
+}
+*/
+
 // -------------------------------------------------------- Initializing the WSC Port 
 
 // verbosity 
