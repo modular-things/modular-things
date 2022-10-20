@@ -102,7 +102,7 @@ let rescan = async () => {
   }
 }
 
-setTimeout(rescan, 1000)
+// setTimeout(rescan, 1000)
 
 /*
 things.rgbbThing_0.handlers.onButtonStateChange = (state) => {
