@@ -21,6 +21,7 @@ import WSSPipe from './utes/wssPipe.js'
 import VPortSerial from '../osapjs/vport/vPortSerial.js'
 
 import { SerialPort } from 'serialport'
+import TIME from '../osapjs/core/time.js'
 
 // we include an osap object - a node
 let osap = new OSAP("local-usb-bridge")
@@ -29,6 +30,11 @@ osap.description = "node featuring wss to client and usbserial cobs connection t
 // -------------------------------------------------------- WSS VPort
 
 let wssVPort = osap.vPort("wssVPort")   // 0
+
+// a rescan endpoint 
+
+let rescanEndpoint = osap.endpoint("nodeRescan")
+rescanEndpoint.addRoute(PK.route().sib(0).pfwd().sib(1).end())
 
 // then resolves with the connected webSocketServer to us 
 let LOGWSSPHY = false 
@@ -93,6 +99,10 @@ let portSweeper = () => {
         console.log(`FOUND desired prt at ${port.path}, launching vport...`)
         activePorts.push(new VPortSerial(osap, port.path))
         console.log(activePorts)
+        // should rescan when it's open, or just delay... 
+        TIME.delay(250).then(() => {
+          rescanEndpoint.write(new Uint8Array([1]), "ackless")
+        })
       }
     }
     // also... check deadies, 
@@ -102,6 +112,7 @@ let portSweeper = () => {
         console.log('at indice...', activePorts.findIndex(elem => elem == vp))
         activePorts.splice(activePorts.findIndex(elem => elem == vp), 1)
         console.log(activePorts)
+        rescanEndpoint.write(new Uint8Array([1]), "ackless")
       }
     }
     // set a timeout, 
