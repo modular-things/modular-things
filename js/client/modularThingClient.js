@@ -15,11 +15,14 @@ no warranty is provided, and users accept all liability.
 'use strict'
 
 // core elements 
-import OSAP from '../osapjs/core/osap.js'
-import PK from '../osapjs/core/packets.js'
-import TIME from '../osapjs/core/time.js'
+import OSAP from "../osapjs/core/osap.js";
+import PK from "../osapjs/core/packets.js";
+import TIME from "../osapjs/core/time.js";
 
-import rgbbThing from '../virtualThings/rgbbThing.js'
+import { addThing } from "./actions/addThing.js";
+import { global_state } from "./global_state.js";
+
+import rgbbThing from "../virtualThings/rgbbThing.js";
 
 console.log(`------------------------------------------`)
 console.log("hello modular-things")
@@ -40,18 +43,21 @@ rescanEndpoint.onData = () => {
 }
 
 // a list of constructors, 
-let constructors = { rgbbThing: rgbbThing }
+let constructors = { rgbbThing }
 
 // a list of virtual machines, 
-let things = []
-// and window-scoped handles 
-window.things = {}
+let scanning = false;
+export const rescan = async () => {
+  if (scanning) return;
+  scanning = true;
 
-let rescan = async () => {
+  global_state.things = {};
+  let usedPorts = [];
+
   try {
     let graph = await osap.nr.sweep()
     let usbBridge = await osap.nr.find("rt_local-usb-bridge", graph)
-    // console.log(usbBridge)
+
     for (let ch of usbBridge.children) {
       // ignore pipe up to us, 
       if (ch.name.includes("wss")) continue
@@ -65,32 +71,27 @@ let rescan = async () => {
         let firmwareName = ch.reciprocal.parent.name.slice(3)
         console.log(`found a... "${firmwareName}" module via usb "${ch.name}"`)
         // do we already have this one in our list ?
-        if (things.find(elem => elem.vPortName == ch.name )) {
+        if (usedPorts.includes(ch.name)) {
           console.warn(`this "${firmwareName}" is already setup...`)
           continue
         } 
-        // unique name by instance count... future will do unique-name write to flashmem 
-        let instanceCount = 0 
-        for(let t = 0; t < things.length; t ++){
-          if(things[t].firmwareName == firmwareName) instanceCount ++ 
-        }
-        let thingName = `${firmwareName}_${instanceCount}`
+
+        // TODO: unique-name write to flashmem 
+        let thingName = `${firmwareName}_${makeID(5)}`;
+
         // if not, check if we have a matching code for it... 
         if (constructors[firmwareName]) {
           // we need ~ to guarantee unique names also (!) 
-          // constructor it & add to this global list
+          // create it & add to this global list
+          usedPorts.push(ch.name);
           let thing = {
             vPortName: ch.name,
             firmwareName: firmwareName,
-            vThing: new constructors[firmwareName](osap, ch.reciprocal.parent, thingName)
+            vThing: constructors[firmwareName](osap, ch.reciprocal.parent, thingName)
           }
           // add to our global ist, then we're done ! 
-          things.push(thing)
-          // set it up... this will do some plumbing, likely, 
-          await thing.vThing.setup()
-          console.log(`added a ${firmwareName}, now we have...`, things)
-          // and we can do this hack for now, 
-          window.things[thingName] = thing.vThing 
+          await addThing(thingName, thing);
+          
         } else {
           // here is where we could roll up an "auto-object" type, if we can't find one:
           console.error(`no constructor found for the ${firmwareName} thing...`)
@@ -100,6 +101,8 @@ let rescan = async () => {
   } catch (err) {
     console.error(err)
   }
+
+  scanning = false;
 }
 
 // setTimeout(rescan, 1000)
@@ -136,7 +139,8 @@ wscVPort.isOpen = () => { return (wscVPortStatus == "open") }
 // then we can start a websocket client to connect there,
 // automated remote-proc. w/ vPort & wss medium,
 // for args, do '/processName.js?args=arg1,arg2'
-jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
+fetch('/startLocal/osapSerialBridge.js').then(async (res) => {
+  res = await res.text();
   if (res.includes('OSAP-wss-addr:')) {
     let addr = res.substring(res.indexOf(':') + 2)
     if (addr.includes('ws://')) {
@@ -172,3 +176,14 @@ jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
     console.error('remote OSAP not established', res)
   }
 })
+
+
+function makeID(length) {
+    var result           = '';
+    var characters       = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}

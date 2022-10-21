@@ -1,37 +1,19 @@
-/*
-controller init 
-
-serves client modules, bootstraps local scripts from client ui.
-
-Jake Read at the Center for Bits and Atoms
-(c) Massachusetts Institute of Technology 2022
-
-This work may be reproduced, modified, distributed, performed, and
-displayed for any purpose, but must acknowledge the open systems assembly protocol (OSAP) project.
-Copyright is retained and must be preserved. The work is provided as is;
-no warranty is provided, and users accept all liability.
-*/
-
 import express from "express";
 import bodyparser from "body-parser";
 import fs from 'fs';
 import child_process from 'child_process';
 import os from 'os';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-// new year new bootstrap
 
 
-const app = express()
-// this include lets us read data out of put requests,
+const app = express();
 
-// and we occasionally spawn local pipes (workers)
-// will use these to figure where tf we are
+// app.get("/api/hello", (req, res) => {
+//   res.json({ hello: "world" });
+// });
+
 let ownIp = ''
 
 // serve everything: https://expressjs.com/en/resources/middleware/serve-static.html
-const __dirname = dirname(fileURLToPath(import.meta.url));
 app.use(express.static(__dirname))
 // accept post bodies as json,
 app.use(bodyparser.json())
@@ -121,3 +103,5 @@ Object.keys(ifaces).forEach(function(ifname) {
     ++alias;
   });
 });
+
+export const handler = app;
