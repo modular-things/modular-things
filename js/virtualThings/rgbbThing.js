@@ -16,31 +16,11 @@ import { TS } from "../osapjs/core/ts.js"
 import PK from "../osapjs/core/packets.js"
 
 export default function rgbbThing(osap, vt, name) {
-  // ---------------------------------- Programmer-Facing things, 
-  // methods... ~ outputs, i.e. we invoke 'em whenever, 
-  this.methods = {
-    setRGB: async (r, g, b) => {
-      try {
-        // float, float, float, -> int-etc,
-        // we could also do the i.e. linearization here, or accept various "color" types 
-        let datagram = new Uint8Array(3)
-        datagram[0] = 255 - r * 255
-        datagram[1] = 255 - g * 255
-        datagram[2] = 255 - b * 255 
-        console.log('writing', datagram)
-        await rgbEndpointMirror.write(datagram, "acked")
-      } catch (err) {
-        console.error(err)
-      }
-    }
-  }
-  // handlers... happen *to* us, ~ inputs 
-  this.handlers = {
-    onButtonStateChange: (state) => { console.warn(`default button state change in ${this.name}, to ${state}`) },
-  }
 
-  // ---------------------------------- We... have a name,
-  this.name = name
+  // local state
+  let onButtonStateChangeHandler = (state) => {
+    console.warn(`default button state change in ${name}, to ${state}`);
+  }
 
   // ---------------------------------- OSAP... stuff, 
   let routeToFirmware = PK.VC2VMRoute(vt.route)
@@ -50,13 +30,13 @@ export default function rgbbThing(osap, vt, name) {
   rgbEndpointMirror.addRoute(PK.route(routeToFirmware).sib(1).end())
 
   // this is where we'll rx button states:
-  let buttonRxEndpoint = osap.endpoint(`buttonCatcher_${this.name}`)
+  let buttonRxEndpoint = osap.endpoint(`buttonCatcher_${name}`)
   buttonRxEndpoint.onData = (data) => {
-    this.handlers.onButtonStateChange(data[0] > 0 ? true : false);
+    onButtonStateChangeHandler(data[0] > 0 ? true : false);
   }
 
   // we should have a setup function:
-  this.setup = async () => {
+  const setup = async () => {
     try {
       // we want to hook i.e. our button (in embedded, at index 2) to our button rx endpoint, 
       // whose index we can know...
@@ -77,5 +57,24 @@ export default function rgbbThing(osap, vt, name) {
     } catch (err) {
       throw err
     }
+  }
+
+  return {
+    setRGB: async (r, g, b) => {
+      try {
+        // float, float, float, -> int-etc,
+        // we could also do the i.e. linearization here, or accept various "color" types 
+        let datagram = new Uint8Array(3)
+        datagram[0] = 255 - r * 255
+        datagram[1] = 255 - g * 255
+        datagram[2] = 255 - b * 255 
+        console.log('writing', datagram)
+        await rgbEndpointMirror.write(datagram, "acked")
+      } catch (err) {
+        console.error(err)
+      }
+    },
+    onButtonStateChange: (fn) => { onButtonStateChangeHandler = fn; },
+    setup
   }
 }
