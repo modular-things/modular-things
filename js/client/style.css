@@ -16,7 +16,7 @@ html, body {
 }
 
 .menu-item {
-	padding: 5px 8px 5px 8px;
+	padding: 7px 9px 7px 9px;
 	color: floralwhite;
 }
 
@@ -38,7 +38,8 @@ html, body {
 	padding: 5px;
 	resize: none;
 	box-sizing: border-box;
-	background: floralwhite;
+	/*background: floralwhite;*/
+	background: #f8f9fa;
 }
 
 .things {
@@ -79,7 +80,8 @@ html, body {
 	display: flex;
 	flex: 1;
 	box-sizing: border-box;
-	background: antiquewhite;
+	/*background: antiquewhite;*/
+	background: #fff4e6;
 }
 
 .rename-form {

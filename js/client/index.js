@@ -1,4 +1,4 @@
-import "./modularThingClient.js";
+import { rescan } from "./modularThingClient.js";
 import { global_state } from "./global_state.js";
 
 import { render, html } from "https://cdn.jsdelivr.net/npm/lit-html@2.4.0/lit-html.min.js";
@@ -6,6 +6,7 @@ import { render, html } from "https://cdn.jsdelivr.net/npm/lit-html@2.4.0/lit-ht
 const view = (state) => html`
   <div class="menu">
     <div class="menu-item" @click=${runCode}>run (shift+enter)</div>
+    <div class="menu-item" @click=${rescan}>scan</div>
   </div>
   <div class="content">
     <div class="left-pane">
