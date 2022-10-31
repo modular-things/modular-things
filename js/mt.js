@@ -3,7 +3,7 @@ controller init
 
 serves client modules, bootstraps local scripts from client ui.
 
-Jake Read at the Center for Bits and Atoms
+Jake Read, Leo McElroy at the Center for Bits and Atoms
 (c) Massachusetts Institute of Technology 2022
 
 This work may be reproduced, modified, distributed, performed, and
@@ -20,6 +20,9 @@ import os from 'os';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
+import { createServer as createViteServer } from 'vite'
+// https://vitejs.dev/guide/ssr.html
+
 // new year new bootstrap
 
 
@@ -32,6 +35,16 @@ let ownIp = ''
 
 // serve everything: https://expressjs.com/en/resources/middleware/serve-static.html
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const vite = await createViteServer({
+  server: { middlewareMode: true },
+  appType: 'custom'
+})
+
+// use vite's connect instance as middleware
+// if you use your own express router (express.Router()), you should use router.use
+app.use(vite.middlewares)
+
 app.use(express.static(__dirname))
 // accept post bodies as json,
 app.use(bodyparser.json())

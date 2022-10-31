@@ -1,7 +1,9 @@
 import { rescan } from "./modularThingClient.js";
 import { global_state } from "./global_state.js";
 
-import { render, html } from "https://cdn.jsdelivr.net/npm/lit-html@2.4.0/lit-html.min.js";
+import { render, html } from "lit-html";
+
+import "./codemirror.js";
 
 const view = (state) => html`
   <div class="menu">
@@ -10,7 +12,8 @@ const view = (state) => html`
   </div>
   <div class="content">
     <div class="left-pane">
-      <textarea spellcheck="false" class="code-editor"></textarea>
+      <codemirror-editor></codemirror-editor>
+      <!-- <textarea spellcheck="false" class="code-editor"></textarea> -->
     </div>
     <div class="things">
       <div style="font-weight:700; font-size: 1.2em; padding-bottom: 10px;">List of Things</div>
@@ -68,7 +71,9 @@ const r = () => {
 r();
 
 function runCode(e) {
-  const code = document.querySelector(".code-editor").value;
+  const cm = document.querySelector("codemirror-editor");
+  const doc = cm.view.state.doc;
+  const code = doc.toString();
 
   const thingNames = Object.keys(global_state.things);
   const thingValues = Object.values(global_state.things).map(thing => thing.vThing);
