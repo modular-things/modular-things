@@ -32,15 +32,16 @@ html, body {
 	padding-right: 10px;
 }
 
+/*
 .code-editor {
 	height: 100%;
 	width: 100%;
 	padding: 5px;
 	resize: none;
 	box-sizing: border-box;
-	/*background: floralwhite;*/
 	background: #f8f9fa;
 }
+*/
 
 .things {
 	width: 300px;
@@ -82,6 +83,7 @@ html, body {
 	box-sizing: border-box;
 	/*background: antiquewhite;*/
 	background: #fff4e6;
+	overflow: hidden;
 }
 
 .rename-form {
@@ -110,4 +112,16 @@ html, body {
 	margin: 5px;
 	padding: 3px;
 	width: 100%;
+}
+
+codemirror-editor {
+	background: white;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+.cm-editor {
+	height: 100%;
+	background: #fbfbfb;
 }
