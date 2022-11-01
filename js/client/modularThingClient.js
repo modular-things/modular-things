@@ -95,7 +95,13 @@ export const rescan = async () => {
           // add to our global ist, then we're done ! 
           await addThing(thingName, thing);
           // test the rename fn, 
-          thing.vThing.rename("newName")
+          thing.vThing.rename("anotherNewName")
+          console.error('notes below this call to console.error!')
+          /*
+          alright, this backend / embedded all works, but now when we rename we have 
+          trouble finding the appropriate constructor, so properly things should have 
+          a name... and a firmware name. i.e. a "type" and a "name" or something, you know ?
+          */
         } else {
           // here is where we could roll up an "auto-object" type, if we can't find one:
           console.error(`no constructor found for the ${firmwareName} thing...`)

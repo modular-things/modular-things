@@ -30,6 +30,8 @@ Endpoint rgbEndpoint(&osap, "rgbValues", onRGBData);
 Endpoint buttonEndpoint(&osap, "buttonState");
 
 void setup() {
+  // uuuh... 
+  osap.init();
   // run the commos 
   vp_arduinoSerial.begin();
   // "hardware"
