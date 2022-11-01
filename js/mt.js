@@ -21,6 +21,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import { createServer as createViteServer } from 'vite'
+import { WebSocketServer } from "ws";
 // https://vitejs.dev/guide/ssr.html
 
 // new year new bootstrap
@@ -67,7 +68,7 @@ app.get('/startLocal/:file', (req, res) => {
   }
   console.log(`attempt to start ${req.params.file} with args ${args}`)
   // startup, let's spawn,
-  const process = child_process.spawn('node', ['-r', 'esm', `local/${req.params.file}`])
+  const process = child_process.spawn('node', [`local/${req.params.file}`])
   // add our own tag,
   process.fileName = req.params.file
   let replied = false

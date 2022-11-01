@@ -75,6 +75,7 @@ export default function rgbbThing(osap, vt, name) {
       }
     },
     onButtonStateChange: (fn) => { onButtonStateChangeHandler = fn; },
-    setup
+    setup,
+    vt,
   }
 }

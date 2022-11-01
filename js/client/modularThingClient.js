@@ -20,6 +20,7 @@ import PK from "../osapjs/core/packets.js";
 import TIME from "../osapjs/core/time.js";
 
 import { addThing } from "./actions/addThing.js";
+import { addRename } from "./actions/addRename.js";
 import { global_state } from "./global_state.js";
 
 import rgbbThing from "../virtualThings/rgbbThing.js";
@@ -89,6 +90,8 @@ export const rescan = async () => {
             firmwareName: firmwareName,
             vThing: constructors[firmwareName](osap, ch.reciprocal.parent, thingName)
           }
+          // add the renaming handle... 
+          await addRenameFn(thing.vThing)
           // add to our global ist, then we're done ! 
           await addThing(thingName, thing);
           

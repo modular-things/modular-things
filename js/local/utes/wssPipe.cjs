@@ -17,11 +17,12 @@ no warranty is provided, and users accept all liability.
 // to start, will write here, then wrap in some interface...
 
 // need to know our own ip,
-import os from 'os'
-import WS from 'ws'
-const WebSocketServer = WS.Server
-//const os = require('os')
-//const WebSocketServer = require('ws').Server
+// import os from 'os'
+// import WS from 'ws'
+
+const os = require('os')
+const WebSocketServer = require('ws').Server
+// const WebSocketServer = WS.Server
 
 // find our addr,
 let wsAddr = ''
@@ -54,6 +55,7 @@ let wsPort = 4040
 let errs = 0
 let startWSS = () => {
   return new Promise((resolve, reject) => {
+    console.log(WebSocketServer)
     const wss = new WebSocketServer({ port: wsPort }, () => {
       console.log(`OSAP-wss-addr: ws://${wsAddr}:${wsPort}`)
     })
@@ -80,6 +82,8 @@ let startWSS = () => {
   })
 }
 
-export default {
-  start: startWSS
-}
+exports.start = startWSS
+
+// export default {
+//   start: startWSS
+// }

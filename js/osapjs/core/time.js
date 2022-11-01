@@ -18,7 +18,7 @@ let TIME = {}
 let getTimeStamp = null
 
 if (typeof process === 'object') {
-  const { PerformanceObserver, performance } = require('perf_hooks')
+  // const { PerformanceObserver, performance } = require('perf_hooks')
   getTimeStamp = () => {
     return performance.now()
   }
