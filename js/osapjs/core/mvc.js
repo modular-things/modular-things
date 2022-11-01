@@ -27,6 +27,8 @@ let RT = {
   DBG_ERRMSG: 152,
   DBG_DBGMSG: 153,
   DBG_RES: 161,
+  RENAME_REQ: 171,
+  RENAME_RES: 172 
 }
 
 export default function OMVC(osap) {
@@ -434,6 +436,21 @@ export default function OMVC(osap) {
         }
       })
     })
+  }
+
+  // ------------------------------------------------------ Rename Vertex Request 
+  this.renameVertex = async (routeToVertex, name) => {
+    await osap.awaitStackAvailableSpace(VT.STACK_ORIGIN)
+    // likewise 
+    let id = getNewQueryID()
+    // + DEST + RENAME_REQ, + ID, + str 
+    let payload = new Uint8Array(3 + name.length)
+    payload[0] = PK.DEST
+    payload[1] = RT.RENAME_REQ 
+    payload[2] = id 
+    TS.write("string", name, payload, 3)
+    console.log('packet like', payload)
+    throw new Error("function is not done, hit strange ESM bug...")
   }
 
   // ------------------------------------------------------ Destination Handler: Dispatching Replies 

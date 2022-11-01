@@ -17,7 +17,7 @@ import OSAP from '../osapjs/core/osap.js'
 import { TS } from '../osapjs/core/ts.js'
 import PK from '../osapjs/core/packets.js'
 
-import WSSPipe from './utes/wssPipe.js'
+import WSSPipe from './utes/wssPipe.cjs'
 import VPortSerial from '../osapjs/vport/vPortSerial.js'
 
 import { SerialPort } from 'serialport'

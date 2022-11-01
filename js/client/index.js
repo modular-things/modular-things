@@ -58,7 +58,12 @@ const renameForm = (state) => html`
       <div class="rename-label">Name:</div>
       <input .value=${state.renaming} class="rename-form-input"/>
     </div>
-    <button class="button">rename</button>
+    <button class="button" @click=${() => {
+      console.log(state);
+      const thing = state.things[state.renaming];
+      console.log(thing);
+      thing.rename("aNewName");
+    }}>rename</button>
     <button class="button" @click=${() => state.renaming = ""}>close</button>
   </div>
 `
