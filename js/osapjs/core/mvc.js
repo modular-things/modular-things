@@ -28,7 +28,7 @@ let RT = {
   DBG_DBGMSG: 153,
   DBG_RES: 161,
   RENAME_REQ: 171,
-  RENAME_RES: 172 
+  RENAME_RES: 172
 }
 
 export default function OMVC(osap) {
@@ -444,13 +444,29 @@ export default function OMVC(osap) {
     // likewise 
     let id = getNewQueryID()
     // + DEST + RENAME_REQ, + ID, + str 
-    let payload = new Uint8Array(3 + name.length)
+    let payload = new Uint8Array(3 + name.length + 4)
     payload[0] = PK.DEST
-    payload[1] = RT.RENAME_REQ 
-    payload[2] = id 
+    payload[1] = RT.RENAME_REQ
+    payload[2] = id
     TS.write("string", name, payload, 3)
-    console.log('packet like', payload)
-    throw new Error("function is not done, hit strange ESM bug...")
+    console.log('rename packet like', payload)
+    let datagram = PK.writeDatagram(routeToVertex, payload)
+    osap.handle(datagram)
+    return new Promise((resolve, reject) => {
+      queriesAwaiting.push({
+        id: id,
+        timeout: setTimeout(() => {
+          reject('rename request timed out')
+        }, 2500),
+        onResponse: function (data) {
+          if(data[0]){
+            resolve()
+          } else {
+            reject(`badness error code ${data[0]} from vertex on rename-request, maybe no-flash-mem in this micro`)
+          }
+        }
+      })
+    })
   }
 
   // ------------------------------------------------------ Destination Handler: Dispatching Replies 
@@ -468,6 +484,7 @@ export default function OMVC(osap) {
       case VBUS.BROADCAST_RM_RES:
       case RT.ERR_RES:
       case RT.DBG_RES:
+      case RT.RENAME_RES:
         {
           // match to id, send to handler, carry on... 
           let rqid = item.data[ptr + 3]

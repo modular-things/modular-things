@@ -91,10 +91,11 @@ export const rescan = async () => {
             vThing: constructors[firmwareName](osap, ch.reciprocal.parent, thingName)
           }
           // add the renaming handle... 
-          await addRenameFn(thing.vThing)
+          await addRename(thing.vThing, osap)
           // add to our global ist, then we're done ! 
           await addThing(thingName, thing);
-          
+          // test the rename fn, 
+          thing.vThing.rename("newName")
         } else {
           // here is where we could roll up an "auto-object" type, if we can't find one:
           console.error(`no constructor found for the ${firmwareName} thing...`)
