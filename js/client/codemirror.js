@@ -23,6 +23,9 @@ const countDocChanges = StateField.define({
   }
 });
 
+// this is a terrible hack but strange bugs are about this one
+const removeAutocompleteSuggestions = basicSetup => basicSetup.filter((_, i) => ![11, 12].includes(i));
+
 class CodeMirror extends HTMLElement {
     constructor() {
         super();
@@ -35,7 +38,7 @@ class CodeMirror extends HTMLElement {
     // lifecycle
     connectedCallback() {
         const extensions = [
-            basicSetup, 
+            removeAutocompleteSuggestions(basicSetup), 
             javascript(),
             keymap.of([indentWithTab]), // TODO: We should put a note about Esc+Tab for accessibility somewhere.
             indentUnit.of("  "),

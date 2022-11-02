@@ -30,6 +30,7 @@ html, body {
 	flex: 1;
 	box-sizing: border-box;
 	padding-right: 10px;
+	width: 100px; /* why? */
 }
 
 /*
