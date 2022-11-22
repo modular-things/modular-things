@@ -17,21 +17,19 @@
 #define POS_EPSILON 0.001F
 
 // hackney, this'll be an interrupt... allegedly 
-const uint32_t integratorInterval = 1000; // microseconds (us) 
 uint32_t lastIntegration = 0;
-const float delT = 1000000 / integratorInterval;
+const uint32_t integratorInterval = 1000; // microseconds (us) 
+const float delT = 0.001F; // integratorInterval / 1000000;
 // states (units are steps, 1=1 ?) 
 volatile uint8_t mode = MODE_POS;         // operative mode 
 volatile float pos = 0.0F;                // current position 
 volatile float vel = 0.0F;                // current velocity 
-volatile float accel = 1.0F;              // current acceleration 
-volatile float operativeVel = 0.0F;       // velocity *to use*
-volatile float operativeAccel = 50.0F;    // acceleration *to use*
+volatile float accel = 0.0F;              // current acceleration 
 // and settings 
-float maxAccel = 250.0F;                  // absolute maximum acceleration (steps / sec)
-float maxVel = 150.0F;                    // absolute maximum velocity (units / sec) 
+float maxAccel = 1000.0F;                  // absolute maximum acceleration (steps / sec)
+float maxVel = 900.0F;                    // absolute maximum velocity (units / sec) 
 // and targets 
-float posTarget = 10000.0F;
+float posTarget = 1000.0F;
 // init-once values we'll use in the integrator 
 volatile float delta = 0.0F;
 volatile float stepModulo = 0.0F;
@@ -44,55 +42,63 @@ void integrate(void){
   switch(mode){
     case MODE_POS:
       distanceToTarget = posTarget - pos;
-      stopDistance = (vel * vel) / (2.0F * operativeAccel);
-      if(stopDistance >= abs(distanceToTarget)){   // if we're going to overshoot, deccel:
-        if(vel <= 0.0F){                // if -ve vel,
-          accel = operativeAccel;             // do +ve accel, 
-        } else {                        // if +ve vel, 
-          accel = -operativeAccel;            // do -ve accel, 
+      stopDistance = (vel * vel) / (2.0F * maxAccel);
+      if(stopDistance >= abs(distanceToTarget)){    // if we're going to overshoot, deccel:
+        if(vel <= 0.0F){                            // if -ve vel,
+          accel = maxAccel;                         // do +ve accel, 
+        } else {                                    // if +ve vel, 
+          accel = -maxAccel;                        // do -ve accel, 
+        }
+      } else {
+        if(distanceToTarget > 0.0F){
+          accel = maxAccel;
+        } else {
+          accel = -maxAccel;
         }
       }
       break;
     case MODE_VEL:
-      if(vel < operativeVel){
-        accel = operativeAccel; 
-      } else if (vel > operativeVel){
-        accel = -operativeAccel;
-      }
+      vel = 0.0F;
+      // if(vel < maxVel){
+      //   accel = maxAccel; 
+      // } else if (vel > maxVel){
+      //   accel = -maxAccel;
+      // }
       break;
   }
-  // cap our accel based on maximum rates: 
-  if(vel >= operativeVel){
-    accel = 0.0F;
-    vel = operativeVel;
-  } else if(vel <= -operativeVel){
-    accel = 0.0F;
-    vel = - operativeVel;
-  }
-  // now: 
-  // I don't know who I am,
-  // I don't know where I am...
-  // all I know is that I must integrate 
+  // using our chosen accel, integrate velocity from previous: 
   vel += accel * delT;
+  // cap our vel based on maximum rates: 
+  if(vel >= maxVel){
+    accel = 0.0F;
+    vel = maxVel;
+  } else if(vel <= -maxVel){
+    accel = 0.0F;
+    vel = - maxVel;
+  }
+  // what's a position delta ? 
   delta = vel * delT;
   // lastly... if we're about to smash the position target, don't smash it:
-  if(abs(distanceToTarget - delta) < POS_EPSILON && abs(vel) < 0.01F){
-    delta = distanceToTarget;
-    vel = 0.0F;
-    accel = 0.0F;
-  }
+  // if(abs(distanceToTarget - delta) < POS_EPSILON && abs(vel) < 0.01F){
+  //   delta = distanceToTarget;
+  //   vel = 0.0F;
+  //   accel = 0.0F;
+  // }
   pos += delta;
+  Serial.println(String(pos));
   // and check in on our step modulo, 
   stepModulo += delta;
   if(stepModulo >= 1.0F){
     digitalWrite(PIN_DIR, HIGH);
     digitalWrite(PIN_STEP, !digitalRead(PIN_STEP));
-  } else {
+    stepModulo -= 1.0F;
+  } else if (stepModulo <= -1.0F){
     digitalWrite(PIN_DIR, LOW);
     digitalWrite(PIN_STEP, !digitalRead(PIN_STEP));
+    stepModulo += 1.0F;
   }
   digitalWrite(PIN_TICK, LOW);
-}
+} // end integrator 
 
 // float stopDistance = (state.velocities.axis[a] * state.velocities.axis[a]) / (2.0F * settings.accelLimits.axis[a]);
 
@@ -142,6 +148,7 @@ Endpoint settingsEndpoint(&osap, "settings", onSettingsData);
 Endpoint buttonEndpoint(&osap, "buttonState");
 
 void setup() {
+  Serial.begin(0);
   pinMode(PIN_TICK, OUTPUT);
   pinMode(PIN_STEP, OUTPUT);
   pinMode(PIN_DIR, OUTPUT);
