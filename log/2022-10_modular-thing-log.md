@@ -60,3 +60,9 @@ next would do...
 did that ! 
 
 From Leo: I downgraded the naming system with random unique IDs which presents some clear irritations when the ports randomly resweep and your code no longer works. I think storing names in EEPROM would be hugely advantagous. I added some UI for writing names to devices but we still need the guts of it.
+
+--- 
+
+## Demo Wishlist 
+
+- touchpad-to-streaming-position drawing robot 
