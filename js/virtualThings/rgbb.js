@@ -68,7 +68,7 @@ export default function rgbbThing(osap, vt, name) {
         datagram[0] = 255 - r * 255
         datagram[1] = 255 - g * 255
         datagram[2] = 255 - b * 255 
-        console.log('writing', datagram)
+        // console.log('writing', datagram)
         await rgbEndpointMirror.write(datagram, "acked")
       } catch (err) {
         console.error(err)

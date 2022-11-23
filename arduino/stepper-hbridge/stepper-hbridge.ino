@@ -77,7 +77,7 @@ EP_ONDATA_RESPONSES onSettingsData(uint8_t* data, uint16_t len){
 
 Endpoint settingsEndpoint(&osap, "settings", onSettingsData);
 
-// ---------------------------------------------- 4th Vertex: Limit / Switch Output... non-op at the moment, 
+// ---------------------------------------------- 5th Vertex: Limit / Switch Output... non-op at the moment, 
 
 // fair warning, this is unused at the moment... and not set-up, 
 // also the limit pin is config'd to look at the interrupt on a scope at the moment, see motionStateMachine.cpp 

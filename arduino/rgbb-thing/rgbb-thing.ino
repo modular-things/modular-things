@@ -4,13 +4,13 @@
 #include <vp_arduinoSerial.h>
 
 // ---------------------------------------------- Pins
-#define PIN_R 15
-#define PIN_G 16
-#define PIN_B 17
-#define PIN_BUT 7
+#define PIN_R 14
+#define PIN_G 15
+#define PIN_B 16
+#define PIN_BUT 17
 
 // ---------------------------------------------- OSAP central-nugget 
-OSAP osap("rgbbThing");
+OSAP osap("rgbb");
 
 // ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);

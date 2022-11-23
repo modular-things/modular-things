@@ -23,7 +23,8 @@ import { addThing } from "./actions/addThing.js";
 import { addSetName } from "./actions/addSetName.js";
 import { global_state } from "./global_state.js";
 
-import rgbbThing from "../virtualThings/rgbbThing.js";
+import rgbb from "../virtualThings/rgbb.js";
+import stepper from "../virtualThings/stepper.js";
 
 console.log(`------------------------------------------`)
 console.log("hello modular-things")
@@ -44,7 +45,7 @@ rescanEndpoint.onData = () => {
 }
 
 // a list of constructors, 
-let constructors = { rgbbThing }
+let constructors = { rgbb, stepper }
 
 // a list of virtual machines, 
 let scanning = false;
@@ -111,12 +112,6 @@ export const rescan = async () => {
           if(madeNewUniqueName){
             thing.vThing.setName(thingName)
           }
-          console.error('notes below this call to console.error!')
-          /*
-          alright, this backend / embedded all works, but now when we rename we have 
-          trouble finding the appropriate constructor, so properly things should have 
-          a name... and a firmware name. i.e. a "type" and a "name" or something, you know ?
-          */
         } else {
           // here is where we could roll up an "auto-object" type, if we can't find one:
           console.error(`no constructor found for the ${firmwareName} thing...`)
