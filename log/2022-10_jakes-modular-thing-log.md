@@ -89,6 +89,12 @@ Yeah I guess I can basically concatenate to `rt_firmwareName_uniqueName`and then
 
 I actually won't have to change any embedded code for that change... 
 
+### Motor VM
+
+OK, I think I'm ~ ready to get to writing this thing, 
+
+### RGBB refactor 
+
 --- 
 
 ## Dev List

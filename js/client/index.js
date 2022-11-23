@@ -35,7 +35,8 @@ const drawThing = (thing) => html`
 
 const getApi = (thing) => {
   const api = Object.keys(thing).map( x => [ x, getParamNames(thing[x]) ]);
-  return api.filter(x => x[0] !== "setup").map(apiEntry);
+  // don't include "setup" or "setName" or "vt"
+  return api.filter(x => ((x[0] !== "setup") && (x[0] !== "setName") && (x[0] !== "vt"))).map(apiEntry);
 }
 
 const apiEntry = ([name, params]) => html`
