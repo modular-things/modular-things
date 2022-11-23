@@ -14,7 +14,7 @@ typedef struct motionState_t {
   float accel;
 } motionState_t;
 
-void motion_init(void);
+void motion_init(uint16_t microsecondsPerIntegration);
 
 void motion_integrate(void);
 
