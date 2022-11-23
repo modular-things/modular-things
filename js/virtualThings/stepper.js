@@ -16,10 +16,13 @@ import PK from "../osapjs/core/packets.js"
 import { TS } from "../osapjs/core/ts.js"
 
 export default function stepper(osap, vt, name) {
-  // erp 
+  // the "vt.route" goes to our partner's "root vertex" - but we 
+  // want to address relative siblings, so I use this utility:
   let routeToFirmware = PK.VC2VMRoute(vt.route)
   // here we basically write a "mirror" endpoint for each downstream thing, 
   // -------------------------------------------- 1: target data 
+  // now I can index to the 1st endpoint (I know it's this one because 
+  // I wrote the firmware!) just by adding a .sib() to that route;
   let targetDataEndpoint = osap.endpoint(`targetDataMirror_${name}`)
   targetDataEndpoint.addRoute(PK.route(routeToFirmware).sib(1).end())
   // -------------------------------------------- 2: motion state is a query object:
