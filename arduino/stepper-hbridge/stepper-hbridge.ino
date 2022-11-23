@@ -63,30 +63,52 @@ EP_ONDATA_RESPONSES onPositionSetData(uint8_t* data, uint16_t len){
   return EP_ONDATA_ACCEPT;
 }
 
-Endpoint settingsEndpoint(&osap, "setPosition", onPositionSetData);
+Endpoint positionSetEndpoint(&osap, "setPosition", onPositionSetData);
+
+// ---------------------------------------------- 4th Vertex: Settings catch-all, 
+
+EP_ONDATA_RESPONSES onSettingsData(uint8_t* data, uint16_t len){
+  // it's just <cscale> for the time being, 
+  uint16_t rptr = 0;
+  float cscale = ts_readFloat32(data, &rptr);
+  stepper_setCScale(cscale);
+  return EP_ONDATA_ACCEPT;
+}
+
+Endpoint settingsEndpoint(&osap, "settings", onSettingsData);
 
 // ---------------------------------------------- 4th Vertex: Limit / Switch Output... non-op at the moment, 
+
+// fair warning, this is unused at the moment... and not set-up, 
+// also the limit pin is config'd to look at the interrupt on a scope at the moment, see motionStateMachine.cpp 
 Endpoint buttonEndpoint(&osap, "buttonState");
 
 void setup() {
   Serial.begin(0);
-  motion_init();
+  // ~ important: the stepper code initializes GCLK4, which we use as timer-interrupt
+  // in the motion system, so it aught to be initialized first ! 
   stepper_init();
+  // another note on the motion system:
+  // at the moment, we have a relatively small absolute-maximum speed: say the integrator interval is 250us, 
+  // we have 0.00025 seconds between ticks, for a max of 4000 steps / second... 
+  // we are then microstepping at 1/4th steps, for 800 steps per motor revolution, (from a base of 200)
+  // meaning we can make only 5 revs / sec, or 300 rippums (RPM), 
+  // with i.e. a 20-tooth GT2 belt, we have 40mm of travel per revolution, making only 200mm/sec maximum traverse 
+  // this is not pitiful, but not too rad, and more importantly is that we will want to communicate these limits 
+  // to users of the motor - so we should outfit a sort of settings-grab function, or something ? 
+  motion_init(250);
   // uuuh... 
   osap.init();
   // run the commos 
   vp_arduinoSerial.begin();
 }
 
-uint32_t lastIntegration = 0;
-// shouldn't be here... 
-uint32_t integratorInterval = 1000;
-
 void loop() {
   // do graph stuff
   osap.loop();
-  if(lastIntegration + integratorInterval < micros()){
-    lastIntegration = micros();
-    motion_integrate();
-  }
+  // if(lastIntegration + integratorInterval < micros()){
+  //   // stepper_step(1, true);
+  //   lastIntegration = micros();
+  //   motion_integrate();
+  // }
 }

@@ -68,6 +68,9 @@ const uint16_t LUT_1022[64] = {
 // on init / cscale, we write new values into this thing, which is where
 // we actually pull currents from, for the h-bridges 
 uint16_t LUT_CURRENTS[64];
+// one electrical phase is 64 pts, so stick us 90' out of phase from one another... 
+volatile uint8_t lutPtrA = 16;
+volatile uint8_t lutPtrB = 0;
 
 void stepper_init(void){
   // -------------------------------------------- DIR PINS 
@@ -119,16 +122,63 @@ void stepper_init(void){
   while(TCC2->SYNCBUSY.bit.WAVE);
   TCC2->PER.reg = 128; 
   while(TCC2->SYNCBUSY.bit.PER);
-  // TCC0->CC[6].reg = 15;  // APWM
-  TCC2->CCB[0].reg = 15;  // BPWM 
+  TCC2->CCB[0].reg = 15;  // APWM 
   TCC2->CTRLA.bit.ENABLE = 1;
-  // -------------------------------------------- 
+  // -------------------------------------------- we actually recalculate a LUT of currents when we reset this value...
+  stepper_setCScale(0.05F);  // it's 0-1, innit 
+}
+
+void stepper_publishCurrents(void){
+  TCC2->CCB[0].reg = LUT_CURRENTS[lutPtrA] >> 3; // divs lut resolution to our output resolution, 
+  TCC0->CCB[0].reg = LUT_CURRENTS[lutPtrB] >> 3;
 }
 
 void stepper_step(uint8_t microSteps, boolean dir){
-  
+  // step LUT ptrs thru table, increment and wrap w/ bit logic 
+  if(dir){
+    lutPtrA += microSteps; lutPtrA = lutPtrA & 0b00111111;
+    lutPtrB += microSteps; lutPtrB = lutPtrB & 0b00111111;
+  } else {
+    lutPtrA -= microSteps; lutPtrA = lutPtrA & 0b00111111;
+    lutPtrB -= microSteps; lutPtrB = lutPtrB & 0b00111111;
+  }
+  // depending on sign of phase, set up / down on gates 
+  if(LUT_1022[lutPtrA] > 511){
+    A_UP;
+  } else if (LUT_1022[lutPtrA] < 511){
+    A_DOWN;
+  } else {
+    A_OFF;
+  }
+  if(LUT_1022[lutPtrB] > 511){
+    B_UP;
+  } else if (LUT_1022[lutPtrB] < 511){
+    B_DOWN;
+  } else {
+    B_OFF;
+  }
+  stepper_publishCurrents();
 }
 
 void stepper_setCScale(float scale){
-
+  // scale max 1.0, min 0.0,
+  if(scale > 1.0F) scale = 1.0F;
+  if(scale < 0.0F) scale = 0.0F;
+  // for each item in the LUTs,
+  for(uint8_t i = 0; i < 64; i ++){
+    if(LUT_1022[i] > 511){
+      // top half, no invert, but shift-down and scale 
+      LUT_CURRENTS[i] = (LUT_1022[i] - 511) * 2.0F * scale;
+    } else if (LUT_1022[i] < 511){
+      // lower half, invert and shift down 
+      float temp = LUT_1022[i];   // get lut as float, 
+      temp = (temp * -2.0F + 1022) * scale; // scale (flipping) and offset back up 
+      LUT_CURRENTS[i] = temp; // set table element, 
+    } else {
+      // the midpoint: off, 
+      LUT_CURRENTS[i] = 0;
+    }
+  }
+  // re-publish currents,
+  stepper_publishCurrents();
 }

@@ -36,6 +36,7 @@ OK, it's apparently working an instrumented, but needs hardware output (probably
 
 I'll actually swap on now to see that I can get the hardware working: so a coupla debug-outs here, then PWM waveforms and hopefully sinusoids on the other side... I'll be copy-pasta from the fab-step project most likely. 
 
-- get it on an interrupt, right? and tidy up 
+This works now as well, thing still isn't on an interrupt though, I suppose that would be next: then the vm / etc. 
+
 - outfit it w/ vm-stuff, 
-- try it for real ? 
+- try it in modular-thing, 

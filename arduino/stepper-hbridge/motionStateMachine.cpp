@@ -1,8 +1,5 @@
 #include "motionStateMachine.h"
-
-#define PIN_TICK 1
-#define PIN_STEP 2
-#define PIN_DIR 3
+#include "stepperDriver.h"
 
 // NOTE: we need to do some maths here to set an absolute-maximum velocities... based on integrator width 
 // and... could this be simpler? like, we have two or three "maximum" accelerations ?? operative and max ? 
@@ -10,16 +7,19 @@
 #define POS_EPSILON 0.001F
 #define TICK_INTERVAL 1000.0F
 
-// hackney, this'll be an interrupt... allegedly 
-const float delT = TICK_INTERVAL / 1000000;
+// delT is re-calculated when we init w/ a new microsecondsPerIntegration 
+float delT = 0.001F;
+// not recalculated... or settings-adjustable, yet, 
+uint8_t microsteps = 4; // and note (!) this *is not* "microstepping" as in 1/n, it's n/16, per our LUTS 
 // states (units are steps, 1=1 ?) 
-volatile uint8_t mode = MOTION_MODE_VEL;         // operative mode 
+volatile uint8_t mode = MOTION_MODE_POS;         // operative mode 
 volatile float pos = 0.0F;                // current position 
 volatile float vel = 0.0F;                // current velocity 
 volatile float accel = 0.0F;              // current acceleration 
 // and settings 
-float maxAccel = 100.0F;                  // absolute maximum acceleration (steps / sec)
-float maxVel = 900.0F;                    // absolute maximum velocity (units / sec) 
+float maxAccel = 5000.0F;                  // absolute maximum acceleration (steps / sec) (not recalculated, but given w/ user instructions)
+float maxVel = 900.0F;                      // absolute maximum velocity (units / sec) (also recalculated on init)
+float absMaxVelocity = 10.0F;               // we'll recalculate this, it's related to our stepping rate 
 // and targets 
 float posTarget = 0.0F;
 float velTarget = 0.0F;
@@ -29,14 +29,58 @@ volatile float stepModulo = 0.0F;
 volatile float distanceToTarget = 0.0F;
 volatile float stopDistance = 0.0F;
 
-void motion_init(void){
+// this is the "limit" pin, currently used as a debug, 
+#define PIN_TICK 22
+
+// s/o to http://academy.cba.mit.edu/classes/output_devices/servo/hello.servo-registers.D11C.ino 
+// s/o also to https://gist.github.com/nonsintetic/ad13e70f164801325f5f552f84306d6f 
+void motion_init(uint16_t microsecondsPerIntegration){
+  // before we get into hardware, let's consider our absolute-maximums;
+  // here's our delta-tee:
+  delT = (float)(microsecondsPerIntegration) / 1000000.0F;
+  // we absolutely cannot step more than one tick-per-integration cycle, 
+  // since we are in one-step-per-unit land, it means our absMax is just 1/delT, 
+  absMaxVelocity = 1.0F / delT; 
+  maxVel = absMaxVelocity; // start here, 
+  // that's it - we can get on with the hardware configs 
+  PORT->Group[0].DIRSET.reg = (uint32_t)(1 << PIN_TICK);
   pinMode(PIN_TICK, OUTPUT);
-  pinMode(PIN_STEP, OUTPUT);
-  pinMode(PIN_DIR, OUTPUT);
+  // states are all initialized already, but we do want to get set-up on a timer interrupt, 
+  // here we're using GCLK4, which I am assuming is set-up already / generated, in the 
+  // stepper module, which uses it for PWM outputs ! 
+  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | 
+                      GCLK_CLKCTRL_GEN_GCLK4 |
+                      GCLK_CLKCTRL_ID_TC4_TC5;
+  while(GCLK->STATUS.bit.SYNCBUSY);
+  // now we want to unmask the TC5, 
+  PM->APBCMASK.reg |= PM_APBCMASK_TC5;
+  // set timer modes / etc, 
+  TC5->COUNT16.CTRLA.reg |= TC_CTRLA_MODE_COUNT16 |
+                            TC_CTRLA_WAVEGEN_MFRQ |
+                            TC_CTRLA_PRESCALER_DIV8; // div/8 on 48mhz clock, so 6MHz base, 6-ticks-per-microsecond, 
+  while(TC5->COUNT16.STATUS.bit.SYNCBUSY);
+  // enable the interrupt,
+  NVIC_DisableIRQ(TC5_IRQn);
+  NVIC_ClearPendingIRQ(TC5_IRQn);
+  NVIC_SetPriority(TC5_IRQn, 1); // hmmm 
+  NVIC_EnableIRQ(TC5_IRQn);
+  TC5->COUNT16.INTENSET.bit.MC0 = 1;
+  // set la freqweenseh
+  TC5->COUNT16.CC[0].reg = 6 * microsecondsPerIntegration;
+  // and enable it, 
+  TC5->COUNT16.CTRLA.reg |= TC_CTRLA_ENABLE;
+  while(TC5->COUNT16.STATUS.bit.SYNCBUSY);
+}
+
+void TC5_Handler(void){
+  PORT->Group[0].OUTSET.reg = (uint32_t)(1 << PIN_TICK);  // marks interrupt entry, to debug 
+  TC5->COUNT16.INTFLAG.bit.MC0 = 1; // clear the interrupt
+  motion_integrate(); // do the motion system integration, 
+  PORT->Group[0].OUTCLR.reg = (uint32_t)(1 << PIN_TICK);  // marks exit 
 }
 
 void motion_integrate(void){
-  digitalWrite(PIN_TICK, HIGH);
+  // digitalWrite(PIN_TICK, HIGH);
   // set our accel based on modal requests, 
   switch(mode){
     case MOTION_MODE_POS:
@@ -87,15 +131,13 @@ void motion_integrate(void){
   // and check in on our step modulo, 
   stepModulo += delta;
   if(stepModulo >= 1.0F){
-    digitalWrite(PIN_DIR, HIGH);
-    digitalWrite(PIN_STEP, !digitalRead(PIN_STEP));
+    stepper_step(microsteps, true);
     stepModulo -= 1.0F;
   } else if (stepModulo <= -1.0F){
-    digitalWrite(PIN_DIR, LOW);
-    digitalWrite(PIN_STEP, !digitalRead(PIN_STEP));
+    stepper_step(microsteps, false);
     stepModulo += 1.0F;
   }
-  digitalWrite(PIN_TICK, LOW);
+  // digitalWrite(PIN_TICK, LOW);
 } // end integrator 
 
 void motion_setPositionTarget(float _targ, float _maxVel, float _maxAccel){
