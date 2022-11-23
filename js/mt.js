@@ -124,11 +124,11 @@ Object.keys(ifaces).forEach(function(ifname) {
     }
     ownIp = iface.address
     if (alias >= 1) {
-      console.log('clank-tool available on: \t' /*ifname + ':' + alias,*/ + iface.address + `:${port}`);
+      console.log('modular-thing-client available on: \t' /*ifname + ':' + alias,*/ + iface.address + `:${port}`);
       // this single interface has multiple ipv4 addresses
       // console.log('serving at: ' ifname + ':' + alias + iface.address + `:${port}`);
     } else {
-      console.log('clank-tool available on:\t' /*ifname + ':' + alias,*/ + iface.address + `:${port}`);
+      console.log('modular-thing-client available on:\t' /*ifname + ':' + alias,*/ + iface.address + `:${port}`);
       // this interface has only one ipv4 adress
       //console.log(ifname, iface.address);
     }

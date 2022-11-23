@@ -167,6 +167,7 @@ TS.write = (type, value, data, start) => {
       data[start + 2] = (stringStream.length >> 16) & 255
       data[start + 3] = (stringStream.length >> 24) & 255
       data.set(stringStream, start + 4)
+      // console.warn(`wrote a string ${value} from ${start}`, data)
       return 4 + stringStream.length
     case 'boolean':
       if (value) {
