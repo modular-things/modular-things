@@ -52,14 +52,26 @@ export default function stepper(osap, vt, name) {
     console.warn(`w/ spu of ${spu}, this ${name} has a new abs-max velocity ${absMaxVelocity}`)
   }
 
+  let setCScale = async (cscale) => {
+    try {
+      let datagram = new Uint8Array(4)
+      let wptr = 0
+      wptr += TS.write("float32", cscale, datagram, wptr)  // it's 0-1, firmware checks
+      // and we can shippity ship it, 
+      await settingsEndpoint.write(datagram, "acked")
+    } catch (err) {
+      console.error(err) 
+    }
+  }
+
   // get states
   let getState = async () => {
     try {
       let data = await motionStateQuery.pull()
       return {
-        pos: TS.read("float32", data, 0),
-        vel: TS.read("float32", data, 4),
-        accel: TS.read("float32", data, 8),
+        pos: TS.read("float32", data, 0) / spu,
+        vel: TS.read("float32", data, 4) / spu,
+        accel: TS.read("float32", data, 8)/ spu,
       }
       // deserialize... 
     } catch (err) {
@@ -73,7 +85,7 @@ export default function stepper(osap, vt, name) {
       return new Promise(async (resolve, reject) => {
         let check = () => {
           getState().then((states) => {
-            console.log(states.vel)
+            console.log(`${states.accel.toFixed(2)}, ${states.vel.toFixed(2)}, ${states.pos.toFixed(2)}`)
             if (states.vel < 0.001 && states.vel > -0.001) {
               resolve()
             } else {
@@ -117,12 +129,26 @@ export default function stepper(osap, vt, name) {
     }
   } // end absolute 
 
+  // goto-relative, 
+  let relative = async (pos, vel, accel) => {
+    try {
+      let state = await getState()
+      pos += state.pos 
+      // that's it my dudes, 
+      await absolute(pos, vel, accel)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   // we return fns that user can call, 
   return {
-    setSPU,
-    getState,
-    awaitMotionEnd,
     absolute,
+    relative,
+    awaitMotionEnd,
+    getState,
+    setCScale,
+    setSPU,
     setup,
     vt,
   }

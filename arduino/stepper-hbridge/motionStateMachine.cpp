@@ -86,6 +86,13 @@ void motion_integrate(void){
     case MOTION_MODE_POS:
       distanceToTarget = posTarget - pos;
       stopDistance = (vel * vel) / (2.0F * maxAccel);
+      if(abs(distanceToTarget - delta) < POS_EPSILON && abs(vel) < 0.01F){
+        // zero out and don't do any phantom motion 
+        delta = 0.0F;
+        vel = 0.0F;
+        accel = 0.0F;
+        return; 
+      }
       if(stopDistance >= abs(distanceToTarget)){    // if we're going to overshoot, deccel:
         if(vel <= 0.0F){                            // if -ve vel,
           accel = maxAccel;                         // do +ve accel, 
@@ -120,12 +127,7 @@ void motion_integrate(void){
   }
   // what's a position delta ? 
   delta = vel * delT;
-  // lastly... if we're about to smash the position target, don't smash it:
-  // if(abs(distanceToTarget - delta) < POS_EPSILON && abs(vel) < 0.01F){
-  //   delta = distanceToTarget;
-  //   vel = 0.0F;
-  //   accel = 0.0F;
-  // }
+  // integrate posn with delta 
   pos += delta;
   // Serial.println(String(pos) + " " + String(vel) + " " + String(accel) + " " + String(distanceToTarget));
   // and check in on our step modulo, 
