@@ -32,6 +32,10 @@ Clock sync actually looks OK, god bless.
 
 So, now I want a full on state machine in here, and to outfit it, then demo with... a step / dir pin set on the scope (first, just going to a pre-set position), then w/ a virtual machine - since i.e. we are going to live in straight one-step-per-unit land down under, yeah? 
 
-- do full state w/ lookahead term, how long ? 
-- do two of these, look at clock drift using micros(), 
-  - then assess w/ an interrupt 
+OK, it's apparently working an instrumented, but needs hardware output (probably next), then a VM, and interrupts. 
+
+I'll actually swap on now to see that I can get the hardware working: so a coupla debug-outs here, then PWM waveforms and hopefully sinusoids on the other side... I'll be copy-pasta from the fab-step project most likely. 
+
+- get it on an interrupt, right? and tidy up 
+- outfit it w/ vm-stuff, 
+- try it for real ? 
