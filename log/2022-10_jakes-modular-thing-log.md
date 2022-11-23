@@ -95,6 +95,21 @@ OK, I think I'm ~ ready to get to writing this thing,
 
 ### RGBB refactor 
 
+done this 
+
+### OK
+
+the motor-vm is done and seems to be working well: we would want a machine vm then, which can easily use two of those to do motion, seems like. 
+
+I'm thinking it would maybe be useful to write one more VM, but I'm somewhat out of time... we have the button and the motor. 
+
+Probably when we get back the best thing to do is start making demos:
+
+- two potentiometers in, driving xy out, 
+  - wants "pos target" to be floating, a new fn on the same motor vm 
+- capacitive touch drum kit on solenoids 
+  - or use the motors in this old reich machine, spin that up as a static demo 
+
 --- 
 
 ## Dev List
