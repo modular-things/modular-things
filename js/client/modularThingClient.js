@@ -20,7 +20,7 @@ import PK from "../osapjs/core/packets.js";
 import TIME from "../osapjs/core/time.js";
 
 import { addThing } from "./actions/addThing.js";
-import { addRename } from "./actions/addRename.js";
+import { addSetName } from "./actions/addSetName.js";
 import { global_state } from "./global_state.js";
 
 import rgbbThing from "../virtualThings/rgbbThing.js";
@@ -68,19 +68,30 @@ export const rescan = async () => {
           console.warn(`${ch.name}'s partner is unreachable...`)
           continue
         }
-        // scrape the "rt_" osap-ness from the name of the thing, 
+        // we have some name like `rt_firmwareName` that might have `_uniqueName` trailing 
+        // so first we can grab the firmwareName like:
         let firmwareName = ch.reciprocal.parent.name.slice(3)
-        console.log(`found a... "${firmwareName}" module via usb "${ch.name}"`)
-        // do we already have this one in our list ?
+        let uniqueName = ''
+        let madeNewUniqueName = false 
+        if(firmwareName.includes('_')){
+          uniqueName = firmwareName.slice(firmwareName.indexOf('_') + 1)
+          firmwareName = firmwareName.slice(0, firmwareName.indexOf('_'))
+        } else {
+          // if we don't have a given unique name, make a new one:
+          uniqueName = `${makeID(5)}`
+          madeNewUniqueName = true 
+        }
+        // log... 
+        console.log(`found a... "${firmwareName}" with unique name ${uniqueName} module via usb "${ch.name}"`)
+        // do we already have this one in our list ? here we diff by port-nums, not names, lol 
         if (usedPorts.includes(ch.name)) {
           console.warn(`this "${firmwareName}" is already setup...`)
           continue
         } 
-
         // TODO: unique-name write to flashmem 
         // jake things unique-names should be more human-typeable, 
         // we also aught to check if the name is unique already, then not-change-it if it is, 
-        let thingName = `${firmwareName}_${makeID(5)}`;
+        let thingName = `${firmwareName}_${uniqueName}`;
 
         // if not, check if we have a matching code for it... 
         if (constructors[firmwareName]) {
@@ -93,11 +104,13 @@ export const rescan = async () => {
             vThing: constructors[firmwareName](osap, ch.reciprocal.parent, thingName)
           }
           // add the renaming handle... 
-          await addRename(thing.vThing, osap)
+          await addSetName(thing.vThing, osap)
           // add to our global ist, then we're done ! 
           await addThing(thingName, thing);
-          // test the rename fn, 
-          thing.vThing.rename("anotherNewName")
+          // finally, rename it to 
+          if(madeNewUniqueName){
+            thing.vThing.setName(thingName)
+          }
           console.error('notes below this call to console.error!')
           /*
           alright, this backend / embedded all works, but now when we rename we have 
