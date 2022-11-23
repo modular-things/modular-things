@@ -61,6 +61,30 @@ did that !
 
 From Leo: I downgraded the naming system with random unique IDs which presents some clear irritations when the ports randomly resweep and your code no longer works. I think storing names in EEPROM would be hugely advantagous. I added some UI for writing names to devices but we still need the guts of it.
 
+## 2022 11 23
+
+OK I have a motor now and should get back to building its VM... I want also to check again the general state of the modular-system thing, OSAP, and the naming-to-eeprom code... I think I might do it with the RGBBThing, to clear that up first? 
+
+Ah! Yes - I had this in a certified half-baked state: we can rename things, but need a second name to find the proper vm's for them: so each needs a fixed root-vertex name, for the firmware, then a unique-name that's re-writable. 
+
+Also I have this bug
+
+### String Reading / Writing Bug
+
+I think here it's that
+
+- strings written in JS and in CPP are successfully read-back by JS, 
+- strings written in JS are not ever read in CPP, 
+- additionally, here we use c-strings, 
+
+This means that... likely, the issue is on the ingestion side - i.e. the data is all there when it's written, but i.e. CPP goes looking for a null-termination, but the way I write strings doesn't terminate 'em as such at the moment (badness), so we have this debacle. 
+
+OK, amended that.
+
+### Two-Names 
+
+
+
 --- 
 
 ## Demo Wishlist 

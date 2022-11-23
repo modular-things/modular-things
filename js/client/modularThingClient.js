@@ -78,6 +78,8 @@ export const rescan = async () => {
         } 
 
         // TODO: unique-name write to flashmem 
+        // jake things unique-names should be more human-typeable, 
+        // we also aught to check if the name is unique already, then not-change-it if it is, 
         let thingName = `${firmwareName}_${makeID(5)}`;
 
         // if not, check if we have a matching code for it... 

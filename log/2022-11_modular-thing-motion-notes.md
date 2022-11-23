@@ -38,5 +38,3 @@ I'll actually swap on now to see that I can get the hardware working: so a coupl
 
 This works now as well, thing still isn't on an interrupt though, I suppose that would be next: then the vm / etc. 
 
-- outfit it w/ vm-stuff, 
-- try it in modular-thing, 
