@@ -83,9 +83,18 @@ OK, amended that.
 
 ### Two-Names 
 
+OK, now we need to stash a firmware-name alongside a unique-root-name... and then report both? 
 
+Yeah I guess I can basically concatenate to `rt_firmwareName_uniqueName`and then disambiguate w/ the `rt_[...]_[...]` delineation, that would be a kind of minimum-surgery, but a little awkward down the line. 
+
+I actually won't have to change any embedded code for that change... 
 
 --- 
+
+## Dev List
+
+- the "rename" button shouldn't allow users to rename the `firmwareName` section of the names... 
+  - it's also straight up not done 
 
 ## Demo Wishlist 
 
