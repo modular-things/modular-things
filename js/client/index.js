@@ -26,9 +26,10 @@ const view = (state) => html`
 const drawThing = (thing) => html`
   <div class="thing">
     <div class="thing-top-line">
-      <div class="thing-name">${thing[0]}</div>
+      <div class="thing-name">Name: ${thing[0]}</div>
       <button class="button" @click=${() => global_state.renaming = thing[0] }>rename</button>
     </div>
+    <div>Type: ${thing[1].firmwareName}</div>
     <div class="thing-api">${getApi(thing[1].vThing)}</div>
   </div>
 `
@@ -60,10 +61,13 @@ const renameForm = (state) => html`
       <input .value=${state.renaming} class="rename-form-input"/>
     </div>
     <button class="button" @click=${() => {
-      console.log(state);
+      // console.log(state);
       const thing = state.things[state.renaming];
-      console.log(thing);
-      thing.rename("aNewName");
+      const newName = document.querySelector(".rename-form-input").value;
+      thing.vThing.setName(newName);
+      delete state.things[state.renaming];
+      state.things[newName] = thing;
+      state.renaming = "";
     }}>rename</button>
     <button class="button" @click=${() => state.renaming = ""}>close</button>
   </div>
