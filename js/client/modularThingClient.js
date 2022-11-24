@@ -45,7 +45,10 @@ rescanEndpoint.onData = () => {
 }
 
 // a list of constructors, 
-let constructors = { rgbb, stepper }
+let constructors = { 
+  rgbb, 
+  stepper 
+}
 
 // a list of virtual machines, 
 let scanning = false;
@@ -71,17 +74,15 @@ export const rescan = async () => {
         }
         // we have some name like `rt_firmwareName` that might have `_uniqueName` trailing 
         // so first we can grab the firmwareName like:
-        let firmwareName = ch.reciprocal.parent.name.slice(3)
-        let uniqueName = ''
-        let madeNewUniqueName = false 
-        if(firmwareName.includes('_')){
-          uniqueName = firmwareName.slice(firmwareName.indexOf('_') + 1)
-          firmwareName = firmwareName.slice(0, firmwareName.indexOf('_'))
-        } else {
+        let [ rt, firmwareName, uniqueName ] = ch.reciprocal.parent.name.split("_");
+
+        let madeNewUniqueName = false;
+        if (!uniqueName) {
           // if we don't have a given unique name, make a new one:
           uniqueName = `${makeID(5)}`
           madeNewUniqueName = true 
         }
+
         // log... 
         console.log(`found a... "${firmwareName}" with unique name ${uniqueName} module via usb "${ch.name}"`)
         // do we already have this one in our list ? here we diff by port-nums, not names, lol 
@@ -92,29 +93,40 @@ export const rescan = async () => {
         // TODO: unique-name write to flashmem 
         // jake things unique-names should be more human-typeable, 
         // we also aught to check if the name is unique already, then not-change-it if it is, 
-        let thingName = `${firmwareName}_${uniqueName}`;
+        let thingName = `${uniqueName}`;
 
         // if not, check if we have a matching code for it... 
         if (constructors[firmwareName]) {
           // we need ~ to guarantee unique names also (!) 
           // create it & add to this global list
           usedPorts.push(ch.name);
+          const vThing = constructors[firmwareName](osap, ch.reciprocal.parent, thingName)
+          vThing.firmwareName = firmwareName;
+
           let thing = {
             vPortName: ch.name,
-            firmwareName: firmwareName,
-            vThing: constructors[firmwareName](osap, ch.reciprocal.parent, thingName)
+            firmwareName,
+            vThing
           }
+
           // add the renaming handle... 
           await addSetName(thing.vThing, osap)
           // add to our global ist, then we're done ! 
           await addThing(thingName, thing);
           // finally, rename it to 
-          if(madeNewUniqueName){
+          if (madeNewUniqueName) {
             thing.vThing.setName(thingName)
           }
         } else {
           // here is where we could roll up an "auto-object" type, if we can't find one:
-          console.error(`no constructor found for the ${firmwareName} thing...`)
+          console.error(`no constructor found for the ${firmwareName} thing...`);
+
+          let type = "stepper";
+          let initialName = "0";
+          let vThing = constructors[type](osap, ch.reciprocal.parent, initialName)
+          vThing.firmwareName = type;
+          await addSetName(vThing, osap)
+          vThing.setName(initialName);
         }
       }
     }
