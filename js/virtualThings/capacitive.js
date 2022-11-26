@@ -87,6 +87,17 @@ export default function(osap, vt, name) {
         let datagram = new Uint8Array(1);
         datagram[0] = index;
         await capacitivePads.write(datagram, "acked")
+        // this return below of capData would return *the previous* reading, 
+        // not whatever is sent up after this "trigger" is sent down... 
+        // you would have to wait here for new data to be sent 
+        // up to the capacitivePads endpoint, so i.e. setting a flag 
+        // that you've triggered a read, then awaiting the next .onData() call, 
+        // instead the new firmware just uses the endpoint-query thing, 
+        // which stuffs the endpoint just before a query packet reads it 
+        // I guess that if the cap.read() call in embedded code is a little slow, 
+        // there should be a way to trigger each individually, but I would in that case 
+        // just write a FW that loops through 'em on its own time and writes new data 
+        // as-fast-as-possible, then the most-recents can be retrieved immediately 
         // await padValue.read();
         return capData;
       } catch (err) {
