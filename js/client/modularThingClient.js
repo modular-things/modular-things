@@ -25,6 +25,7 @@ import { global_state } from "./global_state.js";
 
 import rgbb from "../virtualThings/rgbb.js";
 import stepper from "../virtualThings/stepper.js";
+import capacitive from "../virtualThings/capacitive.js";
 
 console.log(`------------------------------------------`)
 console.log("hello modular-things")
@@ -47,7 +48,8 @@ rescanEndpoint.onData = () => {
 // a list of constructors, 
 let constructors = { 
   rgbb, 
-  stepper 
+  stepper,
+  capacitive
 }
 
 // a list of virtual machines, 
@@ -212,7 +214,7 @@ fetch('/startLocal/osapSerialBridge.js').then(async (res) => {
 
 function makeID(length) {
     var result           = '';
-    var characters       = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var characters       = 'abcdefghijklmnopqrstuvwxyz';
     var charactersLength = characters.length;
     for ( var i = 0; i < length; i++ ) {
         result += characters.charAt(Math.floor(Math.random() * charactersLength));

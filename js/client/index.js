@@ -37,7 +37,9 @@ const drawThing = (thing) => html`
 const getApi = (thing) => {
   const api = Object.keys(thing).map( x => [ x, getParamNames(thing[x]) ]);
   // don't include "setup" or "setName" or "vt"
-  return api.filter(x => ((x[0] !== "setup") && (x[0] !== "setName") && (x[0] !== "vt"))).map(apiEntry);
+  return api
+    .filter(x => !["setup", "setName", "vt", "firmwareName"].includes(x[0]))
+    .map(apiEntry);
 }
 
 const apiEntry = ([name, params]) => html`
@@ -88,7 +90,8 @@ function runCode(e) {
   const thingNames = Object.keys(global_state.things);
   const thingValues = Object.values(global_state.things).map(thing => thing.vThing);
 
-  const f = new Function(...thingNames, code);
+  const AsyncFunction = (async function () {}).constructor;
+  const f = new AsyncFunction(...thingNames, code);
   f(...thingValues);
 }
 
