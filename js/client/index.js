@@ -80,12 +80,29 @@ const r = () => {
   window.requestAnimationFrame(r);
 };
 
-r();
+function init() {
+  r();
+  const cache = localStorage.getItem('cache');
+  if (cache) {
+    const cm = document.querySelector("codemirror-editor");
+    cm.view.dispatch({
+      changes: { from: 0, insert: cache ?? "" }
+    });
+  }
+}
 
-function runCode(e) {
+init();
+
+function getCode() {
   const cm = document.querySelector("codemirror-editor");
   const doc = cm.view.state.doc;
   const code = doc.toString();
+
+  return code;
+}
+
+function runCode(e) {
+  const code = getCode();
 
   const thingNames = Object.keys(global_state.things);
   const thingValues = Object.values(global_state.things).map(thing => thing.vThing);
@@ -96,6 +113,10 @@ function runCode(e) {
 }
 
 window.addEventListener("keydown", (e) => {
+  const code = getCode();
+
+  window.localStorage.setItem("cache", code);
+
   if (e.keyCode === 13 && e.shiftKey) {
     runCode();
     e.preventDefault();
