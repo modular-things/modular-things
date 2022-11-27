@@ -3,7 +3,9 @@
 #include <vp_arduinoSerial.h>
 #include <core/ts.h>
 #include <Wire.h>
-#include <Arduino_LSM6DSOX.h>
+#include <LSM6.h>
+
+LSM6 imu;
 
 // type of board (firmware name)
 OSAP osap("accelerometer");
@@ -17,52 +19,31 @@ boolean preQuery(void);
 Endpoint accelerometerEndpoint(&osap, "accelerometerQuery", preQuery);
 
 boolean preQuery(void) {
-  float x, y, z;
-  float rx, ry, rz;
-  IMU.readAcceleration(x, y, z);
-  IMU.readGyroscope(rx, ry, rz);
+  imu.read();
 
   uint8_t* ptr;
 
-  uint8_t buf[4 * 6];
+  uint8_t buf[2 * 6];
 
-  ptr = (uint8_t*)&x;
-  buf[0] = *ptr;
-  buf[1] = *(ptr+1);
-  buf[2] = *(ptr+2);
-  buf[3] = *(ptr+3);
+  buf[0] = imu.a.x & 0xFF;
+  buf[1] = imu.a.x >> 8 & 0xFF;
 
-  ptr = (uint8_t*)&y;
-  buf[4] = *ptr;
-  buf[5] = *(ptr+1);
-  buf[6] = *(ptr+2);
-  buf[7] = *(ptr+3);
+  buf[2] = imu.a.y & 0xFF;
+  buf[3] = imu.a.y >> 8 & 0xFF;
 
-  ptr = (uint8_t*)&z;
-  buf[8] = *ptr;
-  buf[9] = *(ptr+1);
-  buf[10] = *(ptr+2);
-  buf[11] = *(ptr+3);
+  buf[4] = imu.a.z & 0xFF;
+  buf[5] = imu.a.z >> 8 & 0xFF;
 
-  ptr = (uint8_t*)&rx;
-  buf[12] = *ptr;
-  buf[13] = *(ptr+1);
-  buf[14] = *(ptr+2);
-  buf[15] = *(ptr+3);
+  buf[6] = imu.g.x & 0xFF;
+  buf[7] = imu.g.x >> 8 & 0xFF;
 
-  ptr = (uint8_t*)&ry;
-  buf[16] = *ptr;
-  buf[17] = *(ptr+1);
-  buf[18] = *(ptr+2);
-  buf[19] = *(ptr+3);
+  buf[8] = imu.g.y & 0xFF;
+  buf[9] = imu.g.y >> 8 & 0xFF;
 
-  ptr = (uint8_t*)&rz;
-  buf[20] = *ptr;
-  buf[21] = *(ptr+1);
-  buf[22] = *(ptr+2);
-  buf[23] = *(ptr+3);
+  buf[10] = imu.g.z & 0xFF;
+  buf[11] = imu.g.z >> 8 & 0xFF;
 
-  accelerometerEndpoint.write(buf, 4 * 6);
+  accelerometerEndpoint.write(buf, 2 * 6);
   return true;
 }
 
@@ -70,7 +51,9 @@ void setup() {
   osap.init();
   vp_arduinoSerial.begin();
 
-  IMU.begin();
+  Wire.begin();
+  imu.init();
+  imu.enableDefault();
 }
 
 void loop() {
