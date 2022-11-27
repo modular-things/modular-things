@@ -15,26 +15,24 @@ import PK from "../osapjs/core/packets.js"
 
 export default function(osap, vt, name) {
 
-  const routeToFirmware = PK.VC2VMRoute(vt.route)
-  const oledEndpointMirror = osap.endpoint("oledEndpointMirror")
-  oledEndpointMirror.addRoute(PK.route(routeToFirmware).sib(1).end());
+  let routeToFirmware = PK.VC2VMRoute(vt.route);
+  let accGyroQuery = osap.query(PK.route(routeToFirmware).sib(1).end());
 
   const setup = async () => { }
 
   return {
-    writeText: async (text) => {
+    readAccGyro: async () => {
       try {
-        const utf8Encode = new TextEncoder();
-        const datagram = utf8Encode.encode(text);
-        await oledEndpointMirror.write(datagram, "acked");
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    writeBuffer: async (buf) => {
-      try {
-        // const datagram = new Uint8Array(10);
-        await oledEndpointMirror.write(buf, "acked");
+        const data = await accGyroQuery.pull();
+        // console.log(data);
+        // data.read("float32")
+        const x = TS.read("int16", data, 0);
+        const y = TS.read("int16", data, 2);
+        const z = TS.read("int16", data, 4);
+        const xTheta = TS.read("int16", data, 6);
+        const yTheta = TS.read("int16", data, 8);
+        const zTheta = TS.read("int16", data, 10);
+        return [x, y, z, xTheta, yTheta, zTheta];
       } catch (err) {
         console.error(err);
       }

@@ -4,7 +4,7 @@
 #include <core/ts.h>
 
 // type of board (firmware name)
-OSAP osap("time-of-flight");
+OSAP osap("timeOfFlight");
 
 // ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
@@ -13,8 +13,6 @@ VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
 boolean preTOFQuery(void);
 
 Endpoint tofEndpoint(&osap, "tofQuery", preTOFQuery);
-
-Endpoint tofEndpoint = osap.endpoint("tofQuery");
 
 boolean preTOFQuery(void) {
   uint8_t buf[N_PAD * 2];
