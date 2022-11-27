@@ -26,6 +26,8 @@ import { global_state } from "./global_state.js";
 import rgbb from "../virtualThings/rgbb.js";
 import stepper from "../virtualThings/stepper.js";
 import capacitive from "../virtualThings/capacitive.js";
+import timeOfFlight from "../virtualThings/timeOfFlight.js";
+import accelerometer from "../virtualThings/accelerometer.js";
 
 console.log(`------------------------------------------`)
 console.log("hello modular-things")
@@ -49,7 +51,9 @@ rescanEndpoint.onData = () => {
 let constructors = { 
   rgbb, 
   stepper,
-  capacitive
+  capacitive,
+  timeOfFlight,
+  accelerometer
 }
 
 // a list of virtual machines, 
@@ -123,12 +127,12 @@ export const rescan = async () => {
           // here is where we could roll up an "auto-object" type, if we can't find one:
           console.error(`no constructor found for the ${firmwareName} thing...`);
 
-          let type = "stepper";
-          let initialName = "0";
-          let vThing = constructors[type](osap, ch.reciprocal.parent, initialName)
-          vThing.firmwareName = type;
-          await addSetName(vThing, osap)
-          vThing.setName(initialName);
+          // let type = "stepper";
+          // let initialName = "0";
+          // let vThing = constructors[type](osap, ch.reciprocal.parent, initialName)
+          // vThing.firmwareName = type;
+          // await addSetName(vThing, osap)
+          // vThing.setName(initialName);
         }
       }
     }

@@ -13,24 +13,22 @@ no warranty is provided, and users accept all liability.
 import { TS } from "../osapjs/core/ts.js"
 import PK from "../osapjs/core/packets.js"
 
-let N_PADS = 6
-
 export default function(osap, vt, name) {
 
-  let routeToFirmware = PK.VC2VMRoute(vt.route)
+  let routeToFirmware = PK.VC2VMRoute(vt.route);
   let tofQuery = osap.query(PK.route(routeToFirmware).sib(1).end());
+  // why not just an endpoint?
 
   const setup = async () => { }
 
   return {
-    readDistance: async (index) => {
+    readDistance: async () => {
       try {
-        let data = await tofQuery.pull();
-        let vals = [];
-        for(let p = 0; p < N_PADS; p ++) {
-          vals.push(TS.read("uint16", data, p * 2))
-        }
-        return vals[index];
+        const data = await tofQuery.pull();
+        // could be
+        // data.read("uint16");
+        const val = TS.read("uint16", data, 0);
+        return val;
       } catch (err) {
         console.error(err)
       }
