@@ -101,15 +101,55 @@ function getCode() {
   return code;
 }
 
+let intervals = [];
+let timeouts = [];
+
 function runCode(e) {
   const code = getCode();
 
-  const thingNames = Object.keys(global_state.things);
-  const thingValues = Object.values(global_state.things).map(thing => thing.vThing);
-
   const AsyncFunction = (async function () {}).constructor;
-  const f = new AsyncFunction(...thingNames, code);
-  f(...thingValues);
+
+  intervals.forEach(clearInterval);
+  timeouts.forEach(clearTimeout);
+
+  const patchedInterval = (callback, time, ...args) => {
+    const interval = setInterval(callback, time, ...args);
+    intervals.push(interval);
+    return interval;
+  }
+
+  const patchedTimeout = (callback, time, ...args) => {
+    const timeout = setTimeout(callback, time, ...args);
+    timeouts.push(timeout);
+    return timeout;
+  }
+
+  const things = {};
+
+  for (const key in global_state.things) {
+    things[key] = globa_state.things[key].vThing;
+  }
+
+  const args = {
+    ...things,
+    setInterval: patchedInterval,
+    setTimeout: patchedTimeout,
+    document: null,
+    window: null,
+    eval: null,
+  }
+
+  const names = Object.keys(args);
+  const values = Object.values(args);
+
+  const f = new AsyncFunction(
+    ...names,
+    code
+  );
+
+  f(
+    ...values
+  );
 }
 
 window.addEventListener("keydown", (e) => {
