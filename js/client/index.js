@@ -127,7 +127,7 @@ function runCode(e) {
   const things = {};
 
   for (const key in global_state.things) {
-    things[key] = globa_state.things[key].vThing;
+    things[key] = global_state.things[key].vThing;
   }
 
   const args = {
