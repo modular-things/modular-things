@@ -27,6 +27,7 @@ machine.setPosition([x,y,z])
 machine.stop()
 
 // my thoughts / modifications:
+- am I doing the factory correctly here? I would return an object, rather than the machine.fn everywhere... 
 - we can do without .setMaxAccel and .setMaxVelocity, those are user-impositions, 
   - rather use .absolute and .relative to have (..., rate, accel) arguments 
   - and let those args be modal: if they aren't supplied, use the most-recently-used, 
@@ -110,8 +111,8 @@ export default function createMachine(actuators, machineToActuatorTransform, act
       // finally, what are per-axis accels ?
       let accels = unit.map((u, i) => { return Math.abs(unit[i] * accel) })
       // ok, sheesh, I think we can write 'em, 
-      await Promise.all(machine.actuators.map((actu, i) => { 
-        return actu.absolute(nextActuatorPosition[i], velocities[i], accels[i]) 
+      await Promise.all(machine.actuators.map((actu, i) => {
+        return actu.absolute(nextActuatorPosition[i], velocities[i], accels[i])
       }))
       // then await all stop, 
       await machine.awaitMotionEnd()
@@ -124,28 +125,45 @@ export default function createMachine(actuators, machineToActuatorTransform, act
 
   // move relative... 
   machine.relative = async (deltas, vel, accel) => {
-
+    try {
+      // if we don't know the lastest machine position, grab it... 
+      if (!lastMachinePosition) lastMachinePosition = await machine.getPosition()
+      // and just... do... 
+      let nextMachinePosition = vectorAddition(lastMachinePosition, deltas)
+      await machine.absolute(nextMachinePosition, vel, accel)
+    } catch (err) {
+      throw err
+    }
   }
 
   // get position... 
   // consider: should this do machine.getStates() ? 
   machine.getPosition = async () => {
-    // get each-actuator pos and apply transform, 
-    // unless we already know it... 
-    // (1) get actuator positions (?) or we kind of know 'em don't we - 
-    // (2) apply the transform and carry on 
+    // get each-actuator position... 
+    let currentAcutatorPositions = await Promise.all(machine.actuators.map(actu => actu.getState()))
+    currentAcutatorPositions = currentAcutatorPositions.map(state => state.pos)
+    // return transformed, 
+    return machine.actuatorToMachineTransform(currentAcutatorPositions)
   }
 
   // halt... 
   machine.stop = async () => {
-    // (1) set velocity-targets across all to zero, 
-    // (2) await motion end across all, 
-    // (3) collect new position, given that some unknown amount of decelleration occured 
+    try {
+      // (1) set velocity-targets across all to zero, 
+      await Promise.all(machine.actuators.map(actu => actu.stop()))
+      // (2) await motion end across all, (erp, .stop does so...)
+      // (3) collect new position, given that some unknown amount of decelleration occured 
+      let pos = await machine.getPosition()
+      lastMachinePosition = pos 
+      // that's it, innit 
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   // move at a velocity... 
   machine.move = async (vels, accel) => {
-    throw new Error('not yet implemented')
+    throw new Error('machine.move(vel, accel) is not yet implemented')
     /*
     I'm leaving this off, since it will require that we do:
       - track mode, so that if we are in a velocity-mode, then see a position-mode request, we can halt and swap 
@@ -154,7 +172,7 @@ export default function createMachine(actuators, machineToActuatorTransform, act
 
   // set the position 
   machine.setPosition = async (pos) => {
-    throw new Error(`not yet implemented`)
+    throw new Error(`machine.setPosition(pos) is not yet implemented`)
     /*
     likewise, this is tricky with unknown transforms (!) 
     I would say that, for varying WCS, those should be made explicit to users, 
@@ -162,6 +180,12 @@ export default function createMachine(actuators, machineToActuatorTransform, act
     */
   }
 
+  return machine 
+}
+
+// addition... 
+let vectorAddition = (A, B) => {
+  return A.map((a, i) => { return A[i] + B[i] })
 }
 
 // distances from a-to-b, 

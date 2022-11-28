@@ -58,3 +58,8 @@ machine.stop()
 ```
 
 OK, ish... though perhaps .absolute, .relative should use ([x,y,z]) rather than "raw args" - easier later to disambiguate from other args i.e. if we have (targ, rate, accel)
+
+... it's troublesome, this layer, as it's most appropriately user-code, methinks. position transforms != velocity transforms, etc... hidden modal state, etc... 
+
+But, I'll wrap on this soon, and then I think the most productive thing would be to get a demo wrippen: so, motor mount hardware, ahn machine... limits... or I could do circuit assembly. 
+
