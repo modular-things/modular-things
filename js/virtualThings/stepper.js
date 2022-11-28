@@ -41,8 +41,11 @@ export default function stepper(osap, vt, name) {
   }
 
   // -------------------------------------------- we have some state... ?? 
+  // how many steps-per-unit, 
+  // this could be included in a machineSpaceToActuatorSpace transform as well, 
   let spu = 20
-  let absMaxVelocity = 4000 / 20
+  // this is a result of our step-ticking machine having some limits (can't make more than 1 step per integration)
+  let absMaxVelocity = 4000 / spu 
   let lastVel = absMaxVelocity
   let lastAccel = 100             // units / sec 
 
@@ -54,6 +57,8 @@ export default function stepper(osap, vt, name) {
     // we know that we have a maximum steps-per-second of 4000, so we can say 
     console.warn(`w/ spu of ${spu}, this ${name} has a new abs-max velocity ${absMaxVelocity}`)
   }
+
+  let getAbsMaxVelocity = () => { return absMaxVelocity }
 
   let setCScale = async (cscale) => {
     try {
@@ -133,10 +138,10 @@ export default function stepper(osap, vt, name) {
   } // end absolute 
 
   // goto-relative, 
-  let relative = async (pos, vel, accel) => {
+  let relative = async (delta, vel, accel) => {
     try {
       let state = await getState()
-      pos += state.pos 
+      let pos = delta + state.pos 
       // that's it my dudes, 
       await absolute(pos, vel, accel)
     } catch (err) {

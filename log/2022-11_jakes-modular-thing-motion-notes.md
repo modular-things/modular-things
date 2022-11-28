@@ -38,3 +38,23 @@ I'll actually swap on now to see that I can get the hardware working: so a coupl
 
 This works now as well, thing still isn't on an interrupt though, I suppose that would be next: then the vm / etc. 
 
+## 2022 11 28 
+
+OK and today we'll do this machine API.
+
+```js
+const machine = createMachine(
+  [motor1, motor2, motor3],
+  (targetCoordinates) => { return transformedCoords },
+  (motorCoordinates) => { return targetCoordinates }
+)
+
+machine.setMaxAccel(accel)
+machine.setVelocity(rate)
+machine.absolute([x,y,z], rate = last, accel = last)
+machine.relative([x,y,z], rate = last, accel = last)
+machine.setPosition([x,y,z])
+machine.stop()
+```
+
+OK, ish... though perhaps .absolute, .relative should use ([x,y,z]) rather than "raw args" - easier later to disambiguate from other args i.e. if we have (targ, rate, accel)
