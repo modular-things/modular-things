@@ -108,6 +108,14 @@ export default function stepper(osap, vt, name) {
     }
   }
 
+  async function setVelocity(vel) {
+
+  }
+
+  async function setAcceleration(accel) {
+    
+  }
+
   // goto-this-posn, using optional vel, accel 
   let absolute = async (pos, vel, accel) => {
     try {
