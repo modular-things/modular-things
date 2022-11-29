@@ -64,3 +64,27 @@ OK, ish... though perhaps .absolute, .relative should use ([x,y,z]) rather than 
 But, I'll wrap on this soon, and then I think the most productive thing would be to get a demo wrippen: so, motor mount hardware, ahn machine... limits... or I could do circuit assembly. 
 
 OK, that's all that, I'm going to get into harware now... 
+
+## 2022 11 29
+
+Working on this again, last night we thought to call 'em "synchronizers" and do transforms elsewhere. I think I'll do this, then see about writing the transforms, etc, for a corexy machine. 
+
+- setting maximums:
+  - motor.setVelocity, motor.setAcceleration 
+  - sync.setVelocities, sync.setAccelerations (?) 
+- using 'em 
+  - motor.absolute, motor.relative, motor.velocity 
+  - sync.absolute, sync.relative, sync.velocity 
+- refactor sync factory thing to match motor-set... 
+
+It's... comin, I have realized that each motor *needs* abs-max velocities *as well as* abs-max accels, then also modal-settings for each: what to use. Means a lot of functions to access all of this... but the consistency is nice, at least. 
+
+When I get back, then,
+
+- absMax accel, vel in the motor 
+- check against both... whenever we might need to, right ? 
+  - use .target() as the base, call that elsewhere
+  - .velocity() is the "other base" - innit ? 
+- test with... pots-to-targets ? 
+
+Sheesh: OK, I think it's, like, done, and I want to try wiring it to a machine, and try also the position-target-setting-on-the-fly. 

@@ -116,12 +116,15 @@ I'm getting into machine-week hardware now... I'd basically like to have a compo
 
 ## 2022 11 29 
 
-- finish the boards 
-  - don't solder-paste the usb sticks 
+I should do the machine api, etc, but would kind of like to whip up a composable machine... hardware. Seems as though that'd be foolish... I would prefer, though, not to have to controller-ize something with a gd motion transform, but I also should maybe do so, in order to work my way through the problem... in delta-terms. I'll focus up and do that, I guess. 
+
+Also, limit switches... would be the second step. 
+
 - machine.api() ? 
   - setVelocity(), setAcceleration() come back, in motors?
   - there's a "synchronizer" class, with *no transforms* homie, 
     - basically just does the max-velocities-check and scaling-by-unit-vector stuff 
+    - is the "machine" but isn't called as such 
 - migrate modular-things repos... 
   - modular-things/modular-things-controller
   - modular-things/modular-things-circuits
