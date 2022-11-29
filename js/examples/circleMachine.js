@@ -1,15 +1,15 @@
-let machine = createSynchronizer([ymotor, xmotor])
-console.log(machine)
+let corexy = createSynchronizer([amotor, bmotor])
+console.log(corexy)
 
-ymotor.setCScale(0.55)
-ymotor.setSPU(20)
-xmotor.setCScale(0.55)
-xmotor.setSPU(20)
+amotor.setCScale(0.55)
+amotor.setSPU(20)
+bmotor.setCScale(0.55)
+bmotor.setSPU(20)
 
 // in rads 
-let radius = 100
-for(let i = 0; i < 100; i += 0.1){
+let radius = 25
+for(let i = 0; i < 100; i += 0.2){
   let coord = [Math.sin(i) * radius, Math.cos(i) * radius]
   console.log(coord)
-  await machine.absolute(coord, 1000, 2000)
+  await corexy.absolute(coord, 1000, 10000)
 }

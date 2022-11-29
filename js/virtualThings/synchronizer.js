@@ -158,7 +158,7 @@ export default function createSynchronizer(actuators) {
       let absMaxVelocities = actuators.map(actu => actu.getAbsMaxVelocity())
       let absMaxAccels = actuators.map(actu => actu.getAbsMaxAccel())
       // and a unit vector... I know this should be explicit unitize-an-existing-vector, alas, 
-      let unit = unitVector(lastActuatorPosition, nextActuatorPosition)
+      let unit = unitVector(lastAbsolute, nextAbsolute)
       // these are our candidate vels & accels for the move, 
       let velocities = unit.map((u, i) => { return Math.abs(unit[i] * vel) })
       let accels = unit.map((u, i) => { return Math.abs(unit[i] * accel) })
@@ -183,7 +183,7 @@ export default function createSynchronizer(actuators) {
         return actu.absolute(nextAbsolute[i], velocities[i], accels[i])
       }))
       // motors each await-motion-end, when we await-all .absolute, so by this point we have made the move... can do 
-      lastMachinePosition = pos
+      lastAbsolute = pos
     } catch (err) {
       console.error(err)
     }
@@ -263,7 +263,7 @@ export default function createSynchronizer(actuators) {
     // setters
     setPosition,
     setVelocity,
-    setAcceleration,
+    setAccel,
     // getters, 
     getPosition,
     getVelocity,
