@@ -108,6 +108,8 @@ export default function stepper(osap, vt, name) {
     }
   }
 
+  // TODO add i.e. position(pos) as a target, w/o awaiting-end... for i.e. streaming posn requests / live-drawing 
+
   // goto-this-posn, using optional vel, accel 
   let absolute = async (pos, vel, accel) => {
     try {
@@ -189,6 +191,7 @@ export default function stepper(osap, vt, name) {
   return {
     absolute,
     relative,
+    velocity,
     stop,
     awaitMotionEnd,
     getState,
