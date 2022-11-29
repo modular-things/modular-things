@@ -40,6 +40,37 @@ machine.stop()
 - this is complex in surprising ways... 
 */
 
+// addition... 
+let vectorAddition = (A, B) => {
+  return A.map((a, i) => { return A[i] + B[i] })
+}
+
+// distances from a-to-b, 
+let vectorDeltas = (A, B) => {
+  return A.map((a, i) => { return A[i] - B[i] })
+}
+
+// between A and B 
+let distance = (A, B) => {
+  let numDof = A.length 
+  let sum = 0
+  for (let a = 0; a < numDof; a++) {
+    sum += Math.pow((A[a] - B[a]), 2)
+  }
+  return Math.sqrt(sum)
+}
+
+// from A to B 
+let unitVector = (A, B) => {
+  let numDof = A.length 
+  let dist = distance(A, B)
+  let unit = new Array(numDof)
+  for (let a = 0; a < numDof; a++) {
+    unit[a] = (B[a] - A[a]) / dist
+  }
+  return unit
+}
+
 export default function createMachine(actuators, machineToActuatorTransform, actuatorToMachineTransform) {
   // yonder machine 
   let machine = {}
@@ -93,7 +124,7 @@ export default function createMachine(actuators, machineToActuatorTransform, act
       // we're also going to need to know about each motor's abs-max velocities:
       let absMaxVelocities = machine.actuators.map(actu => actu.getAbsMaxVelocity())
       // calculate deltas for each axis, 
-      let deltas = deltas(lastActuatorPosition, nextActuatorPosition)
+      let deltas = vectorDeltas(lastActuatorPosition, nextActuatorPosition)
       // and a unit vector... I know this should be explicit unitize-an-existing-vector, alas, 
       let unit = unitVector(lastActuatorPosition, nextActuatorPosition)
       // these are our candidate rates, 
@@ -115,7 +146,8 @@ export default function createMachine(actuators, machineToActuatorTransform, act
         return actu.absolute(nextActuatorPosition[i], velocities[i], accels[i])
       }))
       // then await all stop, 
-      await machine.awaitMotionEnd()
+      // nope, motors individually do this... 
+      // await machine.awaitMotionEnd()
       // and finally, set this, 
       lastMachinePosition = pos
     } catch (err) {
@@ -181,33 +213,4 @@ export default function createMachine(actuators, machineToActuatorTransform, act
   }
 
   return machine 
-}
-
-// addition... 
-let vectorAddition = (A, B) => {
-  return A.map((a, i) => { return A[i] + B[i] })
-}
-
-// distances from a-to-b, 
-let deltas = (A, B) => {
-  return A.map((a, i) => { return A[i] - B[i] })
-}
-
-// between A and B 
-let distance = (A, B) => {
-  let sum = 0
-  for (let a = 0; a < numDof; a++) {
-    sum += Math.pow((A[a] - B[a]), 2)
-  }
-  return Math.sqrt(sum)
-}
-
-// from A to B 
-let unitVector = (A, B) => {
-  let dist = distance(A, B)
-  let unit = new Array(numDof)
-  for (let a = 0; a < numDof; a++) {
-    unit[a] = (B[a] - A[a]) / dist
-  }
-  return unit
 }

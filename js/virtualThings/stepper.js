@@ -93,7 +93,7 @@ export default function stepper(osap, vt, name) {
       return new Promise(async (resolve, reject) => {
         let check = () => {
           getState().then((states) => {
-            console.log(`${states.accel.toFixed(2)}, ${states.vel.toFixed(2)}, ${states.pos.toFixed(2)}`)
+            console.log(`${name}\t acc ${states.accel.toFixed(4)},\t vel ${states.vel.toFixed(4)},\t pos ${states.pos.toFixed(4)}`)
             if (states.vel < 0.001 && states.vel > -0.001) {
               resolve()
             } else {
@@ -201,6 +201,7 @@ export default function stepper(osap, vt, name) {
     stop,
     awaitMotionEnd,
     getState,
+    getAbsMaxVelocity,
     setCScale,
     setSPU,
     setup,
