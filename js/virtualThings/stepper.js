@@ -197,6 +197,7 @@ export default function stepper(osap, vt, name) {
   return {
     absolute,
     relative,
+    velocity,
     stop,
     awaitMotionEnd,
     getState,

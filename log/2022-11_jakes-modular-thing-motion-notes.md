@@ -63,3 +63,4 @@ OK, ish... though perhaps .absolute, .relative should use ([x,y,z]) rather than 
 
 But, I'll wrap on this soon, and then I think the most productive thing would be to get a demo wrippen: so, motor mount hardware, ahn machine... limits... or I could do circuit assembly. 
 
+OK, that's all that, I'm going to get into harware now... 
