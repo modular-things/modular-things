@@ -103,6 +103,7 @@ function getCode() {
 
 let intervals = [];
 let timeouts = [];
+let loops = [];
 
 function runCode(e) {
   const code = getCode();
@@ -111,6 +112,8 @@ function runCode(e) {
 
   intervals.forEach(clearInterval);
   timeouts.forEach(clearTimeout);
+  loops.forEach((x, i) => { loops[i] = false });
+
 
   const patchedInterval = (callback, time, ...args) => {
     const interval = setInterval(callback, time, ...args);
@@ -126,14 +129,16 @@ function runCode(e) {
 
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const loop = async (fn, minterval = 10) => {
-    const date = new Date();
-    const start = date.getTime();
-    await fn();
-    const elapsed = (date.getTime()) - start;
-    if (elapsed < minterval) await sleep(minterval - elapsed);
-    // if (minterval === 0) setTimeout(() => {}, 0);
-    loop(fn, minterval);
+  const loop = async (fn, minterval = 0) => {
+    let n = loops.length;
+    loops.push(true);
+    while (loops[n]) {
+      const date = new Date();
+      const start = date.getTime();
+      await fn();
+      const elapsed = (date.getTime()) - start;
+      if (elapsed < minterval) await sleep(minterval - elapsed);
+    }
   }
 
   const things = {};
