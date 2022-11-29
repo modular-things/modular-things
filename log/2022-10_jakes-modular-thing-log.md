@@ -114,14 +114,22 @@ Probably when we get back the best thing to do is start making demos:
 
 I'm getting into machine-week hardware now... I'd basically like to have a composable demo-machine, right? 
 
-- what are these errors ? 
-- machine.api() ? 
-- make a motor mount... 
+## 2022 11 29 
+
 - finish the boards 
+  - don't solder-paste the usb sticks 
+- machine.api() ? 
+  - setVelocity(), setAcceleration() come back, in motors?
+  - there's a "synchronizer" class, with *no transforms* homie, 
+    - basically just does the max-velocities-check and scaling-by-unit-vector stuff 
 - migrate modular-things repos... 
   - modular-things/modular-things-controller
   - modular-things/modular-things-circuits
     - incl. mounts etc, 
+- build some demos 
+  - dials-to-axis on corexy 
+  - drawing robot on corexy 
+  - drumkit / sequencer 
 
 --- 
 
