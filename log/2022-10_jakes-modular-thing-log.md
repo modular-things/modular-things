@@ -110,6 +110,19 @@ Probably when we get back the best thing to do is start making demos:
 - capacitive touch drum kit on solenoids 
   - or use the motors in this old reich machine, spin that up as a static demo 
 
+## 2022 11 28 
+
+I'm getting into machine-week hardware now... I'd basically like to have a composable demo-machine, right? 
+
+- what are these errors ? 
+- machine.api() ? 
+- make a motor mount... 
+- finish the boards 
+- migrate modular-things repos... 
+  - modular-things/modular-things-controller
+  - modular-things/modular-things-circuits
+    - incl. mounts etc, 
+
 --- 
 
 ## Dev List
