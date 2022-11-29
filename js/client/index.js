@@ -1,5 +1,6 @@
 import { rescan } from "./modularThingClient.js";
 import { global_state } from "./global_state.js";
+import createMachine from "../virtualThings/machine.js";
 
 import { render, html } from "lit-html";
 
@@ -146,6 +147,7 @@ function runCode(e) {
     ...things,
     setInterval: patchedInterval,
     setTimeout: patchedTimeout,
+    createMachine,
     loop,
     document: null,
     window: null,

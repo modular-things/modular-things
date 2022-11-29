@@ -4,7 +4,9 @@
 // NOTE: we need to do some maths here to set an absolute-maximum velocities... based on integrator width 
 // and... could this be simpler? like, we have two or three "maximum" accelerations ?? operative and max ? 
 
-#define POS_EPSILON 0.001F
+// stopping criteria... state machine is not perfect,
+#define POS_EPSILON 0.01F
+#define VEL_EPSILON 1.0F
 #define TICK_INTERVAL 1000.0F
 
 // delT is re-calculated when we init w/ a new microsecondsPerIntegration 
@@ -86,7 +88,7 @@ void motion_integrate(void){
     case MOTION_MODE_POS:
       distanceToTarget = posTarget - pos;
       stopDistance = (vel * vel) / (2.0F * maxAccel);
-      if(abs(distanceToTarget - delta) < POS_EPSILON && abs(vel) < 0.01F){
+      if(abs(distanceToTarget - delta) < POS_EPSILON && abs(vel) < VEL_EPSILON){
         // zero out and don't do any phantom motion 
         delta = 0.0F;
         vel = 0.0F;
