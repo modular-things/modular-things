@@ -124,6 +124,18 @@ function runCode(e) {
     return timeout;
   }
 
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const loop = async (fn, minterval = 10) => {
+    const date = new Date();
+    const start = date.getTime();
+    await fn();
+    const elapsed = (date.getTime()) - start;
+    if (elapsed < minterval) await sleep(minterval - elapsed);
+    // if (minterval === 0) setTimeout(() => {}, 0);
+    loop(fn, minterval);
+  }
+
   const things = {};
 
   for (const key in global_state.things) {
@@ -134,6 +146,7 @@ function runCode(e) {
     ...things,
     setInterval: patchedInterval,
     setTimeout: patchedTimeout,
+    loop,
     document: null,
     window: null,
     eval: null,

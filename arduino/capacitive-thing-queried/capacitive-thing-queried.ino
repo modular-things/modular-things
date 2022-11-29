@@ -15,7 +15,7 @@ const int pins_piano[N_PAD] = {2, 3, 4, 5, 6, 7};
 Adafruit_FreeTouch qt_array[N_PAD];
 
 // type of board (firmware name)
-OSAP osap("capacitive-queried");
+OSAP osap("capacitive");
 
 // ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
