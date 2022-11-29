@@ -1,4 +1,4 @@
-let machine = createMachine([ymotor, xmotor])
+let machine = createSynchronizer([ymotor, xmotor])
 console.log(machine)
 
 ymotor.setCScale(0.55)

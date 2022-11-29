@@ -40,25 +40,51 @@ export default function stepper(osap, vt, name) {
     // erp, but this firmware actually is all direct-write, nothing streams back 
   }
 
-  // -------------------------------------------- we have some state... ?? 
+  // -------------------------------------------- Setters
   // how many steps-per-unit, 
   // this could be included in a machineSpaceToActuatorSpace transform as well, 
   let spu = 20
-  // this is a result of our step-ticking machine having some limits (can't make more than 1 step per integration)
+  // each has a max-max velocity and acceleration, which are user settings, 
+  // but velocity is also abs-abs-max'd at our tick rate... 
   let absMaxVelocity = 4000 / spu
+  let absMaxAccel = 10000
   let lastVel = absMaxVelocity
   let lastAccel = 100             // units / sec 
 
-  // tell me about your steps-per-unit, 
-  // note that FW currently does 1/4 stepping: 800 steps / revolution 
-  let setSPU = (_spu) => {
-    spu = _spu
-    absMaxVelocity = 4000 / spu
-    // we know that we have a maximum steps-per-second of 4000, so we can say 
-    console.warn(`w/ spu of ${spu}, this ${name} has a new abs-max velocity ${absMaxVelocity}`)
+  let setPosition = async (pos) => {
+    try {
+      // halt... this also mode-swaps to VEL, so when we set a new posn' 
+      // the motor won't slew to it 
+      await stop()
+      // write up a new-position-paquet, 
+      let datagram = new Uint8Array(4)
+      let wptr = 0 
+      wptr += TS.write("float32", pos, datagram, wptr)
+      await positionSetEndpoint.write(datagram, "acked")
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  let getAbsMaxVelocity = () => { return absMaxVelocity }
+  let setVelocity = async (vel) => {
+    if (vel > absMaxVelocity) vel = absMaxVelocity
+    lastVel = vel
+  }
+
+  let setAccel = async (accel) => {
+    if (accel > absMaxAccel) accel = absMaxAccel
+    lastAccel = accel
+  }
+
+  let setAbsMaxAccel = (maxAccel) => { absMaxAccel = maxAccel }
+
+  let setAbsMaxVelocity = (maxVel) => {
+    // not beyond this tick-based limit, 
+    if (maxVel > 4000 / spu) {
+      maxVel = 4000 / spu
+    }
+    absMaxVelocity = maxVel
+  }
 
   let setCScale = async (cscale) => {
     try {
@@ -71,6 +97,17 @@ export default function stepper(osap, vt, name) {
       console.error(err)
     }
   }
+
+  // tell me about your steps-per-unit, 
+  // note that FW currently does 1/4 stepping: 800 steps / revolution 
+  let setSPU = (_spu) => {
+    spu = _spu
+    if (absMaxVelocity > 4000 / spu) { absMaxVelocity = 4000 / spu }
+    // we know that we have a maximum steps-per-second of 4000, so we can say 
+    console.warn(`w/ spu of ${spu}, this ${name} has a new abs-max velocity ${absMaxVelocity}`)
+  }
+
+  // -------------------------------------------- Getters 
 
   // get states
   let getState = async () => {
@@ -86,6 +123,30 @@ export default function stepper(osap, vt, name) {
       console.error(err)
     }
   }
+
+
+  let getPosition = async () => {
+    try {
+      let state = await getState()
+      return state.pos
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  let getVelocity = async () => {
+    try {
+      let state = await getState()
+      return state.vel
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  let getAbsMaxVelocity = () => { return absMaxVelocity }
+  let getAbsMaxAccel = () => { return absMaxAccel }
+
+  // -------------------------------------------- Operative 
 
   // await no motion, 
   let awaitMotionEnd = async () => {
@@ -108,27 +169,16 @@ export default function stepper(osap, vt, name) {
     }
   }
 
-  async function setVelocity(vel) {
-
-  }
-
-  async function setAcceleration(accel) {
-    
-  }
-
-  // goto-this-posn, using optional vel, accel 
-  let absolute = async (pos, vel, accel) => {
+  // sets the position-target, and delivers rates, accels to use while slewing-to
+  let target = async (pos, vel, accel) => {
     try {
-      // modal vel-and-accels,
+      // modal vel-and-accels, and guards 
       vel ? lastVel = vel : vel = lastVel;
       accel ? lastAccel = accel : accel = lastAccel;
-      // don't go too fast, pls lort
-      if (vel > absMaxVelocity) {
-        vel = absMaxVelocity;
-        lastVel = vel;
-      }
-      // also, warn against zero-velocities...
-      if (vel == 0) throw new Error(`y'all are trying to go somewhere, but modal velocity == 0, this won't do...`)
+      if (accel > absMaxAccel) { accel = absMaxAccel; lastAccel = accel; }
+      if (vel > absMaxVelocity) { vel = absMaxVelocity; lastVel = vel; }
+      // also, warn against zero-or-negative velocities & accelerations 
+      if (vel <= 0 || accel <= 0) throw new Error(`y'all are trying to go somewhere, but modal velocity or accel are negative, this won't do...`)
       // stuff a packet, 
       let datagram = new Uint8Array(13)
       let wptr = 0
@@ -139,6 +189,16 @@ export default function stepper(osap, vt, name) {
       wptr += TS.write("float32", accel * spu, datagram, wptr)  // write max-accel-during
       // and we can shippity ship it, 
       await targetDataEndpoint.write(datagram, "acked")
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // goto-this-posn, using optional vel, accel, and wait for machine to get there 
+  let absolute = async (pos, vel, accel) => {
+    try {
+      // sets motion target, 
+      await target(pos, vel, accel)
       // then we could do... await-move-done ? 
       await awaitMotionEnd()
       console.log(`abs move to ${pos} done`)
@@ -147,7 +207,7 @@ export default function stepper(osap, vt, name) {
     }
   } // end absolute 
 
-  // goto-relative, 
+  // goto-relative, also wait, 
   let relative = async (delta, vel, accel) => {
     try {
       let state = await getState()
@@ -162,14 +222,12 @@ export default function stepper(osap, vt, name) {
   // goto-this-speed, using optional accel, 
   let velocity = async (vel, accel) => {
     try {
-      // modal accel
+      // modal accel, and guards... 
       accel ? lastAccel = accel : accel = lastAccel;
-      // not > absMax, 
-      if (vel > absMaxVelocity) vel = absMaxVelocity;
-      // hmmm... potential bugfarm as .stop() calls this, sets to zero, then modal restarts w/ zero-vel... 
-      // but is consistent with modal-ness elsewhere, 
-      // so I have thrown an error if we call .absolute() w/ vel = 0 
-      lastVel = vel
+      if (accel > absMaxAccel) { accel = absMaxAccel; lastAccel = accel; }
+      if (vel > absMaxVelocity) { vel = absMaxVelocity; lastVel = vel; }
+      // note that we are *not* setting last-vel w/r/t this velocity... esp. since we often call this 
+      // w/ zero-vel, to stop... 
       // now write the paquet, 
       let datagram = new Uint8Array(9)
       let wptr = 0
@@ -195,15 +253,27 @@ export default function stepper(osap, vt, name) {
 
   // we return fns that user can call, 
   return {
+    // operate w/
+    target,
     absolute,
     relative,
     velocity,
     stop,
     awaitMotionEnd,
-    getState,
-    getAbsMaxVelocity,
+    // setters... 
+    setPosition,
+    setVelocity,
+    setAccel,
+    setAbsMaxAccel,
+    setAbsMaxVelocity,
     setCScale,
     setSPU,
+    // inspect... 
+    getPosition,
+    getVelocity,
+    getAbsMaxVelocity,
+    getAbsMaxAccel,
+    // these are hidden 
     setup,
     vt,
   }
