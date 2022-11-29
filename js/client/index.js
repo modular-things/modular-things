@@ -124,16 +124,29 @@ function runCode(e) {
     return timeout;
   }
 
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const loop = async (fn, minterval = 10) => {
+    const date = new Date();
+    const start = date.getTime();
+    await fn();
+    const elapsed = (date.getTime()) - start;
+    if (elapsed < minterval) await sleep(minterval - elapsed);
+    // if (minterval === 0) setTimeout(() => {}, 0);
+    loop(fn, minterval);
+  }
+
   const things = {};
 
   for (const key in global_state.things) {
-    things[key] = globa_state.things[key].vThing;
+    things[key] = global_state.things[key].vThing;
   }
 
   const args = {
     ...things,
     setInterval: patchedInterval,
     setTimeout: patchedTimeout,
+    loop,
     document: null,
     window: null,
     eval: null,
