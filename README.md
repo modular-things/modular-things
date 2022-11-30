@@ -22,7 +22,7 @@ modular-thing is written by [Quentin Bolsee](https://github.com/qbolsee), [Leo M
 
 ## Install 
 
-**(1) install [node.js](https://nodejs.org/en/) (consider using [nvm](https://github.com/nvm-sh/nvm) or [nvm-for-windows](https://github.com/coreybutler/nvm-windows))**
+**(1) install [node.js](https://nodejs.org/en/) - please use version 16.15.1 or above**
 
 **(2) clone this repo**
 
