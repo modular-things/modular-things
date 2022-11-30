@@ -6,10 +6,15 @@
 
 modular-thing uses ~ virtualization ~ to make it easier to write programs that run across multiple hardware devices. 
 
-Devices auto-enumerate on USB ports[^1], 
+Devices auto-enumerate on USB ports[^1], and are wrapped in "virtual-things" - basically, software mirrors for firmwares - and those virtual things are used to program systems. 
 
-- devices are in the circuits-set right now, but it is easy to make any arduino project into a modular-thing 
-- usb-only at the moment, but routing layer OSAP can do it all, in case you want to virtualize across devices that communicate via serialport, etc: in depth support for this is planned 
+At the moment, we have a [series of circuits that we have built custom for this project](https://github.com/modular-things/modular-things-circuits), but any Arduino-based firmware can be expressed as a modular-thing, so adding new ones is not difficult. We are developing some [examples](js/examples)... 
+
+modular-thing is written by [Quentin Bolsee](https://github.com/qbolsee), [Leo McElroy](https://github.com/leomcelroy) and [Jake Read](https://github.com/jakeread) based on ongoing work at the [MIT Center for Bits and Atoms](https://cba.mit.edu/) and [hackclub](https://hackclub.com/). It is based on the [surprising performance of modern USB](log/2022-11_usb-motion-perf-tests-log.md), an insight that we picked up from the [urumbu project](https://gitlab.cba.mit.edu/neilg/urumbu) ([paper](https://cba.mit.edu/docs/papers/22.11.Urumbu.pdf)). Under the hood, it uses [osap](http://osap.tools/) to route packets and serialize data. Also inspired by the [virtual-machine](https://cba.mit.edu/docs/theses/16.08.Peek.pdf) architecture pioneered by [Nadya Peek](http://infosyncratic.nl/) and [Ilan Moyer](https://web.mit.edu/imoyer/www/index.html), way back in the way back. 
+
+---
+
+## [Modular-Thing Circuits](https://github.com/modular-things/modular-things-circuits)
 
 --- 
 
@@ -17,21 +22,23 @@ Devices auto-enumerate on USB ports[^1],
 
 ## Install 
 
+**(1) install [node.js](https://nodejs.org/en/) (consider using [nvm](https://github.com/nvm-sh/nvm) or [nvm-for-windows](https://github.com/coreybutler/nvm-windows))**
+
+**(2) clone this repo**
+
+**(3) navigate to `<this-repo>/js` and do `npm install` in the terminal**
+
 ## Run 
+
+**(1) from `<this-repo>/js` do `npm run start`**
+
+**(2) navigate (in the browser) to http://localhost:8080/client/**
 
 --- 
 
 # Writing New modular-things 
 
-To run
-
-```
-npm run start
-```
-
 For embedded (arduino) codes, put https://github.com/jakeread/osap-arduino (main branch) into `C:\Users\<username>\AppData\Local\Arduino15\libraries\` or wherever your arduino libraries live. 
-
-[circuits here](https://github.com/jakeread/modular-thing-circuits) 
 
 ## Writing VMs
 
@@ -84,4 +91,4 @@ In most cases I just dead-reckon the size of the datagram. Then TS.write will wr
 
 # Footnotes
 
-[^1]: though [osap](http://osap.tools/), the routing layer, supports discovery across arbitrary links
+[^1]: We use USB at the moment, but [osap](http://osap.tools/), the routing layer, supports discovery across arbitrary links, and so we plan to include some kind of realtime-ish bus in future circuits, for deeper and more scalable networks of modular-things. 
