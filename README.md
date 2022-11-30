@@ -40,6 +40,10 @@ modular-thing is written by [Quentin Bolsee](https://github.com/qbolsee), [Leo M
 
 For embedded (arduino) codes, put https://github.com/jakeread/osap-arduino (main branch) into `C:\Users\<username>\AppData\Local\Arduino15\libraries\` or wherever your arduino libraries live. 
 
+We use the [ArduinoCore-fab-sam](https://github.com/qbolsee/ArduinoCore-fab-sam), which you can install into Arduino via the notes in that repo. 
+
+Notes here are abbreviated - if you're a student in HTMAA and are trying to write a new modular-thing, but understanding other examples are not enough, contact us. 
+
 ## Writing VMs
 
 - name your firmware with `OSAP osap("stepper");` i.e. 
