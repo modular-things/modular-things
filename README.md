@@ -1,4 +1,27 @@
-## Plug-and-Pop
+# modular-things 
+
+`plug and play w/ virtualized hardware`
+
+## What it Is 
+
+modular-thing uses ~ virtualization ~ to make it easier to write programs that run across multiple hardware devices. 
+
+Devices auto-enumerate on USB ports[^1], 
+
+- devices are in the circuits-set right now, but it is easy to make any arduino project into a modular-thing 
+- usb-only at the moment, but routing layer OSAP can do it all, in case you want to virtualize across devices that communicate via serialport, etc: in depth support for this is planned 
+
+--- 
+
+# Usage 
+
+## Install 
+
+## Run 
+
+--- 
+
+# Writing New modular-things 
 
 To run
 
@@ -56,3 +79,9 @@ await targetDataEndpoint.write(datagram, "acked")
 ```
 
 In most cases I just dead-reckon the size of the datagram. Then TS.write will write most data types - and there are reciprocals in embedded. 
+
+--- 
+
+# Footnotes
+
+[^1]: though [osap](http://osap.tools/), the routing layer, supports discovery across arbitrary links
