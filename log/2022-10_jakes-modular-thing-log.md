@@ -132,9 +132,13 @@ Also, limit switches... would be the second step.
 - build some demos 
   - dials-to-axis on corexy 
   - drawing robot on corexy 
-  - drumkit / sequencer 
+  - drumkit / sequencer (linear-axis-and-thwapper)
 
 --- 
+
+## The Week
+
+- might be worth doing segmented motion & fixed point arithmetic, for slick motion? serves fab-two-oh... which is maybe enough of an errand ? idk 
 
 ## Dev List
 

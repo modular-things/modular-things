@@ -113,12 +113,12 @@ export default function stepper(osap, vt, name) {
   let getState = async () => {
     try {
       let data = await motionStateQuery.pull()
+      // deserialize... 
       return {
         pos: TS.read("float32", data, 0) / spu,
         vel: TS.read("float32", data, 4) / spu,
         accel: TS.read("float32", data, 8) / spu,
       }
-      // deserialize... 
     } catch (err) {
       console.error(err)
     }

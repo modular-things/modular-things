@@ -88,3 +88,5 @@ When I get back, then,
 - test with... pots-to-targets ? 
 
 Sheesh: OK, I think it's, like, done, and I want to try wiring it to a machine, and try also the position-target-setting-on-the-fly. 
+
+OK - I have the circles-thing up again, with... a new API? IDK - I'm going to try next a floating-target example, with a potentiometer maybe ~ or something, lol, then call it and start doing the organizing, etc. 
