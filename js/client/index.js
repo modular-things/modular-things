@@ -1,7 +1,7 @@
 import { rescan } from "./modularThingClient.js";
 import { global_state } from "./global_state.js";
 import createSynchronizer from "../virtualThings/synchronizer";
-
+import Terminal from "xterm";
 import { render, html } from "lit-html";
 
 import "./codemirror.js";
@@ -14,6 +14,7 @@ const view = (state) => html`
   <div class="content">
     <div class="left-pane">
       <codemirror-editor></codemirror-editor>
+      <div class="terminal"></div>
       <!-- <textarea spellcheck="false" class="code-editor"></textarea> -->
     </div>
     <div class="things">
@@ -31,9 +32,28 @@ const drawThing = (thing) => html`
       <button class="button" @click=${() => global_state.renaming = thing[0] }>rename</button>
     </div>
     <div>Type: ${thing[1].firmwareName}</div>
-    <div class="thing-api">${getApi(thing[1].vThing)}</div>
+    <div class="thing-api">${drawApi(thing)}</div>
   </div>
+  <hr/>
 `
+
+const drawApi = (thing) => {
+  const [ name, obj ] = thing;
+  const api = obj.vThing.api;
+
+  
+
+  return  api.map( entry => html`
+    <div class="apiEntry">
+      <div>${entry.name}(${entry.args.map(x => x.split(":")[0]).join(", ")})</div>
+      ${entry.args.map((x, i) => html`<div style="padding-left: 10px;">${x}</div>`)}
+      ${ entry.return 
+          ? html`<div class="apiEntry-return"><b>returns:</b> ${entry.return}</div>`
+          : ""
+      }
+    </div>
+  ` );
+}
 
 const getApi = (thing) => {
   const api = Object.keys(thing).map( x => [ x, getParamNames(thing[x]) ]);
@@ -83,6 +103,9 @@ const r = () => {
 
 function init() {
   r();
+  var term = new Terminal();
+  term.open(document.querySelector('.terminal'));
+  term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ');
   const cache = localStorage.getItem('cache');
   if (cache) {
     const cm = document.querySelector("codemirror-editor");
@@ -90,6 +113,8 @@ function init() {
       changes: { from: 0, insert: cache ?? "" }
     });
   }
+
+
 }
 
 init();

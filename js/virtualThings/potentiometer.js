@@ -30,9 +30,18 @@ export default function(osap, vt, name) {
       const val0 = TS.read("uint16", data, 0);
       const val1 = TS.read("uint16", data, 2);
       const vals = [ val0, val1 ];
-      return vals[index];
+      return vals[index]/1028;
     },
     setup: () => {},
     vt,
+    api: [
+      {
+        name: "readPotentiometer",
+        args: [
+          "index: int 0 to 1"
+        ],
+        return: "0 to 1"
+      }
+    ]
   }
 }

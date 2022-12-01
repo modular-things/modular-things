@@ -35,5 +35,12 @@ export default function(osap, vt, name) {
     },
     setup,
     vt,
+    api: [
+      {
+        name: "readDistance",
+        args: [],
+        return: "millimeters"
+      }
+    ]
   }
 }

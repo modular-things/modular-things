@@ -57,7 +57,7 @@ export default function(osap, vt, name) {
           vals.push(TS.read("uint16", data, p * 2))
         }
         // then return the most recent,
-        return vals[index]
+        return vals[index]/1028
         // or we could have folks give .readPad() multiple indices, returning each in order, 
         // or it could just always return the full set, etc... 
       } catch (err) {
@@ -66,5 +66,22 @@ export default function(osap, vt, name) {
     },
     setup,
     vt,
+    api: [
+      {
+        name: "setRGB",
+        args: [
+          "red: 0 to 1",
+          "green: 0 to 1",
+          "blue: 0 to 1"
+        ]
+      },
+      {
+        name: "readPad",
+        args: [
+          "index: int 0 to 5"
+        ],
+        return: "0 to 1"
+      },
+    ]
   }
 }

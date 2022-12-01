@@ -1,11 +1,8 @@
 /*
 stepper.js
-
 a "virtual thing" - of course 
-
 Jake Read, Leo McElroy and Quentin Bolsee at the Center for Bits and Atoms
 (c) Massachusetts Institute of Technology 2022
-
 This work may be reproduced, modified, distributed, performed, and
 displayed for any purpose, but must acknowledge the open systems assembly protocol (OSAP) and modular-things projects.
 Copyright is retained and must be preserved. The work is provided as is;
@@ -276,5 +273,67 @@ export default function stepper(osap, vt, name) {
     // these are hidden 
     setup,
     vt,
+    api: [
+      { 
+        name: "absolute",
+        args: [
+          "pos: [x, y, z]",
+        ]
+      },
+      { 
+        name: "relative",
+        args: [
+          "pos: [x, y, z]",
+        ]
+      },
+      { 
+        name: "setVelocity",
+        args: [
+          "number",
+        ]
+      },
+      { 
+        name: "setAcceleration",
+        args: [
+          "number",
+        ]
+      },
+      { 
+        name: "stop",
+        args: []
+      },
+      { 
+        name: "awaitMotionEnd",
+        args: []
+      },
+      { 
+        name: "getState",
+        args: [],
+        return: `
+          { 
+            pos: [x, y, z], 
+            vel: number, 
+            accel: number 
+          }
+        `
+      },
+      { 
+        name: "getAbsMaxVelocity",
+        args: [],
+        return: "number", 
+      },
+      { 
+        name: "setCScale",
+        args: [
+          "number",
+        ]
+      },
+      { 
+        name: "setSPU",
+        args: [
+          "number",
+        ]
+      }
+    ]
   }
 }

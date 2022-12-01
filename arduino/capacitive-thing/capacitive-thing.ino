@@ -11,7 +11,7 @@
 
 #define PAD_THRESH 600
 
-const int pins_piano[N_PAD] = {2, 3, 4, 5, 6, 7};
+const int pins_piano[N_PAD] = { 2, 3, 4, 5, 6, 7 };
 
 Adafruit_FreeTouch qt_array[N_PAD];
 
@@ -50,8 +50,8 @@ Endpoint capacitiveEndpoint(&osap, "readPad", readPad);
 
 EP_ONDATA_RESPONSES readPad(uint8_t* data, uint16_t len) {
   int index = data[0];
-  // we did the float -> int conversion in js 
-  int value = qt_array[index].measure(); // 0 to 1023
+  // we did the float -> int conversion in js
+  int value = qt_array[index].measure();  // 0 to 1023
   analogWrite(PIN_LED_R, 20);
   uint8_t buf[2];
   buf[0] = value & 0x00ff;
@@ -71,9 +71,9 @@ EP_ONDATA_RESPONSES readPad(uint8_t* data, uint16_t len) {
 //   return true;
 // }
 
-// EP_ONDATA_RESPONSES onReadPad(uint8_t* data, uint16_t len) { 
+// EP_ONDATA_RESPONSES onReadPad(uint8_t* data, uint16_t len) {
 //   int index = data[0];
-//   // we did the float -> int conversion in js 
+//   // we did the float -> int conversion in js
 //   int value = qt_array[index].measure(); // 0 to 1023
 //   capacitiveEndpoint.write(value & 0x00ff);
 //   capacitiveEndpoint.write(value >> 8 & 0x00ff);

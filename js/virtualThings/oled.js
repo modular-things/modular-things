@@ -41,5 +41,19 @@ export default function(osap, vt, name) {
     },
     setup,
     vt,
+    api: [
+      {
+        name: "writeText",
+        args: [
+          "text: string"
+        ]
+      },
+      {
+        name: "writeBuffer",
+        args: [
+          "buffer: Uint*Array(160 x 128)"
+        ]
+      }
+    ]
   }
 }

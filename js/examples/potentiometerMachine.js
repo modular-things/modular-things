@@ -14,7 +14,7 @@ bmotor.setAccel(750)
 // let's do... get-set 
 loop(async () => {
   let posns = await Promise.all([joypot.readPotentiometer(0), joypot.readPotentiometer(1)])
-  posns[0] /= 8
-  posns[1] /= 8
+  posns[0] *= 100
+  posns[1] *= 100
   await corexy.target(posns)
 }, 100)

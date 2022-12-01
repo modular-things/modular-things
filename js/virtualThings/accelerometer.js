@@ -39,5 +39,12 @@ export default function(osap, vt, name) {
     },
     setup,
     vt,
+    api: [
+      {
+        name: "readAccGyro",
+        args: [],
+        return: "[x, y, z, xTheta, yTheta, zTheta]"
+      }
+    ]
   }
 }
