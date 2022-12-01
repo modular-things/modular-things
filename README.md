@@ -38,7 +38,9 @@ modular-thing is written by [Quentin Bolsee](https://github.com/qbolsee), [Leo M
 
 # Writing New modular-things 
 
-For embedded (arduino) codes, put https://github.com/jakeread/osap-arduino (main branch) into `C:\Users\<username>\AppData\Local\Arduino15\libraries\` or wherever your arduino libraries live. 
+For embedded (arduino) codes, [manually install] the OSAP library, which you can download as a zip here: https://github.com/jakeread/osap-arduino.
+
+Also, install the `FlashStorage_SAMD` library, via the library manager.
 
 We use the [ArduinoCore-fab-sam](https://github.com/qbolsee/ArduinoCore-fab-sam), which you can install into Arduino via the notes in that repo. 
 
