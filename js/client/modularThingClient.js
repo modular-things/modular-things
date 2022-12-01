@@ -29,6 +29,7 @@ import capacitive from "../virtualThings/capacitive.js";
 import timeOfFlight from "../virtualThings/timeOfFlight.js";
 import accelerometer from "../virtualThings/accelerometer.js";
 import potentiometer from "../virtualThings/potentiometer.js";
+import servo from "../virtualThings/servo.js";
 
 console.log(`------------------------------------------`)
 console.log("hello modular-things")
@@ -55,8 +56,8 @@ let constructors = {
   capacitive,
   timeOfFlight,
   accelerometer,
-  potentiometer
-  
+  potentiometer,
+  servo
 }
 
 // a list of virtual machines, 
