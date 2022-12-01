@@ -103,9 +103,10 @@ const r = () => {
 
 function init() {
   r();
-  var term = new Terminal();
-  term.open(document.querySelector('.terminal'));
-  term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ');
+  // "terminal is not a constructor" despite NPM reinstall 
+  // var term = new Terminal();
+  // term.open(document.querySelector('.terminal'));
+  // term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ');
   const cache = localStorage.getItem('cache');
   if (cache) {
     const cm = document.querySelector("codemirror-editor");

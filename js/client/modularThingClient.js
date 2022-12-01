@@ -25,7 +25,7 @@ import { global_state } from "./global_state.js";
 
 import rgbb from "../virtualThings/rgbb.js";
 import stepper from "../virtualThings/stepper.js";
-import capacitive from "../virtualThings/capacitive-queried.js";
+import capacitive from "../virtualThings/capacitive.js";
 import timeOfFlight from "../virtualThings/timeOfFlight.js";
 import accelerometer from "../virtualThings/accelerometer.js";
 import potentiometer from "../virtualThings/potentiometer.js";
