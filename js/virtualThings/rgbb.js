@@ -77,5 +77,21 @@ export default function rgbbThing(osap, vt, name) {
     onButtonStateChange: (fn) => { onButtonStateChangeHandler = fn; },
     setup,
     vt,
+    api: [
+      { 
+        name: "setRGB",
+        args: [
+          "red: 0 to 1", 
+          "green: 0 to 1", 
+          "blue: 0 to 1"
+        ],
+      },
+      {
+        name: "onButtonStateChange",
+        args: [
+          "function: (buttonState) => {}"
+        ]
+      }
+    ]
   }
 }

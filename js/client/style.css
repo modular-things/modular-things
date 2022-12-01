@@ -46,6 +46,7 @@ html, body {
 
 .things {
 	width: 300px;
+	overflow: scroll;
 }
 
 .thing-top-line {
@@ -57,7 +58,14 @@ html, body {
 
 .apiEntry {
 	padding-left: 25px;
+	padding-bottom: 5px;
 	color: grey;
+}
+
+.apiEntry-return {
+	padding-left: 10px;
+	overflow: scroll;
+	white-space: nowrap;
 }
 
 .button {
@@ -125,4 +133,9 @@ codemirror-editor {
 .cm-editor {
 	height: 100%;
 	background: #fbfbfb;
+}
+
+.terminal {
+	height: 200px;
+	width: 100%;
 }
