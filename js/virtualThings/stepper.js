@@ -293,7 +293,7 @@ export default function stepper(osap, vt, name) {
         ]
       },
       { 
-        name: "setAcceleration",
+        name: "setAccel",
         args: [
           "number",
         ]
