@@ -3,7 +3,7 @@
 #include <vp_arduinoSerial.h>
 #include <core/ts.h>
 #include <Wire.h>
-#include <LSM6.h>
+#include <LSM6.h> // by Pololu 
 
 LSM6 imu;
 
