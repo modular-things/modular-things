@@ -3,7 +3,7 @@
 #include <vp_arduinoSerial.h>
 #include <core/ts.h>
 #include <Wire.h>
-#include <VL53L1X.h> // https://www.arduino.cc/reference/en/libraries/vl53l1x/
+#include <VL53L1X.h> // https://www.arduino.cc/reference/en/libraries/vl53l1x/ (pololu version)
 
 VL53L1X sensor;
 
