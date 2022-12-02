@@ -41,7 +41,7 @@ export default function(osap, vt, name) {
         let datagram = new Uint8Array(3)
         datagram[0] = 255 - r * 255
         datagram[1] = 255 - g * 255
-        datagram[2] = (255 - b * 255) / 2
+        datagram[2] = 255 - (b * 255) / 2
         // console.log('writing', datagram)
         await rgbEndpointMirror.write(datagram, "acked")
       } catch (err) {
