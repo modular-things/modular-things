@@ -14,9 +14,6 @@ OSAP osap("servo");
 // ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
 
-// ---------------------------------------------- 1 Vertex
-boolean preQuery(void);
-
 // ---------------------------------------------- 1th Vertex: String input Endpoint 
 EP_ONDATA_RESPONSES onServoData(uint8_t* data, uint16_t len) {
   uint16_t pulse_us = ts_readUint16(data, 0);
