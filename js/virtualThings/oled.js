@@ -1,5 +1,5 @@
 /*
-a "virtual thing" - of course 
+a "virtual thing" - of course
 
 Jake Read, Leo McElroy and Quentin Bolsee at the Center for Bits and Atoms
 (c) Massachusetts Institute of Technology 2022
@@ -31,14 +31,14 @@ export default function(osap, vt, name) {
         console.error(err);
       }
     },
-    writeBuffer: async (buf) => {
-      try {
-        // const datagram = new Uint8Array(10);
-        await oledEndpointMirror.write(buf, "acked");
-      } catch (err) {
-        console.error(err);
-      }
-    },
+    // writeBuffer: async (buf) => {
+    //   try {
+    //     // const datagram = new Uint8Array(10);
+    //     await oledEndpointMirror.write(buf, "acked");
+    //   } catch (err) {
+    //     console.error(err);
+    //   }
+    // },
     setup,
     vt,
     api: [
@@ -47,13 +47,13 @@ export default function(osap, vt, name) {
         args: [
           "text: string"
         ]
-      },
-      {
-        name: "writeBuffer",
-        args: [
-          "buffer: Uint*Array(160 x 128)"
-        ]
       }
+      // {
+      //   name: "writeBuffer",
+      //   args: [
+      //     "buffer: Uint*Array(160 x 128)"
+      //   ]
+      // }
     ]
   }
 }
