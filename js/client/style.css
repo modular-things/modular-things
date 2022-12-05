@@ -27,10 +27,12 @@ html, body {
 
 .left-pane {
 	height: 100%;
-	flex: 1;
-	box-sizing: border-box;
-	padding-right: 10px;
-	width: 100px; /* why? */
+  flex: 1;
+  box-sizing: border-box;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 100px;
 }
 
 /*
@@ -124,7 +126,7 @@ html, body {
 }
 
 codemirror-editor {
-	background: white;
+  background: white;
   flex: 1;
   overflow: hidden;
   border-radius: 5px;
@@ -136,6 +138,36 @@ codemirror-editor {
 }
 
 .terminal {
-	height: 200px;
-	width: 100%;
+  height: 30px;
+  width: 100%;
+  background: black;
+  margin-top: 10px;
+  box-sizing: border-box;
+  border-radius: 5px;
 }
+
+.entry-line {
+	color: white;
+	padding: 5px;
+	font-family: monospace;
+	display: flex;
+	align-items: center;
+}
+
+.entry-line input {
+	flex: 1;
+	background: none;
+	margin-left: 5px;
+	box-sizing: border-box;
+	color: white;
+	border: none;
+	font-family: monospace;
+}
+
+.entry-line input:focus {
+	outline: none;
+}
+
+
+
+

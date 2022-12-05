@@ -14,7 +14,9 @@ const view = (state) => html`
   <div class="content">
     <div class="left-pane">
       <codemirror-editor></codemirror-editor>
-      <div class="terminal"></div>
+      <div class="terminal">
+      <div class="entry-line">\>\>\><input/></div>
+      </div>
       <!-- <textarea spellcheck="false" class="code-editor"></textarea> -->
     </div>
     <div class="things">
@@ -205,6 +207,15 @@ window.addEventListener("keydown", (e) => {
 
   if (e.keyCode === 13 && e.shiftKey) {
     runCode();
+    e.preventDefault();
+  }
+
+
+  const cmdLine = document.querySelector(".entry-line > input");
+  const isCmd = document.activeElement === cmdLine;
+
+  if (isCmd && e.keyCode === 13) {
+    console.log(cmdLine.value);
     e.preventDefault();
   }
 })
