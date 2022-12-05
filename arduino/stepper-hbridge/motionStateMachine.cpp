@@ -31,9 +31,6 @@ volatile float stepModulo = 0.0F;
 volatile float distanceToTarget = 0.0F;
 volatile float stopDistance = 0.0F;
 
-// this is the "limit" pin, currently used as a debug, 
-#define PIN_TICK 22
-
 // s/o to http://academy.cba.mit.edu/classes/output_devices/servo/hello.servo-registers.D11C.ino 
 // s/o also to https://gist.github.com/nonsintetic/ad13e70f164801325f5f552f84306d6f 
 void motion_init(uint16_t microsecondsPerIntegration){
@@ -45,8 +42,8 @@ void motion_init(uint16_t microsecondsPerIntegration){
   absMaxVelocity = 1.0F / delT; 
   maxVel = absMaxVelocity; // start here, 
   // that's it - we can get on with the hardware configs 
-  PORT->Group[0].DIRSET.reg = (uint32_t)(1 << PIN_TICK);
-  pinMode(PIN_TICK, OUTPUT);
+  //PORT->Group[0].DIRSET.reg = (uint32_t)(1 << PIN_TICK);
+  //pinMode(PIN_TICK, OUTPUT);
   // states are all initialized already, but we do want to get set-up on a timer interrupt, 
   // here we're using GCLK4, which I am assuming is set-up already / generated, in the 
   // stepper module, which uses it for PWM outputs ! 
@@ -75,10 +72,10 @@ void motion_init(uint16_t microsecondsPerIntegration){
 }
 
 void TC5_Handler(void){
-  PORT->Group[0].OUTSET.reg = (uint32_t)(1 << PIN_TICK);  // marks interrupt entry, to debug 
+  //PORT->Group[0].OUTSET.reg = (uint32_t)(1 << PIN_TICK);  // marks interrupt entry, to debug 
   TC5->COUNT16.INTFLAG.bit.MC0 = 1; // clear the interrupt
   motion_integrate(); // do the motion system integration, 
-  PORT->Group[0].OUTCLR.reg = (uint32_t)(1 << PIN_TICK);  // marks exit 
+  //PORT->Group[0].OUTCLR.reg = (uint32_t)(1 << PIN_TICK);  // marks exit 
 }
 
 void motion_integrate(void){

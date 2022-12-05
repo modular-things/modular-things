@@ -101,7 +101,12 @@ void setup() {
   osap.init();
   // run the commos 
   vp_arduinoSerial.begin();
+  pinMode(PIN_BUT, INPUT_PULLUP);
 }
+
+uint32_t debounceDelay = 1;
+uint32_t lastButtonCheck = 0;
+boolean lastButtonState = false;
 
 void loop() {
   // do graph stuff
@@ -111,4 +116,14 @@ void loop() {
   //   lastIntegration = micros();
   //   motion_integrate();
   // }
+  // debounce and set button states, 
+  if(lastButtonCheck + debounceDelay < millis()){
+    lastButtonCheck = millis();
+    boolean newState = digitalRead(PIN_BUT);
+    if(newState != lastButtonState){
+      lastButtonState = newState;
+      // invert on write: vcc-low is button-down, but we should be "true" when down and "false" when up 
+      buttonEndpoint.write(!lastButtonState);
+    }
+  }
 }
