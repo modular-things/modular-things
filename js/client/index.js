@@ -10,17 +10,24 @@ const view = (state) => html`
   <div class="menu">
     <div class="menu-item" @click=${runCode}>run (shift+enter)</div>
     <div class="menu-item" @click=${rescan}>scan</div>
+    <div class="menu-item" @click=${() => global_state.viewWindow = !state.viewWindow }>view/code</div>
   </div>
   <div class="content">
     <div class="left-pane">
+   
       <codemirror-editor></codemirror-editor>
-      <div class="terminal"></div>
+      <div class="terminal">
+        <div class="entry-line">\>\>\><input/></div>
+      </div>
+        
       <!-- <textarea spellcheck="false" class="code-editor"></textarea> -->
     </div>
     <div class="things">
       <div style="font-weight:700; font-size: 1.2em; padding-bottom: 10px;">List of Things</div>
       ${Object.entries(global_state.things).map(drawThing)}
     </div>
+
+    <div class=${["view-window", state.viewWindow ? "" : "hide"].join(" ")}>Test</div>
   </div>
   ${state.renaming !== "" ? renameForm(state) : ""}
 `
@@ -101,6 +108,8 @@ const r = () => {
   window.requestAnimationFrame(r);
 };
 
+window.state = () => console.log(global_state);
+
 function init() {
   r();
   // "terminal is not a constructor" despite NPM reinstall 
@@ -168,6 +177,12 @@ function runCode(e) {
     }
   }
 
+  const render = (node) => {
+    const viewWindow = document.querySelector(".view-window");
+    viewWindow.innerHTML = "";
+    viewWindow.append(node);
+  }
+
   const things = {};
 
   for (const key in global_state.things) {
@@ -180,7 +195,8 @@ function runCode(e) {
     setTimeout: patchedTimeout,
     createSynchronizer,
     loop,
-    document: null,
+    render,
+    // document: null,
     window: null,
     eval: null,
   }
