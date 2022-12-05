@@ -9,9 +9,9 @@
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
-#define X_POS 4
-#define Y_POS 4
-#define TXT_SIZE 3 //Define Size 
+#define X_POS 0
+#define Y_POS 0
+#define TXT_SIZE 1 //Define Size 
 
 #define SCREEN_ADDRESS 0x3C
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -27,14 +27,17 @@ boolean preQuery(void);
 
 // ---------------------------------------------- 1th Vertex: String input Endpoint 
 EP_ONDATA_RESPONSES onStringData(uint8_t* data, uint16_t len) {
+  // first byte is the text size
+  uint8_t txt_size = data[0];
+  // the rest is the text
   // add null terminator
-  char* txt = (char*) malloc(len+1);
-  memcpy(txt, data, len);
-  txt[len] = '\0';
+  char* txt = (char*) malloc(len);
+  memcpy(txt, data+1, len-1);
+  txt[len-1] = '\0';
   
   display.clearDisplay();
   display.setCursor(X_POS, Y_POS);
-  display.setTextSize(TXT_SIZE);
+  display.setTextSize(txt_size);
   display.print(txt);
   display.display();
 

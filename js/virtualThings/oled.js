@@ -22,10 +22,19 @@ export default function(osap, vt, name) {
   const setup = async () => { }
 
   return {
-    writeText: async (text) => {
+    writeText: async (text, textSize=2) => {
       try {
         const utf8Encode = new TextEncoder();
-        const datagram = utf8Encode.encode(text);
+        const datagram_txt = utf8Encode.encode(text);
+        const datagram = new Uint8Array(datagram_txt.length+1);
+        datagram[0] = textSize;
+
+        for (let i=0; i < datagram_txt.length; i++) {
+          datagram[i+1] = datagram_txt[i];
+        }
+
+        console.log(datagram);
+
         await oledEndpointMirror.write(datagram, "acked");
       } catch (err) {
         console.error(err);
@@ -45,7 +54,8 @@ export default function(osap, vt, name) {
       {
         name: "writeText",
         args: [
-          "text: string"
+          "text: string",
+          "textSize=2: 1 to 16"
         ]
       }
       // {
