@@ -1,4 +1,3 @@
-// C:\Users\jaker\AppData\Local\Arduino15\libraries\osap
 #include <osap.h>
 #include <vt_endpoint.h>
 #include <vp_arduinoSerial.h>
@@ -42,7 +41,8 @@ void setup() {
   analogWrite(PIN_R, 255);
   analogWrite(PIN_G, 255);
   analogWrite(PIN_B, 255);
-  pinMode(PIN_BUT, INPUT_PULLUP);
+  pinMode(PIN_BUT, INPUT);
+  // pull-down switch, high when pressed
 }
 
 uint32_t debounceDelay = 10;
@@ -58,8 +58,7 @@ void loop() {
     boolean newState = digitalRead(PIN_BUT);
     if(newState != lastButtonState){
       lastButtonState = newState;
-      // invert on write: vcc-low is button-down, but we should be "true" when down and "false" when up 
-      buttonEndpoint.write(!lastButtonState);
+      buttonEndpoint.write(lastButtonState);
     }
   }
 }

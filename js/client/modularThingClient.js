@@ -29,6 +29,7 @@ import capacitive from "../virtualThings/capacitive.js";
 import timeOfFlight from "../virtualThings/timeOfFlight.js";
 import mosfet from "../virtualThings/mosfet.js";
 import accelerometer from "../virtualThings/accelerometer.js";
+import oled from "../virtualThings/oled.js";
 import potentiometer from "../virtualThings/potentiometer.js";
 import servo from "../virtualThings/servo.js";
 
@@ -57,6 +58,7 @@ let constructors = {
   capacitive,
   timeOfFlight,
   mosfet,
+  oled,
   accelerometer,
   potentiometer,
   servo
