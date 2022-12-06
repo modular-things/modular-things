@@ -37,7 +37,9 @@ export default class Query extends Vertex {
     // again, item.data[ptr] == PK.PTR, ptr + 1 = PK.DEST, ptr + 2 = EP.QUERY_RES,
     switch (item.data[ptr + 2]) {
       case EP.QUERY_RES:
-        // try 
+        // ... if i.e. phy throws a second paquet, and we try to catch another 
+        // query, but we already caught the second paquet, we have an issue here
+        // one op (better) is to have PHYs that don't send packets twice (?) 
         try {
           // match & bail 
           if(this.queryAwaiting.id == item.data[ptr + 3]){
