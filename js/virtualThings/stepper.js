@@ -111,7 +111,7 @@ export default function stepper(osap, vt, name) {
     absMaxVelocity = maxVel
   }
 
-  let setCScale = async (cscale) => {
+  let setCurrentScale = async (cscale) => {
     try {
       let datagram = new Uint8Array(4)
       let wptr = 0
@@ -125,7 +125,7 @@ export default function stepper(osap, vt, name) {
 
   // tell me about your steps-per-unit,
   // note that FW currently does 1/4 stepping: 800 steps / revolution
-  let setSPU = (_spu) => {
+  let setStepsPerUnit = (_spu) => {
     spu = _spu
     if (absMaxVelocity > 4000 / spu) { absMaxVelocity = 4000 / spu }
     // we know that we have a maximum steps-per-second of 4000, so we can say
@@ -291,8 +291,8 @@ export default function stepper(osap, vt, name) {
     setAccel,
     setAbsMaxAccel,
     setAbsMaxVelocity,
-    setCScale,
-    setSPU,
+    setCurrentScale,
+    setStepsPerUnit,
     // inspect...
     getPosition,
     getVelocity,
@@ -306,25 +306,25 @@ export default function stepper(osap, vt, name) {
       {
         name: "absolute",
         args: [
-          "pos: [x, y, z]",
+          "pos: number",
         ]
       },
       {
         name: "relative",
         args: [
-          "pos: [x, y, z]",
+          "delta: number",
         ]
       },
       {
         name: "setVelocity",
         args: [
-          "number",
+          "vel: number",
         ]
       },
       {
         name: "setAccel",
         args: [
-          "number",
+          "accel: number",
         ]
       },
       {
@@ -340,7 +340,7 @@ export default function stepper(osap, vt, name) {
         args: [],
         return: `
           {
-            pos: [x, y, z],
+            pos: number,
             vel: number,
             accel: number
           }
@@ -352,15 +352,15 @@ export default function stepper(osap, vt, name) {
         return: "number",
       },
       {
-        name: "setCScale",
+        name: "setCurrentScale",
         args: [
-          "number",
+          "cscale: number 0 - 1",
         ]
       },
       {
-        name: "setSPU",
+        name: "setStepsPerUnit",
         args: [
-          "number",
+          "spu: number",
         ]
       },
       {
