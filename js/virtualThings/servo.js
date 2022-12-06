@@ -53,7 +53,7 @@ export default function servo(osap, vt, name) {
       if (ang > angleBounds[1]) ang = angleBounds[1]
       // interp... 
       let interp = (ang - angleBounds[0]) / (angleBounds[1] - angleBounds[0])
-      console.warn(`interp with ${interp}`)
+      // console.warn(`interp with ${interp}`)
       interp = interp * (pulseBounds[1] - pulseBounds[0]) + pulseBounds[0]
       await writeMicroseconds(interp)
     } catch (err) {
