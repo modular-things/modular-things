@@ -37,15 +37,21 @@ export default class Query extends Vertex {
     // again, item.data[ptr] == PK.PTR, ptr + 1 = PK.DEST, ptr + 2 = EP.QUERY_RES,
     switch (item.data[ptr + 2]) {
       case EP.QUERY_RES:
-        // match & bail 
-        if(this.queryAwaiting.id == item.data[ptr + 3]){
-          clearTimeout(this.queryAwaiting.timeout)
-          for(let res of this.queryAwaiting.resolutions){
-            res(new Uint8Array(item.data.subarray(ptr + 4)))
+        // try 
+        try {
+          // match & bail 
+          if(this.queryAwaiting.id == item.data[ptr + 3]){
+            clearTimeout(this.queryAwaiting.timeout)
+            for(let res of this.queryAwaiting.resolutions){
+              res(new Uint8Array(item.data.subarray(ptr + 4)))
+            }
+            this.queryAwaiting = null 
+          } else {
+            console.error('on query reply, no matching resolution')
           }
+        } catch (err) {
+          console.warn(`mystery query err...`, err)
           this.queryAwaiting = null 
-        } else {
-          console.error('on query reply, no matching resolution')
         }
         break;
       default:
