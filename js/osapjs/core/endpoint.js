@@ -142,7 +142,11 @@ export default class Endpoint extends Vertex {
             }
           }
           if (this.acksAwaiting.length == 0) {
-            this.acksResolve()
+            try {
+              this.acksResolve()
+            } catch (err) {
+              console.warn(`another stray double-acks error?`, err)
+            }
           }
         }
         item.handled(); break;
