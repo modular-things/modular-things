@@ -9,32 +9,31 @@ let spu = 800 / circ
 let motors = [aMotor, bMotor]
 
 for(let m of motors){
-  await m.setPosition(0)
   await m.setStepsPerUnit(spu)
   await m.setCurrentScale(0.75)
-  await m.setAccel(10000)
-  await m.setVelocity(500)
+  await m.setAccel(5000)
+  await m.setVelocity(300)
 }
 
 let mallets = [aMallet, bMallet]
 
 // in 1/16 time base (allegedly) 
 let song = [
-  [0, 1],
-  [0, 1],
-  [1, 1],
-  [0, 1],
-  [6, 1],
-  [6, 1],
-  [6, 1],
-  [0, 1],
-  [7, 1],
-  [0, 1],
-  [6, 1],
-  [0, 1],
-  [5, 1],
-  [5, 1],
-  [5, 1],
+  [0, 0],
+  [0, 0],
+  [1, 0],
+  [0, 0],
+  [6, 0],
+  [6, 0],
+  [6, 0],
+  [0, 0],
+  [7, 0],
+  [0, 0],
+  [6, 0],
+  [0, 0],
+  [5, 0],
+  [5, 0],
+  [5, 0],
 ]
 
 let noteInterval = 47.85 / 2
@@ -98,7 +97,7 @@ let runTimeSlot = async (slot) => {
         if(song[s][m] && !scheduled[m]){
           scheduled[m] = true 
           let note = song[s][m]
-          motors[m].absolute((note - 1) * noteInterval)
+          motors[m].position((note - 1) * noteInterval)
         }
       }
     }
@@ -107,16 +106,3 @@ let runTimeSlot = async (slot) => {
   }
 }
 
-for(let s = 0; s < song.length; s ++){
-  try {
-    console.warn(s)
-    await runTimeSlot(s)
-    await sleep(250)
-  } catch (err){
-    console.error(err)
-    break
-  }
-}
-
-await aMotor.absolute(0)
-await bMotor.absolute(0)

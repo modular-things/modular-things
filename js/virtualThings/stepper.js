@@ -328,6 +328,12 @@ export default function stepper(osap, vt, name) {
         ]
       },
       {
+        name: "setPosition",
+        args: [
+          "pos: number"
+        ]
+      },
+      {
         name: "stop",
         args: []
       },
