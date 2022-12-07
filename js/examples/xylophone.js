@@ -1,122 +1,215 @@
-// aMallet, aMotor, 
-// bMallet, bMotor, 
+// xylophone.js
+// Jake Read, Quentin Bolsee
+// MIT license 2022
 
-// let's calculate the steps-per-unit, 
-let circ = 64.5
-// with 800 steps per revolution, 
-let spu = 800 / circ
+// let's calculate the steps-per-unit,
+let circ = 64.5;
 
-let motors = [aMotor, bMotor]
+// with 800 steps per revolution,
+let spu = 800 / circ;
 
-for(let m of motors){
-  await m.setPosition(0)
-  await m.setStepsPerUnit(spu)
-  await m.setCurrentScale(0.75)
-  await m.setAccel(10000)
-  await m.setVelocity(500)
+// in mm
+let noteInterval = 23.925;
+
+// in ms
+let noteDuration = 250;
+
+// offset of 1st note from origin, mm
+let noteOffset = [20.0, 38.0];
+
+// things
+let motors = [aMotor, bMotor];
+let mallets = [aMallet, bMallet];
+
+// config
+for (let m of motors) {
+  await m.setPosition(0);
+  await m.setStepsPerUnit(spu);
+  await m.setCurrentScale(0.8);
+  await m.setAccel(10000);
+  await m.setVelocity(400);
 }
 
-let mallets = [aMallet, bMallet]
+// 13 notes
+// in 1/16 time base (allegedly)
 
-// in 1/16 time base (allegedly) 
+// pair of notes, 0 = skip
 let song = [
-  [0, 1],
-  [0, 1],
-  [1, 1],
-  [0, 1],
-  [6, 1],
-  [6, 1],
-  [6, 1],
-  [0, 1],
-  [7, 1],
-  [0, 1],
-  [6, 1],
-  [0, 1],
-  [5, 1],
-  [5, 1],
-  [5, 1],
-]
+[1, 0],
+[0, 13],
+[2, 0],
+[0, 12],
+[3, 0],
+[0, 11],
+[4, 0],
+[0, 10],
+[5, 0],
+[0, 9],
+[6, 0],
+[0, 8],
+[7, 0],
+[0, 7],
+[8, 0],
+[0, 6],
+[9, 0],
+[0, 5],
+[10, 0],
+[0, 4],
+[11, 0],
+[0, 3],
+[12, 0],
+[0, 2],
+[13, 0],
+[0, 1],
+[13, 1],
+[12, 2],
+[11, 3],
+[10, 4],
+[9, 5],
+[8, 6],
+[7, 7],
+[6, 8],
+[5, 9],
+[4, 10],
+[3, 11],
+[2, 12],
+[1, 13],
+];
 
-let noteInterval = 47.85 / 2
 let notes = [
-  //  0,    1     2     3     4     5     6     7     8     9     10    11    12    13    
+  //  0,    1     2     3     4     5     6     7     8     9     10    11    12    13
       0,    "C",  "D",  "E",  "F",  "G",  "A",  "B",  "C",  "D",  "E",  "F",  "G",  "A"
-]
+];
 
-// for (let n = 0; n < notes.length; n++) {
-//   notes[n] = {
-//     letter: notes[n],
-//     pos: noteInterval * n
-//   }
-// }
-
-let thwapNote = async (index, m = 0) => {
-  try {
-    if (index >= notes.length) throw new Error('u r tryna thwap out of bounds')
-    await motors[m].absolute(notes[index].pos)
-    await mallets[m].setGate(1)
-    setTimeout(async () => {
-      await mallets[m].setGate(0)
-    }, 1)
-  } catch (err) {
-    console.error(err)
+// padding at the beginning
+// should give enough time for to reach 1st note
+function pad_song(n_pad) {
+  for (let i=0; i < n_pad; i++) {
+    song.unshift([0, 0]);
   }
 }
 
-let gotoNote = async (index, m = 0) => {
-  try {
-    if (index >= notes.length) throw new Error('u r tryna go out of bounds')
-    if (m >= motors.length) throw new Error('again w/ the out of bounds operation')
-    await motors[m].absolute(notes[index].pos)
-  } catch (err) {
-    console.error(err)
+pad_song(1);
+
+function assign_moves() {
+  var n1, n2, pos1, pos2, i_last1, i_last2;
+  var m1, m2;
+  pos1=0;
+  pos2=0;
+  i_last1=0;
+  i_last2=0;
+
+  for (let i=0; i < song.length; i++) {
+    n1 = song[i][0];
+    n2 = song[i][1];
+    if (n1 == 0 && n2 == 0)
+      continue;
+    if (n1 != 0 && n2 != 0) {
+      let max_dist = Math.max(Math.abs(n1-pos1), Math.abs(n2-pos2));
+      let max_dist_alt = Math.max(Math.abs(n2-pos1), Math.abs(n1-pos2));
+      if (max_dist_alt < max_dist) {
+        moves1[i_last1] = n2;
+        moves2[i_last2] = n1;
+      } else {
+        moves1[i_last1] = n1;
+        moves2[i_last2] = n2;
+      }
+      thwaps1[i] = true;
+      thwaps2[i] = true;
+      i_last1 = i;
+      i_last2 = i;
+    } else {
+      // find valid note
+      let n = Math.max(n1, n2);
+
+      // first moves
+      if (i_last1 == 0) {
+        assign2 = false;
+      } else if (i_last2 == 0) {
+        assign2 = true;
+      } else {
+        let dist1 = Math.abs(pos1 - n);
+        let dist2 = Math.abs(pos2 - n);
+        assign2 = dist2 < dist1;
+      }
+
+      if (assign2) {
+        moves2[i_last2] = n;
+        thwaps2[i] = true;
+        pos2 = n;
+        i_last2 = i;
+      } else {
+        moves1[i_last1] = n;
+        thwaps1[i] = true;
+        pos1 = n;
+        i_last1 = i;
+      }
+    }
   }
 }
 
 let thwap = async (m = 0, op = true) => {
   try {
-    if(!op) return 
-    await mallets[m].setGate(1)
+    if (!op)
+      return;
+    await mallets[m].setGate(1);
     setTimeout(async () => {
-      await mallets[m].setGate(0)
-    }, 1)
+      await mallets[m].setGate(0);
+    }, 5)
   } catch (err) {
-    console.error(err)
+    console.error(err);
   }
 }
 
-let runTimeSlot = async (slot) => {
+let note_to_pos = (n, m) => {
+  return (n - 1) * noteInterval + noteOffset[m];
+}
+
+// for each time slot, whether to hit the note and where to move next, if needed
+let thwaps1 = new Array(notes.length).fill(false);
+let thwaps2 = new Array(notes.length).fill(false);
+let moves1 = new Array(notes.length).fill(0);
+let moves2 = new Array(notes.length).fill(0);
+assign_moves();
+
+let thwaps = [thwaps1, thwaps2];
+let moves = [moves1, moves2];
+
+//console.log(moves);
+
+for (let m = 0; m < 2; m++) {
+  if (moves[m][0] > 0)
+    motors[m].absolute(note_to_pos(moves[m][0], m));
+}
+for (let m = 0; m < 2; m++) {
+  await motors[m].awaitMotionEnd();
+}
+
+for (let s = 1; s < song.length; s++) {
   try {
-    let notes = song[slot]
-    if(!notes) throw new Error("we've gone beyond the song end, I think")
-    // thwap if they exist: we should be already-at-the-place, 
-    await Promise.all([thwap(0, notes[0]), thwap(1, notes[1])])
-    // now look ahead to next positions ? 
-    let scheduled = [false, false]
-    for(let s = slot + 1; s < song.length; s ++){
-      for(let m = 0; m < 2; m ++){
-        if(song[s][m] && !scheduled[m]){
-          scheduled[m] = true 
-          let note = song[s][m]
-          motors[m].absolute((note - 1) * noteInterval)
-        }
-      }
+    console.warn(s);
+    for (let m = 0; m < 2; m++){
+      // thwap if needed
+      if (thwaps[m][s])
+        // true
+        await thwap(m);
+      // move if needed
+      if (moves[m][s] > 0)
+        motors[m].absolute(note_to_pos(moves[m][s], m));
     }
+    await sleep(noteDuration);
   } catch (err) {
-    console.error(err)
+    console.error(err);
+    break;
   }
 }
 
-for(let s = 0; s < song.length; s ++){
-  try {
-    console.warn(s)
-    await runTimeSlot(s)
-    await sleep(250)
-  } catch (err){
-    console.error(err)
-    break
-  }
+// well that was fun, now back to origin
+for (let m = 0; m < 2; m++) {
+  if (moves[m][0] > 0)
+    motors[m].absolute(0);
 }
-
-await aMotor.absolute(0)
-await bMotor.absolute(0)
+for (let m = 0; m < 2; m++) {
+  await motors[m].awaitMotionEnd();
+  await motors[m].setCurrentScale(0);
+}

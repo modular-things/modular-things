@@ -32,9 +32,6 @@ export default function(osap, vt, name) {
         for (let i=0; i < datagram_txt.length; i++) {
           datagram[i+1] = datagram_txt[i];
         }
-
-        console.log(datagram);
-
         await oledEndpointMirror.write(datagram, "acked");
       } catch (err) {
         console.error(err);
