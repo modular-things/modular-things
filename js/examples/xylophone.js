@@ -11,9 +11,6 @@ let spu = 800 / circ;
 // in mm
 let noteInterval = 23.925;
 
-// in ms
-let noteDuration = 250;
-
 // offset of 1st note from origin, mm
 let noteOffset = [20.0, 38.0];
 
@@ -30,9 +27,11 @@ for (let m of motors) {
   await m.setVelocity(400);
 }
 
+// in ms
+let noteDuration = 250;
+
 // 13 notes
 // in 1/16 time base (allegedly)
-
 // pair of notes, 0 = skip
 let song = [
 [1, 0],
@@ -206,8 +205,7 @@ for (let s = 1; s < song.length; s++) {
 
 // well that was fun, now back to origin
 for (let m = 0; m < 2; m++) {
-  if (moves[m][0] > 0)
-    motors[m].absolute(0);
+  await motors[m].absolute(0);
 }
 for (let m = 0; m < 2; m++) {
   await motors[m].awaitMotionEnd();
