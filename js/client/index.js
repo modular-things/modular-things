@@ -3,6 +3,7 @@ import { global_state } from "./global_state.js";
 import createSynchronizer from "../virtualThings/synchronizer";
 import Terminal from "xterm";
 import { render, html } from "lit-html";
+import { download } from "./download.js";
 
 import "./codemirror.js";
 
@@ -11,6 +12,7 @@ const view = (state) => html`
     <div class="menu-item" @click=${runCode}>run (shift+enter)</div>
     <div class="menu-item" @click=${rescan}>scan</div>
     <div class="menu-item" @click=${() => global_state.viewWindow = !state.viewWindow }>view/code</div>
+    <div class="menu-item" @click=${() => download("anon.js", getCode())}>download</div>
   </div>
   <div class="content">
     <div class="left-pane">
