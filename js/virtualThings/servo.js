@@ -57,7 +57,7 @@ export default function servo(osap, vt, name) {
       interp = interp * (pulseBounds[1] - pulseBounds[0]) + pulseBounds[0]
       await writeMicroseconds(interp)
     } catch (err) {
-      throw error
+      throw err 
     }
   }
 

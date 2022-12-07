@@ -22,7 +22,7 @@ function pad_song(song, n_pad) {
   }
 }
 
-function assign_moves() {
+function assign_moves(song, moves1, moves2, thwaps1, thwaps2) {
   var n1, n2, pos1, pos2, i_last1, i_last2;
   var m1, m2;
   pos1=0;
@@ -328,27 +328,28 @@ el.querySelector("button").addEventListener("click", () => {
 let motors = [aMotor, bMotor];
 let mallets = [aMallet, bMallet];
 
-// config
-for (let m of motors) {
-  await m.setPosition(0);
-  await m.setStepsPerUnit(spu);
-  await m.setCurrentScale(0.8);
-  await m.setAccel(10000);
-  await m.setVelocity(400);
-}
 
 async function play_song(song) {
+  // config
+  for (let m of motors) {
+    await m.setPosition(0);
+    await m.setStepsPerUnit(spu);
+    await m.setCurrentScale(0.8);
+    await m.setAccel(10000);
+    await m.setVelocity(400);
+  }
+
   pad_song(song, 1);
 
   // in ms
   let noteDuration = 250;
 
   // for each time slot, whether to hit the note and where to move next, if needed
-  let thwaps1 = new Array(notes.length).fill(false);
-  let thwaps2 = new Array(notes.length).fill(false);
-  let moves1 = new Array(notes.length).fill(0);
-  let moves2 = new Array(notes.length).fill(0);
-  assign_moves();
+  let thwaps1 = new Array(song.length).fill(false);
+  let thwaps2 = new Array(song.length).fill(false);
+  let moves1 = new Array(song.length).fill(0);
+  let moves2 = new Array(song.length).fill(0);
+  assign_moves(song, moves1, moves2, thwaps1, thwaps2);
 
   let thwaps = [thwaps1, thwaps2];
   let moves = [moves1, moves2];
