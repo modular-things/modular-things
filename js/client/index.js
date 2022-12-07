@@ -198,6 +198,7 @@ function runCode(e) {
     createSynchronizer,
     loop,
     render,
+    sleep,
     // document: null,
     window: null,
     eval: null,
