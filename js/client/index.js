@@ -11,14 +11,14 @@ const view = (state) => html`
   <div class="menu">
     <div class="menu-item" @click=${runCode}>run (shift+enter)</div>
     <div class="menu-item" @click=${rescan}>scan</div>
-    <div class="menu-item" @click=${() => global_state.viewWindow = !state.viewWindow }>view/code</div>
     <div class="menu-item" @click=${() => download("anon.js", getCode())}>download</div>
+    <div class="menu-item" @click=${() => global_state.viewWindow = !state.viewWindow }>view/code</div>
   </div>
   <div class="content">
     <div class="left-pane">
    
       <codemirror-editor></codemirror-editor>
-      <div class="terminal">
+      <div class="terminal" style="display: none;">
         <div class="entry-line">\>\>\><input/></div>
       </div>
         
