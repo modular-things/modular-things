@@ -199,6 +199,7 @@ function runCode(e) {
     loop,
     render,
     sleep,
+    delay: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
     // document: null,
     window: null,
     eval: null,
