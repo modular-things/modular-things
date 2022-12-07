@@ -85,7 +85,7 @@ void motion_integrate(void){
     case MOTION_MODE_POS:
       distanceToTarget = posTarget - pos;
       stopDistance = (vel * vel) / (2.0F * maxAccel);
-      if(abs(distanceToTarget - delta) < POS_EPSILON && abs(vel) < VEL_EPSILON){
+      if(abs(distanceToTarget - delta) < POS_EPSILON){
         // zero out and don't do any phantom motion 
         delta = 0.0F;
         vel = 0.0F;
