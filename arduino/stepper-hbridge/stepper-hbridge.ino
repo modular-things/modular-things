@@ -119,11 +119,11 @@ void loop() {
   // debounce and set button states, 
   if(lastButtonCheck + debounceDelay < millis()){
     lastButtonCheck = millis();
-    boolean newState = digitalRead(PIN_BUT);
-    if(newState != lastButtonState){
-      lastButtonState = newState;
-      // invert on write: vcc-low is button-down, but we should be "true" when down and "false" when up 
-      buttonEndpoint.write(!lastButtonState);
-    }
+    // boolean newState = digitalRead(PIN_BUT);
+    // if(newState != lastButtonState){
+    //   lastButtonState = newState;
+    //   // invert on write: vcc-low is button-down, but we should be "true" when down and "false" when up 
+    //   buttonEndpoint.write(!lastButtonState);
+    // }
   }
 }
