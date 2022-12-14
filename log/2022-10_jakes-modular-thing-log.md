@@ -134,6 +134,27 @@ Also, limit switches... would be the second step.
   - drawing robot on corexy 
   - drumkit / sequencer (linear-axis-and-thwapper)
 
+## 2022 12 13 
+
+I'm collecting here:
+
+### Post Machine-Week Notes
+
+- modular-thing needs a way out of the sandbox 
+- we should try a webserial build
+- the mod-jewel would be zuper-rad, we want it 
+- otherwise, it's examples-building time... 
+- and maybe we build a deployable raspberry-pi version ? 
+  - some kind of "embedded" pi, could load code to execute server-side there... 
+- a CHI (?) paper, a Hackaday post... 
+- an example where we make any-old-arduino project into a modular-thing, 
+- can we find the students' final codes, to analyze as graphs ?
+  - what are the little transforms that they needed ? what graph objects missing ?
+
+### Post Machine-Week TODOs 
+
+- collect images, logs of student work, etc, into machineweek-2022 repo 
+
 --- 
 
 ## The Week
