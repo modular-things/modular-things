@@ -28,13 +28,19 @@ fpint32_t fp_intToFixed(int32_t inty){
 // w/ fixed point mult, we have some out-of-ranging trouble, 
 // we can maybe do this w/ 64-bit ints, but it's going to suck a little bit of time
 // though still better than the floating point libs, 
-fp_int32_t fp_mult(fpint32_t a, fpint32_t b){
+fpint32_t fp_mult(fpint32_t a, fpint32_t b){
   return ((int64_t)(a) * (int64_t)(b)) >> fp_scale;
 }
-// we can instead do it... ???
-here ... // https://www.youtube.com/watch?v=npQF28g6s_k& 7:40 
-fp_int32_t fp_mult(fpint32_t a, fpint32_t b){
-  return ((int64_t)(a) * (int64_t)(b)) >> fp_scale;
+// we can instead do it w/ some fancy shifting, but I'm not going to get into this yet: 
+// leaving it as a potential speedup... 
+// https://www.youtube.com/watch?v=npQF28g6s_k& 7:40 
+// fp_int32_t fp_mult(fpint32_t a, fpint32_t b){
+//   return ((a >> 6) * (b >> 6)) >> 4;
+// }
+
+// division...
+fpint32_t fp_div(fpint32_t num, fpint32_t denum){
+  return ((int64_t)(num) << fp_scale) / denum;
 }
 
 // stopping criteria... state machine is not perfect,

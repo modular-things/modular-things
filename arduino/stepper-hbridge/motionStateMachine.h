@@ -24,6 +24,7 @@ fpint32_t fp_intToFixed(int32_t inty);
 // addition & subtraction is just integer addition, straight up 
 // but w/ multiplication we need a little scaling, so: 
 fpint32_t fp_mult(fpint32_t a, fpint32_t b);
+fpint32_t fp_div(fpint32_t num, fpint32_t denum);
 
 // struct for a handoff, 
 typedef struct motionState_t {
