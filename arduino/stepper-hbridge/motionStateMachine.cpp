@@ -48,41 +48,45 @@ fpint32_t fp_div(fpint32_t num, fpint32_t denum){
 #define VEL_EPSILON 1.0F
 #define TICK_INTERVAL 1000.0F
 
+// ---------------------------------------------- stateful stuff 
 // delT is re-calculated when we init w/ a new microsecondsPerIntegration 
-float delT = 0.001F;
+fpint32_t delT = fp_floatToFixed(0.001F);
 // not recalculated... or settings-adjustable, yet, 
 uint8_t microsteps = 4; // and note (!) this *is not* "microstepping" as in 1/n, it's n/16, per our LUTS 
 // states (units are steps, 1=1 ?) 
-volatile uint8_t mode = MOTION_MODE_POS;         // operative mode 
-volatile float pos = 0.0F;                // current position 
-volatile float vel = 0.0F;                // current velocity 
-volatile float accel = 0.0F;              // current acceleration 
+volatile uint8_t mode = MOTION_MODE_POS;            // operative mode 
+volatile fpint32_t pos = 0;                         // current position 
+volatile fpint32_t vel = 0;                         // current velocity 
+volatile fpint32_t accel = 0;                       // current acceleration 
 // and settings 
-float maxAccel = 5000.0F;                  // absolute maximum acceleration (steps / sec) (not recalculated, but given w/ user instructions)
-float maxVel = 900.0F;                      // absolute maximum velocity (units / sec) (also recalculated on init)
-float absMaxVelocity = 10.0F;               // we'll recalculate this, it's related to our stepping rate 
+fpint32_t maxAccel = fp_floatToFixed(5000.0F);      // absolute maximum acceleration (steps / sec) (not recalculated, but given w/ user instructions)
+fpint32_t maxVel = fp_floatToFixed(900.0F);         // absolute maximum velocity (units / sec) (also recalculated on init)
+fpint32_t absMaxVelocity = fp_floatToFixed(10.0F);  // we'll recalculate this, it's related to our stepping rate 
 // and targets 
-float posTarget = 0.0F;
-float velTarget = 0.0F;
+fpint32_t posTarget = 0;
+fpint32_t velTarget = 0;
+
+// ---------------------------------------------- internal stuff 
 // init-once values we'll use in the integrator 
-volatile float delta = 0.0F;
-volatile float stepModulo = 0.0F;
-volatile float distanceToTarget = 0.0F;
-volatile float stopDistance = 0.0F;
+volatile fpint32_t delta = 0;
+volatile fpint32_t stepModulo = 0;
+volatile fpint32_t distanceToTarget = 0;
+volatile fpint32_t stopDistance = 0;
 
 // s/o to http://academy.cba.mit.edu/classes/output_devices/servo/hello.servo-registers.D11C.ino 
 // s/o also to https://gist.github.com/nonsintetic/ad13e70f164801325f5f552f84306d6f 
 void motion_init(uint16_t microsecondsPerIntegration){
   // before we get into hardware, let's consider our absolute-maximums;
   // here's our delta-tee:
-  delT = (float)(microsecondsPerIntegration) / 1000000.0F;
+  delT = fp_div(fp_intToFixed(microsecondsPerIntegration), fp_intToFixed(1000000));
   // we absolutely cannot step more than one tick-per-integration cycle, 
   // since we are in one-step-per-unit land, it means our absMax is just 1/delT, 
-  absMaxVelocity = 1.0F / delT; 
+  absMaxVelocity = fp_div(fp_intToFixed(1), delT);
+  // init our maxVel to this absMax, 
   maxVel = absMaxVelocity; // start here, 
   // that's it - we can get on with the hardware configs 
-  //PORT->Group[0].DIRSET.reg = (uint32_t)(1 << PIN_TICK);
-  //pinMode(PIN_TICK, OUTPUT);
+  PORT->Group[0].DIRSET.reg = (uint32_t)(1 << PIN_TICK);
+  pinMode(PIN_TICK, OUTPUT);
   // states are all initialized already, but we do want to get set-up on a timer interrupt, 
   // here we're using GCLK4, which I am assuming is set-up already / generated, in the 
   // stepper module, which uses it for PWM outputs ! 
@@ -111,10 +115,10 @@ void motion_init(uint16_t microsecondsPerIntegration){
 }
 
 void TC5_Handler(void){
-  //PORT->Group[0].OUTSET.reg = (uint32_t)(1 << PIN_TICK);  // marks interrupt entry, to debug 
+  PORT->Group[0].OUTSET.reg = (uint32_t)(1 << PIN_TICK);  // marks interrupt entry, to debug 
   TC5->COUNT16.INTFLAG.bit.MC0 = 1; // clear the interrupt
   motion_integrate(); // do the motion system integration, 
-  //PORT->Group[0].OUTCLR.reg = (uint32_t)(1 << PIN_TICK);  // marks exit 
+  PORT->Group[0].OUTCLR.reg = (uint32_t)(1 << PIN_TICK);  // marks exit 
 }
 
 void motion_integrate(void){
