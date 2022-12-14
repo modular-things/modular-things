@@ -4,6 +4,39 @@
 // NOTE: we need to do some maths here to set an absolute-maximum velocities... based on integrator width 
 // and... could this be simpler? like, we have two or three "maximum" accelerations ?? operative and max ? 
 
+// fp tests would be... writing to int, reading back floats, checking consistency 
+// can probably use osap::debug ? 
+
+// hmmm https://www.youtube.com/watch?v=S12qx1DwjVk& at ~ 18:00 
+float fp_fixedToFloat(fpint32_t fixed){
+  return ((float)fixed / (float)(1 << fp_scale));
+}
+
+// actually this is unclear to me... https://www.youtube.com/watch?v=S12qx1DwjVk& at 16:57
+fpint32_t fp_floatToFixed(float flt){
+  return (flt * (float)(1 << fp_scale));
+}
+
+int32_t fp_fixedToInt(fpint32_t fixed){
+  return (fixed >> fp_scale);
+}
+
+fpint32_t fp_intToFixed(int32_t inty){
+  return (inty << fp_scale); 
+}
+
+// w/ fixed point mult, we have some out-of-ranging trouble, 
+// we can maybe do this w/ 64-bit ints, but it's going to suck a little bit of time
+// though still better than the floating point libs, 
+fp_int32_t fp_mult(fpint32_t a, fpint32_t b){
+  return ((int64_t)(a) * (int64_t)(b)) >> fp_scale;
+}
+// we can instead do it... ???
+here ... // https://www.youtube.com/watch?v=npQF28g6s_k& 7:40 
+fp_int32_t fp_mult(fpint32_t a, fpint32_t b){
+  return ((int64_t)(a) * (int64_t)(b)) >> fp_scale;
+}
+
 // stopping criteria... state machine is not perfect,
 #define POS_EPSILON 0.01F
 #define VEL_EPSILON 1.0F
