@@ -10,7 +10,7 @@
 // where's the radix... picking 16 (the middle) ~ arbitrarily 
 // so we have 2^16 = 65 536 dots after the pt, (0.000015...)
 // and 2^16 = 65 536 dots in front of the pt, so we have max vals (accel, pos, etc) +/- 32.5k, not bad, 
-const int32_t fp_scale = 14;
+const int32_t fp_scale = 18;
 
 // get explicit abt which are fixed point ints, 
 typedef int32_t fpint32_t;
@@ -33,7 +33,7 @@ typedef struct motionState_t {
   float accel;
 } motionState_t;
 
-void motion_init(uint16_t microsecondsPerIntegration);
+void motion_init(int32_t microsecondsPerIntegration);
 
 void motion_integrate(void);
 
@@ -42,5 +42,7 @@ void motion_setVelocityTarget(float _targ, float _maxAccel);
 void motion_setPosition(float _pos);
 
 void motion_getCurrentStates(motionState_t* statePtr);
+
+void motion_printDebug(void);
 
 #endif 

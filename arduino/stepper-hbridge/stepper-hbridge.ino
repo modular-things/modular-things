@@ -103,12 +103,15 @@ void setup() {
   // with i.e. a 20-tooth GT2 belt, we have 40mm of travel per revolution, making only 200mm/sec maximum traverse 
   // this is not pitiful, but not too rad, and more importantly is that we will want to communicate these limits 
   // to users of the motor - so we should outfit a sort of settings-grab function, or something ? 
-  motion_init(250);
+  motion_init(100);
 }
 
 uint32_t debounceDelay = 1;
 uint32_t lastButtonCheck = 0;
 boolean lastButtonState = false;
+
+uint32_t debugDelay = 1000;
+uint32_t lastDebug = 0;
 
 void loop() {
   // do graph stuff
@@ -122,5 +125,10 @@ void loop() {
     //   // invert on write: vcc-low is button-down, but we should be "true" when down and "false" when up 
     //   buttonEndpoint.write(!lastButtonState);
     // }
+  }
+  // periodic print, to debug motion machine 
+  if(lastDebug + debugDelay < millis()){
+    lastDebug = millis();
+    motion_printDebug();
   }
 }

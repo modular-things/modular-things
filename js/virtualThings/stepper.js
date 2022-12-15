@@ -294,6 +294,7 @@ export default function stepper(osap, vt, name) {
     setCurrentScale,
     setStepsPerUnit,
     // inspect...
+    getState,
     getPosition,
     getVelocity,
     getAbsMaxVelocity,
@@ -351,6 +352,16 @@ export default function stepper(osap, vt, name) {
             accel: number
           }
         `
+      },
+      {
+        name: "getPosition",
+        args: [],
+        return: `number`
+      },
+      {
+        name: "getVelocity",
+        args: [],
+        return: `number`
       },
       {
         name: "getAbsMaxVelocity",
