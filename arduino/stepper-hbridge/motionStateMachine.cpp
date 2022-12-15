@@ -246,5 +246,5 @@ void motion_getCurrentStates(motionState_t* statePtr){
 
 void motion_printDebug(void){
   // we should check if these worked, 
-  // OSAP::debug("delT and absMax, " + String(fp_fixedToFloat(delT), 6) + " " + String(fp_fixedToFloat(absMaxVelocity)));
+  OSAP::debug("delT and absMax, " + String(fp_fixedToFloat(delT), 8) + " " + String(fp_fixedToFloat(absMaxVelocity)));
 }
