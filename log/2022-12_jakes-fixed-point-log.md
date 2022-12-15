@@ -111,4 +111,4 @@ That's the basics, then, but I think I need some position scalar... we can perha
   - to 5us step, 50us period 
 - better than this 0.000092 "delT" (where reality is 0.0001) - that's 8 % error on everything, bad ! - could swap to milliseconds timebase for velocities, etc? 
   - absolute bounds 
-- reporting on abs
+- reporting on abs-max accels, vels, based on delT *and* fixed point range?
