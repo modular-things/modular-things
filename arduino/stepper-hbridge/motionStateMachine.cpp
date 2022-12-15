@@ -44,6 +44,13 @@ fpint32_t fp_div(fpint32_t num, fpint32_t denum){
   return ((int64_t)(num) << fp_scale) / denum;
 }
 
+// big-div, 
+fpint32_t fp_calcStopDistance(fpint32_t _vel, fpint32_t _maxAccel){
+  int64_t _velSq = ((int64_t)(_vel) * (int64_t)(_vel)) >> fp_scale;
+  int64_t _accelTwo = ((int64_t)(_maxAccel) * (int64_t)(fp_intToFixed(2))) >> fp_scale;
+  return (_velSq << fp_scale) / _accelTwo;
+}
+
 // stopping criteria... state machine is not perfect,
 #define POS_EPSILON fp_floatToFixed(0.01F)
 #define VEL_EPSILON 1.0F
@@ -133,27 +140,32 @@ void motion_integrate(void){
   // set our accel based on modal requests, 
   switch(mode){
     case MOTION_MODE_POS:
+      // how far to go ? 
       distanceToTarget = posTarget - pos;
-      // for vf = 0, d = (vel^2) / (2 * a)
-      stopDistance = fp_mult(vel, vel) / fp_mult(fp_intToFixed(2), maxAccel);
-      if(abs(distanceToTarget - delta) < POS_EPSILON){
-        // zero out and don't do any phantom motion 
-        delta = 0;
+      // since we dead-reckon targets at the end, we should have this case:
+      if(distanceToTarget == 0){
         vel = 0;
         accel = 0;
-        return; 
+        break;
       }
+      // how far to stop, at end ? 
+      // for vf = 0, d = (vel^2) / (2 * a)
+      // or d / (2 * a) = vel ^ 2
+      // or sqrt(d/(2a)) = vel ?? useless, sqrt hard 
+      // yar: this easily scales velocities outside of any sensible range... 
+      stopDistance = fp_calcStopDistance(vel, maxAccel); // fp_div(fp_mult(vel, vel), fp_mult(fp_intToFixed(2), maxAccel));
+      // check for overshoot: 
       if(stopDistance >= abs(distanceToTarget)){    // if we're going to overshoot, deccel:
         if(vel <= 0){                               // if -ve vel,
-          accel = maxAccel;                         // do +ve accel, 
+          accel = maxAccel;                           // do +ve accel, 
         } else {                                    // if +ve vel, 
-          accel = -maxAccel;                        // do -ve accel, 
+          accel = -maxAccel;                          // do -ve accel, 
         }
-      } else {
-        if(distanceToTarget > 0){
-          accel = maxAccel;
-        } else {
-          accel = -maxAccel;
+      } else {                                      // if we're not going to overshoot, 
+        if(distanceToTarget > 0){                   // if +ve distance, 
+          accel = maxAccel;                           // do +ve accel,
+        } else {                                    // if -ve distnace,
+          accel = -maxAccel;                          // do -ve accel, 
         }
       }
       break;
@@ -177,6 +189,14 @@ void motion_integrate(void){
   }
   // what's a position delta ? 
   delta = fp_mult(vel, delT);
+  // if the next step is going to hit the targ, make exactly that delta... 
+  if(mode == MOTION_MODE_POS){
+    if(delta > distanceToTarget && distanceToTarget > 0){
+      delta = distanceToTarget;
+    } else if (delta < distanceToTarget && distanceToTarget < 0){
+      delta = distanceToTarget;
+    }
+  }
   // integrate posn with delta 
   pos += delta;
   // Serial.println(String(pos) + " " + String(vel) + " " + String(accel) + " " + String(distanceToTarget));
@@ -219,10 +239,12 @@ void motion_getCurrentStates(motionState_t* statePtr){
   statePtr->pos = fp_fixedToFloat(pos);
   statePtr->vel = fp_fixedToFloat(vel);
   statePtr->accel = fp_fixedToFloat(accel);
+  statePtr->distanceToTarget = fp_fixedToFloat(distanceToTarget);
+  statePtr->stopDistance = fp_fixedToFloat(stopDistance);
   interrupts();
 }
 
 void motion_printDebug(void){
   // we should check if these worked, 
-  OSAP::debug("delT and absMax, " + String(fp_fixedToFloat(delT), 6) + " " + String(fp_fixedToFloat(absMaxVelocity)));
+  // OSAP::debug("delT and absMax, " + String(fp_fixedToFloat(delT), 6) + " " + String(fp_fixedToFloat(absMaxVelocity)));
 }

@@ -75,9 +75,40 @@ Better would be to store speeds, etc, in delta-T base time? But we then also inv
 
 I think I'm going to carry on w/ this, then think about adding precision later on... first, will try to add the dead-reckoning integration steps. 
 
+OK, it's ~ happening, as is the dead reckoning bit of the integrator, but I'm having scaling troubles... on position, especially, and also the stop distance maths is not working: maybe that's also scaling things out of range? 
+
+I should print stopDistance and positionDelta out of the state endpoint, perhaps, to debug a little better? Then I can come up with a better scaling... solution, something ? Maybe I should just set my integrator up so that the integration step... or the delT is some power of 2? 
+
+Yep - I think I am scaling outside of my ranges, while doing this line:
+
+```cpp
+// for vf = 0, d = (vel^2) / (2 * a)
+stopDistance = fp_div(fp_mult(vel, vel), fp_mult(fp_intToFixed(2), maxAccel));
+```
+
+Since ~ vals here are 200 (for vel, with steps-rep at motor being ~ 4k), so * 2 = 16 million, easily out of range. We need a better way to calculate stopping distnace... or a better way to span these dynamic ranges. 
+
+Certainly one approach would be to do all of this maths up front, send some simpler representation downstream... 
+
+OK, I unfk-d this by elevating the whole calc into doubles:
+
+```cpp
+// big-div, 
+fpint32_t fp_calcStopDistance(fpint32_t _vel, fpint32_t _maxAccel){
+  int64_t _velSq = ((int64_t)(_vel) * (int64_t)(_vel)) >> fp_scale;
+  int64_t _accelTwo = ((int64_t)(_maxAccel) * (int64_t)(fp_intToFixed(2))) >> fp_scale;
+  return (_velSq << fp_scale) / _accelTwo;
+}
+```
+
+That's the basics, then, but I think I need some position scalar... we can perhaps have this-scale velocity, etc, but can't do it with position - for sure. 
+
 ---
 
 ## Perf Goals
 
 - from 50us integration step, 250us integration period 
   - to 5us step, 50us period 
+- better than this 0.000092 "delT" (where reality is 0.0001) - that's 8 % error on everything, bad ! - could swap to milliseconds timebase for velocities, etc? 
+  - absolute bounds 
+- reporting on abs

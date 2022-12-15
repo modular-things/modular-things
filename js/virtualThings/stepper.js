@@ -143,6 +143,8 @@ export default function stepper(osap, vt, name) {
         pos: TS.read("float32", data, 0) / spu,
         vel: TS.read("float32", data, 4) / spu,
         accel: TS.read("float32", data, 8) / spu,
+        distanceToTarget: TS.read("float32", data, 12) / spu,
+        stopDistance: TS.read("float32", data, 16) / spu,
       }
     } catch (err) {
       console.error(err)
@@ -179,7 +181,7 @@ export default function stepper(osap, vt, name) {
       return new Promise(async (resolve, reject) => {
         let check = () => {
           getState().then((states) => {
-            // console.log(`${name}\t acc ${states.accel.toFixed(4)},\t vel ${states.vel.toFixed(4)},\t pos ${states.pos.toFixed(4)}`)
+            console.log(`${name}\t acc ${states.accel.toFixed(4)},\t vel ${states.vel.toFixed(4)},\t pos ${states.pos.toFixed(4)},\t dtt ${states.distanceToTarget.toFixed(4)},\t sd ${states.stopDistance.toFixed(4)}`)
             if (states.vel < 0.001 && states.vel > -0.001) {
               resolve()
             } else {
