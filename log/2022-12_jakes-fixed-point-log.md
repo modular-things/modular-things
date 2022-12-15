@@ -65,6 +65,16 @@ fpint32_t fp_div(fpint32_t num, fpint32_t denum){
 
 So I can more or less dead-nuts replace the current integrator with these maths, then see if I can get similar results as what I had previously. 
 
+## 2022 12 15 
+
+Alrigh I've this loaded and running and, yeah, integrator runs now around 4us relative the previous ~ 50... looks like I would be OK running the integrator up to 10KHz, maybe 20? But does it still work... Hmm - more like 4us when everything is inactive, 10-20us when it's chugging along actually doing maths. 
+
+I think the crux of the manner in which this is currently set up is that there's a big dynamic range between the ~ position, velocity values, and the delta-T, which is very small (0.0001 here, w/ 100us time). 
+
+Better would be to store speeds, etc, in delta-T base time? But we then also invite a suspiciously large amount of converting-in-and-out fkery. 
+
+I think I'm going to carry on w/ this, then think about adding precision later on... first, will try to add the dead-reckoning integration steps. 
+
 ---
 
 ## Perf Goals

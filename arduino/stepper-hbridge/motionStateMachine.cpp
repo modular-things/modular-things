@@ -79,17 +79,18 @@ volatile fpint32_t stopDistance = 0;
 
 // s/o to http://academy.cba.mit.edu/classes/output_devices/servo/hello.servo-registers.D11C.ino 
 // s/o also to https://gist.github.com/nonsintetic/ad13e70f164801325f5f552f84306d6f 
-void motion_init(uint16_t microsecondsPerIntegration){
+void motion_init(int32_t microsecondsPerIntegration){
   // before we get into hardware, let's consider our absolute-maximums;
   // here's our delta-tee:
+  // ... resorting to floating maths here for the big div, then converting, 
+  float fdelT = (float)(microsecondsPerIntegration) / 1000000.0F;
+  delT = fp_floatToFixed(fdelT);
   // oof, this'll break... since the 1m is out of our range, non ? 
   // though maybe the promotion to 64-bits helps, so I should test 
-  delT = fp_div(fp_intToFixed(microsecondsPerIntegration), fp_intToFixed(1000000));
+  // delT = fp_div(fp_intToFixed(microsecondsPerIntegration), fp_intToFixed(1000000));
   // we absolutely cannot step more than one tick-per-integration cycle, 
   // since we are in one-step-per-unit land, it means our absMax is just 1/delT, 
   absMaxVelocity = fp_div(fp_intToFixed(1), delT);
-  // we should check if these worked, 
-  OSAP::debug("delT and absMax, " + String(fp_fixedToFloat(delT)) + " " + String(fp_fixedToFloat(absMaxVelocity)));
   // init our maxVel to this absMax, 
   maxVel = absMaxVelocity; // start here, 
   // that's it - we can get on with the hardware configs 
@@ -219,4 +220,9 @@ void motion_getCurrentStates(motionState_t* statePtr){
   statePtr->vel = fp_fixedToFloat(vel);
   statePtr->accel = fp_fixedToFloat(accel);
   interrupts();
+}
+
+void motion_printDebug(void){
+  // we should check if these worked, 
+  OSAP::debug("delT and absMax, " + String(fp_fixedToFloat(delT), 6) + " " + String(fp_fixedToFloat(absMaxVelocity)));
 }
