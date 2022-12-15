@@ -81,10 +81,17 @@ Endpoint settingsEndpoint(&osap, "settings", onSettingsData);
 
 // fair warning, this is unused at the moment... and not set-up, 
 // also the limit pin is config'd to look at the interrupt on a scope at the moment, see motionStateMachine.cpp 
+#define PIN_BUT 22 
 Endpoint buttonEndpoint(&osap, "buttonState");
 
 void setup() {
   Serial.begin(0);
+  // uuuh... 
+  osap.init();
+  // run the commos 
+  vp_arduinoSerial.begin();
+  // and init the limit / "button" pin 
+  pinMode(PIN_BUT, INPUT_PULLUP);
   // ~ important: the stepper code initializes GCLK4, which we use as timer-interrupt
   // in the motion system, so it aught to be initialized first ! 
   stepper_init();
@@ -97,11 +104,6 @@ void setup() {
   // this is not pitiful, but not too rad, and more importantly is that we will want to communicate these limits 
   // to users of the motor - so we should outfit a sort of settings-grab function, or something ? 
   motion_init(250);
-  // uuuh... 
-  osap.init();
-  // run the commos 
-  vp_arduinoSerial.begin();
-  pinMode(PIN_BUT, INPUT_PULLUP);
 }
 
 uint32_t debounceDelay = 1;
@@ -111,11 +113,6 @@ boolean lastButtonState = false;
 void loop() {
   // do graph stuff
   osap.loop();
-  // if(lastIntegration + integratorInterval < micros()){
-  //   // stepper_step(1, true);
-  //   lastIntegration = micros();
-  //   motion_integrate();
-  // }
   // debounce and set button states, 
   if(lastButtonCheck + debounceDelay < millis()){
     lastButtonCheck = millis();

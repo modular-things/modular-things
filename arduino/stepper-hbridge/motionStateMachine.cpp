@@ -1,5 +1,6 @@
 #include "motionStateMachine.h"
 #include "stepperDriver.h"
+#include <osap.h>
 
 // NOTE: we need to do some maths here to set an absolute-maximum velocities... based on integrator width 
 // and... could this be simpler? like, we have two or three "maximum" accelerations ?? operative and max ? 
@@ -44,9 +45,12 @@ fpint32_t fp_div(fpint32_t num, fpint32_t denum){
 }
 
 // stopping criteria... state machine is not perfect,
-#define POS_EPSILON 0.01F
+#define POS_EPSILON fp_floatToFixed(0.01F)
 #define VEL_EPSILON 1.0F
 #define TICK_INTERVAL 1000.0F
+
+// shouldn't be here: just using to debug interval time 
+#define PIN_TICK 22 
 
 // ---------------------------------------------- stateful stuff 
 // delT is re-calculated when we init w/ a new microsecondsPerIntegration 
@@ -78,15 +82,18 @@ volatile fpint32_t stopDistance = 0;
 void motion_init(uint16_t microsecondsPerIntegration){
   // before we get into hardware, let's consider our absolute-maximums;
   // here's our delta-tee:
+  // oof, this'll break... since the 1m is out of our range, non ? 
+  // though maybe the promotion to 64-bits helps, so I should test 
   delT = fp_div(fp_intToFixed(microsecondsPerIntegration), fp_intToFixed(1000000));
   // we absolutely cannot step more than one tick-per-integration cycle, 
   // since we are in one-step-per-unit land, it means our absMax is just 1/delT, 
   absMaxVelocity = fp_div(fp_intToFixed(1), delT);
+  // we should check if these worked, 
+  OSAP::debug("delT and absMax, " + String(fp_fixedToFloat(delT)) + " " + String(fp_fixedToFloat(absMaxVelocity)));
   // init our maxVel to this absMax, 
   maxVel = absMaxVelocity; // start here, 
   // that's it - we can get on with the hardware configs 
   PORT->Group[0].DIRSET.reg = (uint32_t)(1 << PIN_TICK);
-  pinMode(PIN_TICK, OUTPUT);
   // states are all initialized already, but we do want to get set-up on a timer interrupt, 
   // here we're using GCLK4, which I am assuming is set-up already / generated, in the 
   // stepper module, which uses it for PWM outputs ! 
@@ -122,27 +129,27 @@ void TC5_Handler(void){
 }
 
 void motion_integrate(void){
-  // digitalWrite(PIN_TICK, HIGH);
   // set our accel based on modal requests, 
   switch(mode){
     case MOTION_MODE_POS:
       distanceToTarget = posTarget - pos;
-      stopDistance = (vel * vel) / (2.0F * maxAccel);
+      // for vf = 0, d = (vel^2) / (2 * a)
+      stopDistance = fp_mult(vel, vel) / fp_mult(fp_intToFixed(2), maxAccel);
       if(abs(distanceToTarget - delta) < POS_EPSILON){
         // zero out and don't do any phantom motion 
-        delta = 0.0F;
-        vel = 0.0F;
-        accel = 0.0F;
+        delta = 0;
+        vel = 0;
+        accel = 0;
         return; 
       }
       if(stopDistance >= abs(distanceToTarget)){    // if we're going to overshoot, deccel:
-        if(vel <= 0.0F){                            // if -ve vel,
+        if(vel <= 0){                               // if -ve vel,
           accel = maxAccel;                         // do +ve accel, 
         } else {                                    // if +ve vel, 
           accel = -maxAccel;                        // do -ve accel, 
         }
       } else {
-        if(distanceToTarget > 0.0F){
+        if(distanceToTarget > 0){
           accel = maxAccel;
         } else {
           accel = -maxAccel;
@@ -158,59 +165,58 @@ void motion_integrate(void){
       break;
   }
   // using our chosen accel, integrate velocity from previous: 
-  vel += accel * delT;
+  vel += fp_mult(accel, delT);
   // cap our vel based on maximum rates: 
   if(vel >= maxVel){
-    accel = 0.0F;
+    accel = 0;
     vel = maxVel;
   } else if(vel <= -maxVel){
-    accel = 0.0F;
+    accel = 0;
     vel = - maxVel;
   }
   // what's a position delta ? 
-  delta = vel * delT;
+  delta = fp_mult(vel, delT);
   // integrate posn with delta 
   pos += delta;
   // Serial.println(String(pos) + " " + String(vel) + " " + String(accel) + " " + String(distanceToTarget));
   // and check in on our step modulo, 
   stepModulo += delta;
-  if(stepModulo >= 1.0F){
+  if(stepModulo >= fp_intToFixed(1)){
     stepper_step(microsteps, true);
-    stepModulo -= 1.0F;
-  } else if (stepModulo <= -1.0F){
+    stepModulo -= fp_intToFixed(1);
+  } else if (stepModulo <= fp_intToFixed(-1)){
     stepper_step(microsteps, false);
-    stepModulo += 1.0F;
+    stepModulo += fp_intToFixed(1);
   }
-  // digitalWrite(PIN_TICK, LOW);
 } // end integrator 
 
 void motion_setPositionTarget(float _targ, float _maxVel, float _maxAccel){
   // I'm ~ kind of assuming we are already stopped when these reqs are issued, so... 
   noInterrupts();
-  maxAccel = _maxAccel;
-  maxVel = _maxVel;
-  posTarget = _targ;
+  maxAccel = fp_floatToFixed(_maxAccel);
+  maxVel = fp_floatToFixed(_maxVel);
+  posTarget = fp_floatToFixed(_targ);
   mode = MOTION_MODE_POS;
   interrupts();
 }
 
 void motion_setVelocityTarget(float _targ, float _maxAccel){
   noInterrupts();
-  maxAccel = _maxAccel;
-  velTarget = _targ;
+  maxAccel = fp_floatToFixed(_maxAccel);
+  velTarget = fp_floatToFixed(_targ);
   mode = MOTION_MODE_VEL;
   interrupts();
 }
 
 void motion_setPosition(float _pos){
   // not too introspective here,
-  pos = _pos;
+  pos = fp_floatToFixed(_pos);
 }
 
 void motion_getCurrentStates(motionState_t* statePtr){
   noInterrupts();
-  statePtr->pos = pos;
-  statePtr->vel = vel;
-  statePtr->accel = accel;
+  statePtr->pos = fp_fixedToFloat(pos);
+  statePtr->vel = fp_fixedToFloat(vel);
+  statePtr->accel = fp_fixedToFloat(accel);
   interrupts();
 }
