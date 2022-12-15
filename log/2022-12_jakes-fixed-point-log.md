@@ -103,6 +103,22 @@ fpint32_t fp_calcStopDistance(fpint32_t _vel, fpint32_t _maxAccel){
 
 That's the basics, then, but I think I need some position scalar... we can perhaps have this-scale velocity, etc, but can't do it with position - for sure. 
 
+### Time Bases
+
+I think the trouble here is in ranges w/r/t time bases: if we have our fixed point after 16 bits, we have 65k ticks on either side: so max. range of a position value, i.e., is 32k on either end. Taken with SPU in the way, that's ~ 800, or 400mm (around). Not enough. However, it is (barely) enough precision to do speeds w/r/t *one second* - units / sec, etc: where our **delta-tee** is ~ `0.0001` (for a 10khz clock), so, only ~ kind of inside of our epsilon of `0.000015` 
+
+The trouble is that speeds need (relatively) high precision, but are hampered by this tiny delta-tee multiplication where i.e. `velocity = accel * delT` or `pos = vel * delT` at each step. Positions, in the same precision, need more *range* 
+
+If we move the time base around, we can *move decimal places relative in speed* while **expanding those in position** - which is not time-based. 
+
+Eh - actually, after looking at this... the middle ground uses `units/ms` as a timebase, and use fixed point w/ 8 bits (or 9...) (!) of resolution after the dot.
+
+![fixedpoint-maths](images/2022-12-15_fixed-points-01.png)
+
+These are ~ fine as is, maybe, but does a little better with a 10ms timebase, a little awkward, but here we are: same position resolutions, then with 1000mm/sec max rate (with SPU applied, etc). 
+
+I think a more sane approach would be to just roll position around somehow... it seems ~ somewhat inevitable... that amounts to not changing the existing code too much, save for the wrapping-integer, and for looking a little differently at target positions. 
+
 ---
 
 ## Perf Goals
