@@ -119,6 +119,23 @@ These are ~ fine as is, maybe, but does a little better with a 10ms timebase, a 
 
 I think a more sane approach would be to just roll position around somehow... it seems ~ somewhat inevitable... that amounts to not changing the existing code too much, save for the wrapping-integer, and for looking a little differently at target positions. 
 
+## Rollover
+
+OK: I think... my insight so far is that we really want speeds in per-tick units, so we're not doing any multiplication... and we want to use the fact that *we never integrate a delta of more than one* to roll position into a much larger counter... I think this way we can end up with pretty huge dynamic range, but I am apparently out of time today to figure it out. 
+
+my goals next:
+
+- work out how to use the above insight (per-tick delta never > 1) to properly divide units, 
+  - should be one intentional position rollover
+  - we still need ~ bigish speed ranges, right ? or what ?
+    - how do speed ranges relate to real-speed-ranges ? 
+    - check that our maths in that sheet was accurate ? isn't real-rate-ranges actually monstrous, given small-timebase-units ??? 
+    - i.e. velocity would *never* be > than 1.0, in this world...
+
+OK, starting to make more sense. This is fundamental, so worth some slow work, though I'm equally impatient with it... tomorrow. 
+
+- the last trick is like... this distance-to-stop calculation, that's across scales, innit ? maybe the 64-bit expansion still covers in that case, or maybe not, maybe we have to calculate something else up front, like that state-space slope... which is the same maths anyways, isn't it? 
+
 ---
 
 ## Perf Goals
