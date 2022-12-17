@@ -8,21 +8,21 @@ modular-thing uses ~ virtualization ~ to make it easier to write programs that r
 
 Devices auto-enumerate on USB ports[^1], and are wrapped in "virtual-things" - basically, software mirrors for firmwares - and those virtual things are used to program systems. 
 
-![mt-intro](log/video/mt-01-intro.mp4)
+https://user-images.githubusercontent.com/3912931/208218533-4f560322-4c1f-4b66-8764-bb6632fe6b44.mp4
 
 At the moment, we have a [series of **circuits** that we have built custom for this project](https://github.com/modular-things/modular-things-circuits), but any Arduino-based firmware can be expressed as a modular-thing, so adding new ones is not difficult. We are developing some [examples](js/examples)... 
 
 It is also possible to build small UIs in the modular-things IDE, mixing webpage code directly with machine-controller code.
 
-![mt-ui](log/video/mt-02-ui.mp4)
+https://user-images.githubusercontent.com/3912931/208218526-1f176558-08ec-48f6-a232-80a7c65dabd2.mp4
 
 We've used the system to successfully build systems of medium complexity, like a xylophone that plays itself;
 
-![mt-xylo](log/video/mt-03-xylophone.mp4)
+https://user-images.githubusercontent.com/3912931/208218497-fbc46cd1-46c9-4727-bb22-3730d9768665.mp4
 
 And we've used it in an educational context, where [HTMAA](https://fab.cba.mit.edu/classes/863.22/) student groups used it as a machine-building framework.
 
-![mt-machines](log/video/mt-04-machineweek.mp4)
+https://user-images.githubusercontent.com/3912931/208218519-a38d10d7-ebe8-494f-a381-eab1c3aec8d2.mp4
 
 --- 
 
