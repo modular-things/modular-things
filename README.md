@@ -8,7 +8,23 @@ modular-thing uses ~ virtualization ~ to make it easier to write programs that r
 
 Devices auto-enumerate on USB ports[^1], and are wrapped in "virtual-things" - basically, software mirrors for firmwares - and those virtual things are used to program systems. 
 
-At the moment, we have a [series of circuits that we have built custom for this project](https://github.com/modular-things/modular-things-circuits), but any Arduino-based firmware can be expressed as a modular-thing, so adding new ones is not difficult. We are developing some [examples](js/examples)... 
+![mt-intro](log/video/mt-01-intro.mp4)
+
+At the moment, we have a [series of **circuits** that we have built custom for this project](https://github.com/modular-things/modular-things-circuits), but any Arduino-based firmware can be expressed as a modular-thing, so adding new ones is not difficult. We are developing some [examples](js/examples)... 
+
+It is also possible to build small UIs in the modular-things IDE, mixing webpage code directly with machine-controller code.
+
+![mt-ui](log/video/mt-02-ui.mp4)
+
+We've used the system to successfully build systems of medium complexity, like a xylophone that plays itself;
+
+![mt-xylo](log/video/mt-03-xylophone.mp4)
+
+And we've used it in an educational context, where [HTMAA](https://fab.cba.mit.edu/classes/863.22/) student groups used it as a machine-building framework.
+
+![mt-machines](log/video/mt-04-machineweek.mp4)
+
+--- 
 
 modular-thing is written by [Quentin Bolsee](https://github.com/qbolsee), [Leo McElroy](https://github.com/leomcelroy) and [Jake Read](https://github.com/jakeread) based on ongoing work at the [MIT Center for Bits and Atoms](https://cba.mit.edu/) and [Hack Club](https://hackclub.com/). It is based on the [surprising performance of modern USB](log/2022-11_usb-motion-perf-tests-log.md), an insight that we picked up from the [urumbu project](https://gitlab.cba.mit.edu/neilg/urumbu) ([paper](https://cba.mit.edu/docs/papers/22.11.Urumbu.pdf)). Under the hood, it uses [osap](http://osap.tools/) to route packets and serialize data. Also inspired by the [virtual-machine](https://cba.mit.edu/docs/theses/16.08.Peek.pdf) architecture pioneered by [Nadya Peek](http://infosyncratic.nl/) and [Ilan Moyer](https://web.mit.edu/imoyer/www/index.html), way back in the way back. 
 
