@@ -24,7 +24,7 @@ let VT = {
   STACK_DEST: 1
 }
 
-VT.defaultStackSize = 5
+VT.defaultStackSize = 6
 
 // endpoint layer types & keys 
 let EP = {
@@ -53,6 +53,16 @@ let VBUS =  {
   BROADCAST_SET_RES: 144,
   BROADCAST_RM_REQ: 147,
   BROADCAST_RM_RES: 148 
+}
+
+// root layer keys 
+let RT = {
+  DBG_STAT: 151,
+  DBG_ERRMSG: 152,
+  DBG_DBGMSG: 153,
+  DBG_RES: 161,
+  RENAME_REQ: 171,
+  RENAME_RES: 172
 }
 
 let EPMSEG = {
@@ -189,4 +199,5 @@ export {
   EP,     // endpoint keys 
   EPMSEG, // mseg endpoint keys,
   VBUS,   // vbus mvc keys 
+  RT,     // root mvc keys 
 }
