@@ -7,8 +7,11 @@
 
 VL53L1X sensor;
 
+// message-passing memory allocation 
+#define OSAP_STACK_SIZE 10
+VPacket messageStack[OSAP_STACK_SIZE];
 // type of board (firmware name)
-OSAP osap("timeOfFlight");
+OSAP osap("timeOfFlight", messageStack, OSAP_STACK_SIZE);
 
 // ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);

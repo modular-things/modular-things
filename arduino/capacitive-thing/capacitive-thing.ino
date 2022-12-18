@@ -14,8 +14,11 @@ const int pins_piano[N_PAD] = {2, 3, 4, 5, 6, 7};
 
 Adafruit_FreeTouch qt_array[N_PAD];
 
+// message-passing memory allocation 
+#define OSAP_STACK_SIZE 10
+VPacket messageStack[OSAP_STACK_SIZE];
 // type of board (firmware name)
-OSAP osap("capacitive");
+OSAP osap("capacitive", messageStack, OSAP_STACK_SIZE);
 
 // ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);

@@ -16,14 +16,14 @@
 #define SCREEN_ADDRESS 0x3C
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT);
 
+// message-passing memory allocation 
+#define OSAP_STACK_SIZE 10
+VPacket messageStack[OSAP_STACK_SIZE];
 // type of board (firmware name)
-OSAP osap("oled");
+OSAP osap("oled", messageStack, OSAP_STACK_SIZE);
 
 // ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
-
-// ---------------------------------------------- 1 Vertex
-boolean preQuery(void);
 
 // ---------------------------------------------- 1th Vertex: String input Endpoint 
 EP_ONDATA_RESPONSES onStringData(uint8_t* data, uint16_t len) {

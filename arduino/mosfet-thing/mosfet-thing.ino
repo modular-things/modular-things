@@ -7,7 +7,10 @@
 #define PIN_LED 15
 
 // ---------------------------------------------- OSAP central-nugget 
-OSAP osap("mosfet");
+// message-passing memory allocation 
+#define OSAP_STACK_SIZE 10
+VPacket messageStack[OSAP_STACK_SIZE];
+OSAP osap("mosfet", messageStack, OSAP_STACK_SIZE);
 
 // ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
