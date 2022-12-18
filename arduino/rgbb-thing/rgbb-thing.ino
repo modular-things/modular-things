@@ -8,8 +8,11 @@
 #define PIN_B 16
 #define PIN_BUT 17
 
+// message-passing memory allocation 
+#define OSAP_STACK_SIZE 10
+VPacket messageStack[OSAP_STACK_SIZE];
 // ---------------------------------------------- OSAP central-nugget 
-OSAP osap("rgbb");
+OSAP osap("rgbb", messageStack, OSAP_STACK_SIZE);
 
 // ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);

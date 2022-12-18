@@ -54,15 +54,13 @@ modular-thing is written by [Quentin Bolsee](https://github.com/qbolsee), [Leo M
 
 # Writing New modular-things 
 
-For embedded (arduino) codes, [manually install] the OSAP library, which you can download as a zip here: https://github.com/jakeread/osap-arduino.
+For embedded (arduino) codes, install the OSAP library, which you can download as a zip here: https://github.com/jakeread/osap-arduino, and should also be available via arduino's library manager.
 
 Also, install the `FlashStorage_SAMD` library, via the library manager.
 
-We use the [ArduinoCore-fab-sam](https://github.com/qbolsee/ArduinoCore-fab-sam), which you can install into Arduino via the notes in that repo. 
+We use the [ArduinoCore-fab-sam](https://github.com/qbolsee/ArduinoCore-fab-sam) for [these circuits](https://github.com/modular-things/modular-things-circuits), which you can install into Arduino via the notes in that repo.
 
-Notes here are abbreviated - if you're a student in HTMAA and are trying to write a new modular-thing, but understanding other examples are not enough, contact us. 
-
-## Writing VMs
+## Brief Notes on Writing "virtual things" 
 
 - name your firmware with `OSAP osap("stepper");` i.e. 
 - add `stepper.js` in `thisRepo/js/virtualThings`
