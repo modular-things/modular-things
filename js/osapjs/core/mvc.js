@@ -16,20 +16,11 @@ Copyright is retained and must be preserved. The work is provided as is;
 no warranty is provided, and users accept all liability.
 */
 
-import { TS, VT, EP, VBUS } from './ts.js'
+import { TS, VT, EP, VBUS, RT } from './ts.js'
 import TIME from './time.js'
 import PK from './packets.js'
 
 let ROUTEREQ_MAX_TIME = 2000 // ms 
-
-let RT = {
-  DBG_STAT: 151,
-  DBG_ERRMSG: 152,
-  DBG_DBGMSG: 153,
-  DBG_RES: 161,
-  RENAME_REQ: 171,
-  RENAME_RES: 172
-}
 
 export default function OMVC(osap) {
   // ------------------------------------------------------ Query IDs
@@ -86,10 +77,11 @@ export default function OMVC(osap) {
             let res = {
               loopHighWaterMark: TS.read("uint32", data, 0),
               errorCount: TS.read("uint32", data, 4),
-              debugCount: TS.read("uint32", data, 8)
+              debugCount: TS.read("uint32", data, 8),
+              version: TS.read("uint32", data, 12)
             }
             if (stream != "none") {
-              res.msg = TS.read("string", data, 12).value
+              res.msg = TS.read("string", data, 16).value
             }
             resolve(res)
           }
