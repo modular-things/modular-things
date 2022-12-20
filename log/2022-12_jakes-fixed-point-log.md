@@ -119,7 +119,7 @@ These are ~ fine as is, maybe, but does a little better with a 10ms timebase, a 
 
 I think a more sane approach would be to just roll position around somehow... it seems ~ somewhat inevitable... that amounts to not changing the existing code too much, save for the wrapping-integer, and for looking a little differently at target positions. 
 
-## Rollover
+### Rollover
 
 OK: I think... my insight so far is that we really want speeds in per-tick units, so we're not doing any multiplication... and we want to use the fact that *we never integrate a delta of more than one* to roll position into a much larger counter... I think this way we can end up with pretty huge dynamic range, but I am apparently out of time today to figure it out. 
 
@@ -135,6 +135,18 @@ my goals next:
 OK, starting to make more sense. This is fundamental, so worth some slow work, though I'm equally impatient with it... tomorrow. 
 
 - the last trick is like... this distance-to-stop calculation, that's across scales, innit ? maybe the 64-bit expansion still covers in that case, or maybe not, maybe we have to calculate something else up front, like that state-space slope... which is the same maths anyways, isn't it? 
+
+## 2022 12 20 
+
+OK, IIRC this is ~ basically working, but not quite, and we have elected for `2.30` fixed points, where we use the vast majority of our bits behind the point, stash rates in a velocity-per-integration-unit-unit, then rollover into a 64-bit fixed point position that's basically `34.30` fixed point: far more range than we'll ever need, and far more precision than we'll ever need.
+
+Then we'll need to implement that in the code, get it up to testing... and I think think about our epsilons, absolute rates, etc, and try to guard against 'em. 
+
+Hmmm... it's working-ish, though integration steps are still large-ish on account of (I think) much use of 64-bit integers... in particular, the stopping distance calculation. 
+
+Perhaps the en-quickening way to to this would be to calculate that up front, rather than at every integration step... in some way, we're defining a velocity-and-accel boundary (?). 
+
+Yeah, this would be the smarts then: it reduces also the integration time back from ~ 40us to ~4us, meaning we could approach 100kHz if we'd like. So, next I'll figure how to calculate "stopping distance" up front, even though it's a rate-dependent calculation. 
 
 ---
 
