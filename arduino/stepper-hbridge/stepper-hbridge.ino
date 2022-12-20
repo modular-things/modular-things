@@ -7,7 +7,10 @@
 #include <core/ts.h>
 
 // ---------------------------------------------- OSAP central-nugget 
-OSAP osap("stepper");
+// message-passing memory allocation 
+#define OSAP_STACK_SIZE 12
+VPacket messageStack[OSAP_STACK_SIZE];
+OSAP osap("stepper", messageStack, OSAP_STACK_SIZE);
 
 // ---------------------------------------------- 0th Vertex: OSAP USB Serial
 VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
