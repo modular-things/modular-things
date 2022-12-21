@@ -148,6 +148,99 @@ Perhaps the en-quickening way to to this would be to calculate that up front, ra
 
 Yeah, this would be the smarts then: it reduces also the integration time back from ~ 40us to ~4us, meaning we could approach 100kHz if we'd like. So, next I'll figure how to calculate "stopping distance" up front, even though it's a rate-dependent calculation. 
 
+### When2Decel State Machine
+
+MK, this is 
+
+```cpp
+// how far to stop, at end ? 
+// for vf = 0, d = (vel^2) / (2 * a)
+// or d / (2 * a) = vel ^ 2
+```
+
+Or, more easily considered on the v-t plot ? though it doesn't tell us anything about distance. We want to define a boundary in our easily-available state space (vel, dist), that, if crossed, tells us to deccel. 
+
+But, I mean, IDK what to say here: we have a stopping distance:
+
+$$
+d = \frac{v^2}{2a}
+$$
+
+Which, fwiw, is more involved when we have nonzero vf, but not that bad.
+
+Maybe in terms of time-to-deccel, though another division appears:
+
+$$
+0 = v_i + at
+$$
+
+$$
+t = \frac{-v_i}{a}
+$$
+
+And distance within that time:
+
+$$
+d = \frac{v_i + v_f}{2} * t
+$$
+
+$$
+d = \frac{v_i}{2} * t
+$$
+
+I mean, the div/two is fast, innit, but the $/a$ isn't, and we can see that the above is just going to land us at our original $d = v^2 / 2a$ stopping distance calculation... like, this is just kinematics, the boundary I'm looking for *is* that formulation. 
+
+I'm trying it this way since I want to run it as a state machine, but it might just be that I have to calculate the whole trapezoid up front - as is the case w/ everyone else who runs these types of codes. 
+
+I don't want to do that just yet - I'd like to try the last trick of rm'ing the *a* term... 
+
+$$
+da = v^2 / 2 
+$$
+
+This at least makes the div/two into `>> 2` - real quick. Let's see... then if I have 
+
+```cpp
+stopDA = posDelta * accel;
+maxStopDA = (v*v) >> 2;
+```
+
+So...
+
+$$
+d = \frac{v^2}{2a}
+$$
+
+To sanity check... previously I was decelerating if my stopping distance w/ this maxed accel & current rate was larger (or equal) to my current distance from the target, I would start slowing down. 
+
+It's two distance comparisons, and since $a$ is constant here, it means I should be able to compare the distances, multipled to A, 
+
+OP, I think I am learning that `>>` is "arithmetic" right shift whereas `>>>` is logical - and `>>` shifts in ones on the left, leading to these -ve numbers... 
+
+oof, IDK - I think, for starters, my max accel is whackity huge, I'm going up to 200 units / sec in one tick. 
+
+Yeah, for some reason I am not using accel here at all, it's getting pinned immediately... something something, scaling on the way down... IDK if I will manage to sort this out today, ffs. 
+
+Oye yeah check it out, here's the condition we want, when this is true we want to start sloooowen down:
+
+$$
+d_{2targ} < d_{2stop} = \frac{v^2}{2a}
+$$
+
+So we can move the constants over, to compare:
+
+$$
+(2a * d_{2targ}) < (2a*d_{2stop}) = v^2
+$$
+
+Here's our comparison:
+
+$$
+(2a_{max} * d_{2targ}) <  v^2
+$$
+
+This is mucho-better looking, though I think my $2a_{max} * d_{2targ}$ maths is looking pretty sus; I should expect it to be dropping consistently as the distance-to-target decreases, it's just jumping all over though. 
+
 ---
 
 ## Perf Goals

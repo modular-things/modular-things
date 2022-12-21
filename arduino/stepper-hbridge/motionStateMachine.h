@@ -20,7 +20,10 @@ typedef struct motionState_t {
   float vel;
   float accel;
   float distanceToTarget;
-  float stopDistance;
+  float maxVel;
+  float maxAccel;
+  float twoDA;
+  float vSquared;
 } motionState_t;
 
 void motion_init(int32_t microsecondsPerIntegration);

@@ -42,7 +42,7 @@ boolean beforeMotionStateQuery(void);
 
 Endpoint stateEndpoint(&osap, "motionState", onMotionStateData, beforeMotionStateQuery);
 
-uint8_t stateData[32];
+uint8_t stateData[64];
 
 boolean beforeMotionStateQuery(void){
   motionState_t state;
@@ -52,7 +52,10 @@ boolean beforeMotionStateQuery(void){
   ts_writeFloat32(state.vel, stateData, &rptr);
   ts_writeFloat32(state.accel, stateData, &rptr);
   ts_writeFloat32(state.distanceToTarget, stateData, &rptr);
-  ts_writeFloat32(state.stopDistance, stateData, &rptr);
+  ts_writeFloat32(state.maxVel, stateData, &rptr);
+  ts_writeFloat32(state.maxAccel, stateData, &rptr);
+  ts_writeFloat32(state.twoDA, stateData, &rptr);
+  ts_writeFloat32(state.vSquared, stateData, &rptr);
   stateEndpoint.write(stateData, rptr);
   // in-fill current posn, velocity, and acceleration
   return true;
