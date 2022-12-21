@@ -68,7 +68,7 @@ export default function stepper(osap, vt, name) {
   // -------------------------------------------- Setters
   // how many steps-per-unit,
   // this could be included in a machineSpaceToActuatorSpace transform as well,
-  let spu = 20
+  let spu = 10
   // each has a max-max velocity and acceleration, which are user settings,
   // but velocity is also abs-abs-max'd at our tick rate...
   let absMaxVelocity = 4000 / spu
@@ -144,7 +144,10 @@ export default function stepper(osap, vt, name) {
         vel: TS.read("float32", data, 4) / spu,
         accel: TS.read("float32", data, 8) / spu,
         distanceToTarget: TS.read("float32", data, 12) / spu,
-        stopDistance: TS.read("float32", data, 16) / spu,
+        maxVel: TS.read("float32", data, 16) / spu,
+        maxAccel: TS.read("float32", data, 20) / spu,
+        twoDA: TS.read("float32", data, 24) / spu,
+        vSquared: TS.read("float32", data, 28) / spu,
       }
     } catch (err) {
       console.error(err)
@@ -181,8 +184,12 @@ export default function stepper(osap, vt, name) {
       return new Promise(async (resolve, reject) => {
         let check = () => {
           getState().then((states) => {
-            console.log(`${name}\t acc ${states.accel.toFixed(2)},\t vel ${states.vel.toFixed(2)},\t pos ${states.pos.toFixed(2)},\t dtt ${states.distanceToTarget.toFixed(2)},\t sd ${states.stopDistance.toFixed(2)}`)
-            if (states.vel < 0.001 && states.vel > -0.001) {
+            console.log(
+`${name}
+acc ${states.accel.toFixed(6)},\t vel ${states.vel.toFixed(2)},\t pos ${states.pos.toFixed(2)},\t dtt ${states.distanceToTarget.toFixed(2)},
+maxAcc ${states.maxAccel.toFixed(6)},\t maxVel ${states.maxVel.toFixed(2)},\t twoDA ${states.twoDA.toFixed(12)},\t vSqr ${states.vSquared.toFixed(12)}`
+)
+            if (Math.abs(states.distanceToTarget) < 0.001) {
               resolve()
             } else {
               setTimeout(check, 10)
