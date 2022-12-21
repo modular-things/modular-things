@@ -97,6 +97,9 @@ volatile fpint64_t distanceToTarget = 0;
 volatile fpint64_t twoDA = 0;
 volatile fpint64_t vSquared = 0;
 
+// ~ wavey, babey 
+#define FP_STOPCALC_REDUCE 4
+
 // s/o to http://academy.cba.mit.edu/classes/output_devices/servo/hello.servo-registers.D11C.ino 
 // s/o also to https://gist.github.com/nonsintetic/ad13e70f164801325f5f552f84306d6f 
 void motion_init(int32_t microsecondsPerIntegration){
@@ -166,9 +169,9 @@ void motion_integrate(void){
       // (x << 1) == (x * 2), that's gorgus, 
       // and we're going to do this... with a little less prescision, as accel can be punishing:
       // that's the (x >> 16) in each of these terms... 
-      twoDA = ((distanceToTarget << 1) >> 16) * ((int64_t)(maxAccel) >> 16);
+      twoDA = ((distanceToTarget << 1) >> FP_STOPCALC_REDUCE) * ((int64_t)(maxAccel) >> FP_STOPCALC_REDUCE);
       //abs(((((int64_t)(2 << fp_scale) * distanceToTarget) >> fp_scale) * (int64_t)(maxAccel)));
-      vSquared = ((int64_t)(vel >> 16) * (int64_t)(vel >> 16));
+      vSquared = ((int64_t)(vel >> FP_STOPCALC_REDUCE) * (int64_t)(vel >> FP_STOPCALC_REDUCE));
       // we can use that to compare when-2-stop, 
       if(twoDA <= vSquared){    // if we're going to overshoot, deccel:
         if(vel <= 0){                               // if -ve vel,
@@ -231,7 +234,8 @@ void motion_setPositionTarget(float _targ, float _maxVel, float _maxAccel){
   // first, elevate from units-per-sec to units-per-integration-step,
   // and convert, 
   fpint32_t _mvCand = fp_floatToFixed32(_maxVel * delT);
-  fpint32_t _maCand = fp_floatToFixed32(_maxAccel * delT);
+  // I think that we might need to scale accel by delT^2, since 2nd derivative (?) or sth ?
+  fpint32_t _maCand = fp_floatToFixed32(_maxAccel * delT * delT);
   // and check againt our abs-max, 
   if(_mvCand > absMaxRate) _mvCand = absMaxRate;
   if(_maCand > absMaxRate) _maCand = absMaxRate;
@@ -245,7 +249,7 @@ void motion_setPositionTarget(float _targ, float _maxVel, float _maxAccel){
 }
 
 void motion_setVelocityTarget(float _targ, float _maxAccel){
-  fpint32_t _maCand = fp_floatToFixed32(_maxAccel * delT);
+  fpint32_t _maCand = fp_floatToFixed32(_maxAccel * delT * delT);
   if(_maCand > absMaxRate) _maCand = absMaxRate;
   noInterrupts();
   maxAccel = _maCand;
