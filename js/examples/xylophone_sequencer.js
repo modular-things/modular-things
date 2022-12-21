@@ -1,5 +1,5 @@
 // xylophone.js
-// Jake Read, Quentin Bolsee
+// Jake Read, Quentin Bolsee, Leo McElroy
 // MIT license 2022
 
 // let's calculate the steps-per-unit,
