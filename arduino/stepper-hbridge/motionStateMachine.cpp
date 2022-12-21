@@ -56,10 +56,10 @@ fpint32_t fp_div32x32(fpint32_t num, fpint32_t denum){
 
 // big-div, 
 fpint64_t fp_calcStopDistance(fpint32_t _vel, fpint32_t _maxAccel){
-  return 0;
-  // int64_t _velSq = ((int64_t)(_vel) * (int64_t)(_vel)) >> fp_scale;
-  // int64_t _accelTwo = ((int64_t)(_maxAccel) * (int64_t)(fp_int32ToFixed32(2))) >> fp_scale;
-  // return (_velSq << fp_scale) / _accelTwo;
+  // return 0;
+  int64_t _velSq = ((int64_t)(_vel) * (int64_t)(_vel)) >> fp_scale;
+  int64_t _accelTwo = ((int64_t)(_maxAccel) * (int64_t)(fp_int32ToFixed32(2))) >> fp_scale;
+  return (_velSq << fp_scale) / _accelTwo;
 }
 
 // shouldn't be here: just using to debug interval time 
@@ -93,7 +93,9 @@ volatile fpint32_t velTarget = 0;
 volatile fpint32_t delta = 0;
 volatile fpint32_t stepModulo = 0;
 volatile fpint64_t distanceToTarget = 0;
-volatile fpint64_t stopDistance = 0;
+
+volatile fpint64_t twoDA = 0;
+volatile fpint64_t vSquared = 0;
 
 // s/o to http://academy.cba.mit.edu/classes/output_devices/servo/hello.servo-registers.D11C.ino 
 // s/o also to https://gist.github.com/nonsintetic/ad13e70f164801325f5f552f84306d6f 
@@ -160,14 +162,15 @@ void motion_integrate(void){
         accel = 0;
         break;
       }
-      // how far to stop, at end ? 
-      // for vf = 0, d = (vel^2) / (2 * a)
-      // or d / (2 * a) = vel ^ 2
-      // or sqrt(d/(2a)) = vel ?? useless, sqrt hard 
-      // yar: this easily scales velocities outside of any sensible range... 
-      stopDistance = fp_calcStopDistance(vel, maxAccel); // fp_div(fp_mult(vel, vel), fp_mult(fp_intToFixed(2), maxAccel));
-      // check for overshoot: 
-      if(stopDistance >= abs(distanceToTarget)){    // if we're going to overshoot, deccel:
+      // I think it's like this:
+      // (x << 1) == (x * 2), that's gorgus, 
+      // and we're going to do this... with a little less prescision, as accel can be punishing:
+      // that's the (x >> 16) in each of these terms... 
+      twoDA = ((distanceToTarget << 1) >> 16) * ((int64_t)(maxAccel) >> 16);
+      //abs(((((int64_t)(2 << fp_scale) * distanceToTarget) >> fp_scale) * (int64_t)(maxAccel)));
+      vSquared = ((int64_t)(vel >> 16) * (int64_t)(vel >> 16));
+      // we can use that to compare when-2-stop, 
+      if(twoDA <= vSquared){    // if we're going to overshoot, deccel:
         if(vel <= 0){                               // if -ve vel,
           accel = maxAccel;                           // do +ve accel, 
         } else {                                    // if +ve vel, 
@@ -176,7 +179,7 @@ void motion_integrate(void){
       } else {                                      // if we're not going to overshoot, 
         if(distanceToTarget > 0){                   // if +ve distance, 
           accel = maxAccel;                           // do +ve accel,
-        } else {                                    // if -ve distnace,
+        } else {                                  // if -ve distnace,
           accel = -maxAccel;                          // do -ve accel, 
         }
       }
@@ -245,7 +248,6 @@ void motion_setVelocityTarget(float _targ, float _maxAccel){
   fpint32_t _maCand = fp_floatToFixed32(_maxAccel * delT);
   if(_maCand > absMaxRate) _maCand = absMaxRate;
   noInterrupts();
-  if(_maxAccel > absMaxRate) _maxAccel = absMaxRate;
   maxAccel = _maCand;
   velTarget = fp_floatToFixed32(delT * _targ);
   mode = MOTION_MODE_VEL;
@@ -263,7 +265,10 @@ void motion_getCurrentStates(motionState_t* statePtr){
   statePtr->vel = fp_fixed32ToFloat(vel) / delT;
   statePtr->accel = fp_fixed32ToFloat(accel) / delT;
   statePtr->distanceToTarget = fp_fixed64ToFloat(distanceToTarget);
-  statePtr->stopDistance = fp_fixed64ToFloat(stopDistance);
+  statePtr->maxVel = fp_fixed32ToFloat(maxVel) / delT;
+  statePtr->maxAccel = fp_fixed32ToFloat(maxAccel) / delT;
+  statePtr->twoDA = fp_fixed64ToFloat(twoDA);
+  statePtr->vSquared = fp_fixed64ToFloat(vSquared);
   interrupts();
 }
 
