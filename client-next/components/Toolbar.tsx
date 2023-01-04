@@ -1,4 +1,7 @@
 import { Button, Flex, Heading } from "theme-ui";
+import download from "../lib/download";
+import runCode from "../lib/run";
+import { getCode } from "./CodeMirror";
 
 export default function Toolbar() {
     return (
@@ -14,9 +17,9 @@ export default function Toolbar() {
             }
         }}>
             <Heading as="h1" sx={{ fontSize: "1.1rem" }} px="0.25rem">Modular Things</Heading>
-            <Button>run (shift+enter)</Button>
+            <Button onClick={() => runCode(getCode() ?? "")}>run (shift+enter)</Button>
             <Button>scan</Button>
-            <Button>download</Button>
+            <Button onClick={() => download("anon.js", getCode() ?? "")}>download</Button>
         </Flex>
     )
 }
