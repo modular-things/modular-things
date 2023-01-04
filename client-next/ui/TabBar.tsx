@@ -5,24 +5,21 @@ import { Button, ThemeUIStyleObject } from "theme-ui";
 export default function TabBar(props: {
     direction?: "horizontal" | "vertical",
     tabs: string[],
-    selected: number,
+    selected: number | null,
     onSelect?: (index: number | null) => void,
-    sx?: ThemeUIStyleObject
+    className?: string,
 }) {
-    const { direction = "horizontal", tabs, selected, onSelect, sx } = props;
+    const { direction = "horizontal", tabs, selected, onSelect, className } = props;
     return (
         <div sx={{
             display: "flex",
-            // flexDirection: direction === "horizontal" ? "row" : "column",
             alignItems: "center",
             [direction === "horizontal" ? "pt" : "pl"]: "0.25rem",
             [direction === "horizontal" ? "pl" : "pt"]: "0.5rem",
             [direction === "horizontal" ? "borderBottom" : "borderRight"]: "1px solid black",
             // firefox bug workaround
             writingMode: direction === "horizontal" ? "horizontal-tb" : "vertical-rl",
-
-            ...sx
-        }}>
+        }} className={className}>
             {tabs.map((tab, index) => (
                 <Button
                     key={index}
@@ -43,7 +40,11 @@ export default function TabBar(props: {
                         [direction === "horizontal" ? "borderBottomRightRadius" : "borderBottomLeftRadius"]: 0,
 
                         // firefox bug workaround
-                        writingMode: direction === "horizontal" ? "horizontal-tb" : "vertical-rl"
+                        writingMode: direction === "horizontal" ? "horizontal-tb" : "vertical-rl",
+                        ...(direction === "vertical" && {
+                            py: "1rem",
+                            px: "0.5rem"
+                        })
                     }}
                 ><span sx={{
                     writingMode: direction === "horizontal" ? "horizontal-tb" : "vertical-rl",
