@@ -6,7 +6,7 @@ let intervals: number[] = [];
 let timeouts: number[] = [];
 let loops: boolean[] = [];
 
-export default function runCode(code: string, thingsObj: GlobalState["things"]) {
+export default function runCode(code: string, state: GlobalState) {
     const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 
     intervals.forEach(clearInterval);
@@ -42,7 +42,7 @@ export default function runCode(code: string, thingsObj: GlobalState["things"]) 
     };
 
     const render = (node: Node) => {
-        const viewWindow = document.querySelector(".view-window");
+        const viewWindow = state.view;
         if(!viewWindow) return;
         viewWindow.innerHTML = "";
         viewWindow.append(node);
@@ -50,8 +50,8 @@ export default function runCode(code: string, thingsObj: GlobalState["things"]) 
 
     const things: Record<string, Thing["vThing"]> = {};
 
-    for (const key in thingsObj) {
-      things[key] = thingsObj[key].vThing;
+    for (const key in state.things) {
+      things[key] = state.things[key].vThing;
     }
   
     const args = {

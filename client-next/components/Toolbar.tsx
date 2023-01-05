@@ -28,10 +28,10 @@ export default function Toolbar() {
 }
 
 function RunButton() {
-    const { things } = useStore(["things"]);
+    const state = useStore(["things", "view"]);
 
     return (
-        <Button onClick={() => runCode(getCode() ?? "", things)}>run (shift+enter)</Button>
+        <Button onClick={() => runCode(getCode() ?? "", state)}>run (shift+enter)</Button>
     );
 }
 
@@ -54,6 +54,9 @@ function ScanButton() {
                 setState(ScanState.Idle);
             } catch(e) {
                 setState(ScanState.Error);
+                patchStore({
+                    things: {}
+                });
                 console.error(e);
             }
         }}>
