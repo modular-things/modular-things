@@ -1,4 +1,12 @@
 import { createState } from "niue";
+import type { rescan } from "./modularThingClient";
 
-export const [useStore, patchStore] = createState({
+type Unpromisify<T> = T extends Promise<infer U> ? U : T;
+
+export type GlobalState = {
+    things: Unpromisify<ReturnType<typeof rescan>>
+};
+
+export const [useStore, patchStore] = createState<GlobalState>({
+    things: {}
 });
