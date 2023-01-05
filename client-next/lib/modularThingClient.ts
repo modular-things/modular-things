@@ -206,7 +206,7 @@ wscVPort.isOpen = () => { return (wscVPortStatus == "open") }
 // then we can start a websocket client to connect there,
 // automated remote-proc. w/ vPort & wss medium,
 // for args, do '/processName.js?args=arg1,arg2'
-fetch('/startLocal/osapSerialBridge.js').then(async (res) => {
+fetch('http://localhost:8080/startLocal/osapSerialBridge.js').then(async (res) => {
   const text = await res.text();
   if (text.includes('OSAP-wss-addr:')) {
     let addr = text.substring(text.indexOf(':') + 2)

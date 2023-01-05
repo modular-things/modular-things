@@ -4,7 +4,7 @@ import { javascript } from "@codemirror/lang-javascript"
 import { EditorState, StateField } from "@codemirror/state";
 import { syntaxTree, indentUnit } from "@codemirror/language";
 import { indentWithTab } from "@codemirror/commands";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ThemeUIStyleObject } from "theme-ui";
 
 const countDocChanges = StateField.define({
@@ -36,12 +36,11 @@ export function getCode() {
 }
 
 export default function CodeMirror({ className }: { className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
+  // const ref = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<EditorView>();
 
-  useEffect(() => {
-    console.log("ref.current", ref.current);
-    if(!ref.current) return;
+  const editorRef = useCallback((node: HTMLDivElement) => {
+    if(!node) return;
 
     const extensions = [
       autocompleteRemoved, 
@@ -55,21 +54,17 @@ export default function CodeMirror({ className }: { className?: string }) {
 
     const view = new EditorView({
       state,
-      parent: ref.current
+      parent: node
     });
     //@ts-expect-error
-    ref.current.children[0]["view"] = view;
+    node.children[0]["view"] = view;
     setView(view);
-
-    return () => {
-      view?.destroy();
-    };
-  }, [ref.current]);
+  }, [])
 
   return <div sx={{
     "& > *": {
       height: "100%",
       width: "100%"
     }
-  }} className={className} ref={ref} />;
+  }} className={className} ref={editorRef} />;
 }

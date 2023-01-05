@@ -1,23 +1,27 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button, Flex, Heading, Text } from "theme-ui";
-import { useStore } from "../lib/state";
+import { patchStore, useStore } from "../lib/state";
 import TabBar from "../ui/TabBar";
 
 export default function Sidebar() {
     const [tab, setTab] = useState<number | null>(null);
+    const viewRef = useCallback((node: HTMLDivElement) => {
+        patchStore({
+            view: node
+        });
+    }, []);
 
     return (
-        </*Flex sx={{
-            writingMode: "vertical-lr", // firefox bug workaround
-            "& > *:not(:last-child)": {
-                writingMode: "horizontal-tb"
-            },
-            flexDirection: "column"
-        }}*/>
+        <>
             {tab === 0 && <PanelWrapper><Devices /></PanelWrapper>}
+            <PanelWrapper sx={{
+                display: tab === 1 ? "initial" : "none"
+            }}>
+                <div ref={viewRef} />
+            </PanelWrapper>
             <TabBar
                 direction="vertical"
-                tabs={["Devices", "All Views", "Drawing Machine", "Moving thing"]}
+                tabs={["Devices", "View", "Help"]}
                 selected={tab}
                 onSelect={(tab) => setTab(tab)}
                 sx={{
@@ -28,9 +32,9 @@ export default function Sidebar() {
     )
 }
 
-function PanelWrapper({ children }: { children: React.ReactNode }) {
+function PanelWrapper({ children, className }: { children: React.ReactNode, className?: string }) {
     return (
-        <Box sx={{
+        <Box className={className} sx={{
             flexDirection: "column",
             margin: "0.25rem",
             border: "1px solid",
