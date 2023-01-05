@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { Flex } from "theme-ui";
-import CodeMirror from "../components/CodeMirror";
 import Editor from "../components/Editor";
+import Sidebar from "../components/Sidebar";
 import Toolbar from "../components/Toolbar";
 import TabBar from "../ui/TabBar";
 
@@ -26,7 +26,7 @@ export default function Index() {
                     <Editor sx={{
                         flex: 1
                     }} />
-                    <TabBar direction="vertical" tabs={["Devices", "All Views", "Drawing Machine", "Moving thing"]} selected={1} />
+                    <Sidebar />
                 </Flex>
             </Flex>
         </>

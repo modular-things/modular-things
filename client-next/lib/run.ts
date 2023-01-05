@@ -1,10 +1,12 @@
+import { Thing } from "./modularThingClient";
+import { GlobalState } from "./state";
 import createSynchronizer from "./virtualThings/synchronizer";
 
 let intervals: number[] = [];
 let timeouts: number[] = [];
 let loops: boolean[] = [];
 
-export default function runCode(code: string) {
+export default function runCode(code: string, thingsObj: GlobalState["things"]) {
     const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 
     intervals.forEach(clearInterval);
@@ -46,11 +48,11 @@ export default function runCode(code: string) {
         viewWindow.append(node);
     };
 
-    const things = {};
+    const things: Record<string, Thing["vThing"]> = {};
 
-    /*for (const key in global_state.things) {
-      things[key] = global_state.things[key].vThing;
-    } TODO */
+    for (const key in thingsObj) {
+      things[key] = thingsObj[key].vThing;
+    }
   
     const args = {
       ...things,

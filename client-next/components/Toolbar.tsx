@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Button, Flex, Heading } from "theme-ui";
 import download from "../lib/download";
+import { rescan } from "../lib/modularThingClient";
 import runCode from "../lib/run";
+import { patchStore, useStore } from "../lib/state";
 import { getCode } from "./CodeMirror";
 
 export default function Toolbar() {
@@ -17,9 +20,49 @@ export default function Toolbar() {
             }
         }}>
             <Heading as="h1" sx={{ fontSize: "1.1rem" }} px="0.25rem">Modular Things</Heading>
-            <Button onClick={() => runCode(getCode() ?? "")}>run (shift+enter)</Button>
-            <Button>scan</Button>
+            <RunButton />
+            <ScanButton />
             <Button onClick={() => download("anon.js", getCode() ?? "")}>download</Button>
         </Flex>
-    )
+    );
+}
+
+function RunButton() {
+    const { things } = useStore(["things"]);
+
+    return (
+        <Button onClick={() => runCode(getCode() ?? "", things)}>run (shift+enter)</Button>
+    );
+}
+
+enum ScanState {
+    Loading,
+    Error,
+    Idle
+};
+
+function ScanButton() {
+    const [state, setState] = useState<ScanState>(ScanState.Idle);
+
+    return (
+        <Button disabled={state === ScanState.Loading} onClick={async () => {
+            setState(ScanState.Loading);
+            try {
+                patchStore({
+                    things: await rescan()
+                });
+                setState(ScanState.Idle);
+            } catch(e) {
+                setState(ScanState.Error);
+                console.error(e);
+            }
+        }}>
+            scan
+            {state === ScanState.Loading && "…"}
+            {state === ScanState.Error && <span sx={{
+                color: "red",
+                ml: "0.25rem"
+            }}>!</span>}
+        </Button>
+    );
 }
