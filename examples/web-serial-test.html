@@ -1,0 +1,50 @@
+
+<button class="authorize">authorize port</button>
+<button class="button">available ports</button>
+
+<div>Ports:</div>
+<div class="port-list"></div>
+
+
+<script>
+
+let ports = [];
+
+const portList = document.querySelector(".port-list");
+
+navigator.serial.addEventListener('connect', async (e) => {
+  // Connect to `e.target` or add it to a list of available ports.
+  console.log("connected to", e.target);
+  ports = await navigator.serial.getPorts();
+  draw();
+});
+
+navigator.serial.addEventListener('disconnect', async (e) => {
+  // Remove `e.target` from the list of available ports.
+  console.log("disconnected from", e.target);
+  ports = await navigator.serial.getPorts();
+  draw();
+});
+
+document.querySelector(".button").addEventListener("click", async () => {
+  ports = await navigator.serial.getPorts();
+  draw();
+})
+
+document.querySelector(".authorize").addEventListener("click", async () => {
+  await navigator.serial.requestPort();
+})
+
+const productIdMap = {
+  32834: "PicoArduino",
+  17751: "SAMD21E"
+}
+
+const draw = () => {
+  const deviceNames = ports.map(port => productIdMap[port.getInfo().usbProductId]);
+  portList.innerHTML = deviceNames.map(device => `<li>${device}</li>`).join("");
+}
+
+
+
+</script>
