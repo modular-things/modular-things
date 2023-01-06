@@ -4,7 +4,7 @@ import { Button, ThemeUIStyleObject } from "theme-ui";
 
 export default function TabBar(props: {
     direction?: "horizontal" | "vertical",
-    tabs: string[],
+    tabs: React.ReactNode[],
     selected: number | null,
     onSelect?: (index: number | null) => void,
     className?: string,
@@ -49,6 +49,8 @@ export default function TabBar(props: {
                 ><span sx={{
                     writingMode: direction === "horizontal" ? "horizontal-tb" : "vertical-rl",
                     textOrientation: "mixed",
+                    display: "flex",
+                    alignItems: "center",
                 }}>{tab}</span></Button>
             ))}
         </div>

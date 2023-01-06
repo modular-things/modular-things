@@ -71,6 +71,25 @@
     "@babel/helper-validator-identifier" "^7.19.1"
     to-fast-properties "^2.0.0"
 
+"@carbon/icon-helpers@^10.36.0":
+  version "10.36.0"
+  resolved "https://registry.yarnpkg.com/@carbon/icon-helpers/-/icon-helpers-10.36.0.tgz#2052af78d320a1a9b69010a19a56eaf7dd5115b1"
+  integrity sha512-omrDngPr3HnwecIDzCNYrpPPdLX0kilyHxHpnztKlT7ePTbn5fb+ndmnWaqxjVDFqQgSvfJhTqTUQnwPpGHpAA==
+
+"@carbon/icons-react@^11.13.0":
+  version "11.13.0"
+  resolved "https://registry.yarnpkg.com/@carbon/icons-react/-/icons-react-11.13.0.tgz#7c10c2096e46e6dc4fec6b937d70a64bbc7446f9"
+  integrity sha512-6eW3zHmhw1RRUHW1v99tJKsyaUOTJkM5DwtxbeiD/Ifzheutua1lNqSP97EAuaHJyfs1m49PMNL7dOBBNICc0Q==
+  dependencies:
+    "@carbon/icon-helpers" "^10.36.0"
+    "@carbon/telemetry" "0.1.0"
+    prop-types "^15.7.2"
+
+"@carbon/telemetry@0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@carbon/telemetry/-/telemetry-0.1.0.tgz#57b331cd5a855b4abbf55457456da8211624d879"
+  integrity sha512-kNWt0bkgPwGW0i5h7HFuljbKRXPvIhsKbB+1tEURAYLXoJg9iJLF1eGvWN5iVoFCS2zje4GR3OGOsvvKVe7Hlg==
+
 "@codemirror/autocomplete@^6.0.0":
   version "6.4.0"
   resolved "https://registry.yarnpkg.com/@codemirror/autocomplete/-/autocomplete-6.4.0.tgz#76ac9a2a411a4cc6e13103014dba5e0fe601da5a"
@@ -584,6 +603,11 @@
     "@theme-ui/color-modes" "^0.15.4"
     "@theme-ui/core" "^0.15.4"
     "@theme-ui/css" "^0.15.4"
+
+"@types/carbon__icons-react@^11.12.0":
+  version "11.12.0"
+  resolved "https://registry.yarnpkg.com/@types/carbon__icons-react/-/carbon__icons-react-11.12.0.tgz#5f78687a1e135474d3f8f5fd9aaa8aa84c3030e4"
+  integrity sha512-uAOsYyHWkytAQF3FyJp6TgI9pOlaxlOnBLCYpVnQwJE6G7XY4dkdstxQgdBPrR4ktX76ye0X8GmYCfzBkjOeOw==
 
 "@types/json5@^0.0.29":
   version "0.0.29"
@@ -2074,7 +2098,7 @@ prelude-ls@^1.2.1:
   resolved "https://registry.yarnpkg.com/prelude-ls/-/prelude-ls-1.2.1.tgz#debc6489d7a6e6b0e7611888cec880337d316396"
   integrity sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==
 
-prop-types@^15.8.1:
+prop-types@^15.7.2, prop-types@^15.8.1:
   version "15.8.1"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
   integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
