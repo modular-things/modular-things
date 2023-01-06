@@ -5,9 +5,11 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 This project's structure is based on a few libraries/systems I've found to work particularly well for building maintainable and extensible React applications that aren't too confusing to reason about.
 
 - [`niue`](https://github.com/Merlin04/niue): a simple state management/event library for React that I built a while back. `lib/state.ts` contains the global state store which can be accessed and patched from anywhere in the React app. `lib/events.ts` contains some event definitions that components can subscribe to/dispatch to ease cross-component communication.
-- [`theme-ui`](https://theme-ui.com): a library for styling React apps based on a global theme (in `ui/theme.ts`). This makes it easy to make changes to the look and feel of the app. It also a set of default components to avoid reinventing the wheel, and has some nice-to-haves that plain CSS doesn't like easy responsive styles and various shorthands for CSS properties.
+- [`theme-ui`](https://theme-ui.com): a library for styling React apps based on a global theme (in `ui/theme.ts`). This makes it easy to make changes to the look and feel of the app. It also has a set of default components to avoid reinventing the wheel, and has some nice-to-haves that plain CSS doesn't like easy responsive styles and various shorthands for CSS properties.
 - TypeScript: I find that it helps me catch more bugs quicker and makes code more self-documenting.
 - Next.js: A framework for React that provides reasonable defaults (very little configuration/setup necessary) plus many other features
+
+In general, I put parts of the application in `components`, UI components that aren't tied to the rest of the app in `ui`, and files that don't contain React components in `lib`.
 
 ## Getting Started
 
