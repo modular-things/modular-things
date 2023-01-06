@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button, Flex, Heading, Text } from "theme-ui";
 import { patchStore, useStore } from "../lib/state";
 import TabBar from "../ui/TabBar";
+import FileTree from "./FileTree";
 
 export default function Sidebar() {
-    const [tab, setTab] = useState<number | null>(null);
+    const [tab, setTab] = useState<number | null>(0);
     const viewRef = useCallback((node: HTMLDivElement) => {
         patchStore({
             view: node
@@ -13,15 +14,16 @@ export default function Sidebar() {
 
     return (
         <>
-            {tab === 0 && <PanelWrapper><Devices /></PanelWrapper>}
+            {tab === 0 && <PanelWrapper><FileTree /></PanelWrapper>}
+            {tab === 1 && <PanelWrapper><Devices /></PanelWrapper>}
             <PanelWrapper sx={{
-                display: tab === 1 ? "initial" : "none"
+                display: tab === 2 ? "initial" : "none"
             }}>
                 <div ref={viewRef} />
             </PanelWrapper>
             <TabBar
                 direction="vertical"
-                tabs={["Devices", "View", "Help"]}
+                tabs={["Files", "Devices", "View", "Help"]}
                 selected={tab}
                 onSelect={(tab) => setTab(tab)}
                 sx={{

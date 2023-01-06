@@ -14,7 +14,8 @@ export const theme: Theme = {
     colors: {
         text: "#000",
         background: "#fff",
-        primary: "#33e"
+        primary: "#33e",
+        muted: "#e5e5e5",
     },
     styles: {
         root: {
@@ -28,6 +29,19 @@ export const theme: Theme = {
             },
             "& *": {
                 fontFamily: "inherit"
+            }
+        }
+    },
+    buttons: {
+        primary: {
+            transition: "all 0.1s ease-in-out",
+        },
+        icon: {
+            bg: "muted",
+            p: "0.25rem",
+            transition: "all 0.1s ease-in-out",
+            "&:hover": {
+                filter: "brightness(0.9)"
             }
         }
     }
