@@ -34,8 +34,9 @@ export type FolderSerialized = {
 export type FSNodeSerialized = FileSerialized | FolderSerialized;
 
 export type FS = FSNode[];
+export type FSSerialized = FSNodeSerialized[];
 
-export function deserializeFS(fs: FSNodeSerialized[], parent: Folder | null = null): FS {
+export function deserializeFS(fs: FSSerialized, parent: Folder | null = null): FS {
     const mapFn = (node: FSNodeSerialized): FSNode => {
         const thisNode = { ...node, parent };
         if (thisNode.type === FSNodeType.File) {
@@ -47,7 +48,7 @@ export function deserializeFS(fs: FSNodeSerialized[], parent: Folder | null = nu
     return fs.map(mapFn);
 }
 
-export function serializeFS(fs: FS): FSNodeSerialized[] {
+export function serializeFS(fs: FS): FSSerialized {
     return fs.map((node: FSNode) => {
         const serializedNode = { ...node } as FSNodeSerialized;
         //@ts-expect-error
@@ -70,7 +71,7 @@ export const getNodePath = (node: FSNode) => {
     return path.reverse().join("/");
 };
 
-export const pathToNode = (path: string, fs: Folder[]): FSNode => {
+export const pathToNode = (path: string, fs: FS): FSNode => {
     const parts = path.split("/");
     let node: FSNode | undefined = { type: FSNodeType.Folder, children: fs } as FSNode;
     for (let part of parts) {

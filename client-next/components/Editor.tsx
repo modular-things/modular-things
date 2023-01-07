@@ -3,21 +3,27 @@ import { useState } from "react";
 import { Box, Close, Flex, ThemeUIStyleObject } from "theme-ui";
 import { useOnDeleteNode, useOnOpenFile } from "../lib/events";
 import { FSNodeType } from "../lib/fs";
-import { patchStore, useStore } from "../lib/state";
+import { OpenFile, patchStore, useStore } from "../lib/state";
 import TabBar from "../ui/TabBar";
-import CodeMirror from "./CodeMirror";
+import CodeMirror, { createCMState } from "./CodeMirror";
 
 export default function Editor(props: { className?: string }) {
     const { openFiles, activeTab, fs } = useStore(["openFiles", "activeTab", "fs"]);
 
-    useOnOpenFile((file) => {
-        if(openFiles.includes(file)) {
+    useOnOpenFile((node) => {
+        const existingIndex = openFiles.findIndex(f => f.node === node);
+        if(existingIndex !== -1) {
             patchStore({
-                activeTab: openFiles.indexOf(file)
+                activeTab: existingIndex
             });
         } else {
+            const newOpenFile: OpenFile = {
+                node,
+                cmState: null!
+            };
+            newOpenFile.cmState = createCMState(newOpenFile);
             patchStore({
-                openFiles: [...openFiles, file],
+                openFiles: [...openFiles, newOpenFile],
                 activeTab: openFiles.length
             });
         }
@@ -31,7 +37,7 @@ export default function Editor(props: { className?: string }) {
             });
         }
         patchStore({
-            openFiles: openFiles.filter(v => v !== node)
+            openFiles: openFiles.filter(v => v.node !== node)
         });
     }, [openFiles, activeTab]);
 
@@ -59,9 +65,9 @@ export default function Editor(props: { className?: string }) {
                         <TabBar hasClose sx={{
                             width: "max-content",
                             minWidth: "100%"
-                        }} tabs={openFiles.map(n => (
+                        }} tabs={openFiles.map(f => (
                             <>
-                                {n.name}
+                                {f.node.name}
                             </>
                         ))} selected={activeTab} onSelect={v => v !== null && patchStore({
                             activeTab: v
@@ -79,7 +85,7 @@ export default function Editor(props: { className?: string }) {
                     </Box>
                     <CodeMirror sx={{
                         flex: 1
-                    }} />
+                    }} openFile={activeTab !== null ? openFiles[activeTab] : undefined} />
                 </>
             )}
         </Flex>
