@@ -23,14 +23,13 @@ export default function TabBar(props: {
             writingMode: direction === "horizontal" ? "horizontal-tb" : "vertical-rl",
         }} className={className}>
             {tabs.map((tab, index) => (
-                <Box sx={{
+                <Box key={index} sx={{
                     position: "relative",
                     "&:not(:first-of-type)": {
                         [direction === "horizontal" ? "ml" : "mt"]: "-1px"
                     }
                 }}>
                     <Button
-                        key={index}
                         onClick={() => onSelect?.(selected === index ? null : index)}
                         sx={{
                             transform: direction === "horizontal" ? "none" : "rotate(180deg)",

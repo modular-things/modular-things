@@ -1,11 +1,11 @@
 import { EditorView, basicSetup } from "codemirror"
-import { keymap } from "@codemirror/view";
+import { keymap, ViewUpdate } from "@codemirror/view";
 import { javascript } from "@codemirror/lang-javascript"
 import { EditorState, StateField } from "@codemirror/state";
 import { syntaxTree, indentUnit } from "@codemirror/language";
 import { indentWithTab } from "@codemirror/commands";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ThemeUIStyleObject } from "theme-ui";
+import { useCallback, useEffect, useState } from "react";
+import { OpenFile } from "../lib/state";
 
 const countDocChanges = StateField.define({
   create(state) {
@@ -35,36 +35,48 @@ export function getCode() {
   }) | undefined)?.view.state.doc.toString();
 }
 
-export default function CodeMirror({ className }: { className?: string }) {
-  // const ref = useRef<HTMLDivElement>(null);
+const cmExtensions = (openFile: OpenFile) => [
+  autocompleteRemoved,
+  javascript(),
+  keymap.of([indentWithTab]), // TODO: We should put a note about Esc+Tab for accessibility somewhere.
+  indentUnit.of("  "),
+  // countDocChanges,
+  EditorView.updateListener.of((v: ViewUpdate) => {
+    openFile.cmState = v.state;
+    if(v.docChanged) openFile.node.content = v.state.doc.toString();
+  })
+];
+
+export const createCMState = (openFile: OpenFile) => EditorState.create({ extensions: cmExtensions(openFile), doc: openFile.node.content });
+
+export const deserializeCMState = (state: any, openFile: OpenFile) => EditorState.fromJSON(state, { extensions: cmExtensions(openFile) });
+
+export default function CodeMirror({ className, openFile }: { className?: string, openFile?: OpenFile }) {
   const [view, setView] = useState<EditorView>();
+
+  useEffect(() => {
+    // console.log("cm effect", view, openFile);
+    if(!view || !openFile) return;
+    view.setState(openFile.cmState);
+  }, [view, openFile]);
 
   const editorRef = useCallback((node: HTMLDivElement) => {
     if(!node) return;
 
-    const extensions = [
-      autocompleteRemoved, 
-      javascript(),
-      keymap.of([indentWithTab]), // TODO: We should put a note about Esc+Tab for accessibility somewhere.
-      indentUnit.of("  "),
-      // countDocChanges
-    ]
-
-    const state = EditorState.create({ extensions });
-
     const view = new EditorView({
-      state,
+      // state,
       parent: node
     });
+
     //@ts-expect-error
     node.children[0]["view"] = view;
     setView(view);
-  }, [])
+  }, []);
 
-  return <div sx={{
+  return openFile ? <div sx={{
     "& > *": {
       height: "100%",
       width: "100%"
     }
-  }} className={className} ref={editorRef} />;
+  }} className={className} ref={editorRef} /> : null;
 }

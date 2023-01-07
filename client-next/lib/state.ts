@@ -1,15 +1,22 @@
+import { EditorState } from "@codemirror/state";
 import { createState } from "niue";
-import { FS, deserializeFS, FSNodeType, FSNode } from "./fs";
+import { deserializeCMState } from "../components/CodeMirror";
+import { FS, deserializeFS, FSNodeType, File, FSSerialized, serializeFS, getNodePath, pathToNode } from "./fs";
 import type { rescan } from "./modularThingClient";
 
 type Unpromisify<T> = T extends Promise<infer U> ? U : T;
+
+export type OpenFile = {
+    node: File,
+    cmState: EditorState
+};
 
 export type GlobalState = {
     things: Unpromisify<ReturnType<typeof rescan>>,
     view?: HTMLDivElement | null | undefined,
     fs: FS,
-    openFiles: FSNode[],
-    activeTab: number | null
+    openFiles: OpenFile[],
+    activeTab: number | null,
 };
 
 const initialFs: FS = deserializeFS([
@@ -73,6 +80,47 @@ export const [useStore, patchStore] = createState<GlobalState>({
     things: {},
     view: undefined,
     fs: initialFs,
-    openFiles: [initialFs[0]],
-    activeTab: 0
+    openFiles: [],
+    activeTab: null
 });
+
+export type SerializedOpenFile = {
+    path: string,
+    cmState: any
+};
+
+export type SerializedGlobalState = {
+    fs: FSSerialized,
+    openFiles: SerializedOpenFile[],
+    activeTab: number | null,
+    formatVersion: 0
+};
+
+export const serializeState = (state: GlobalState): SerializedGlobalState => {
+    return {
+        fs: serializeFS(state.fs),
+        openFiles: state.openFiles.map((openFile) => ({
+            path: getNodePath(openFile.node),
+            cmState: openFile.cmState.toJSON()
+        })),
+        activeTab: state.activeTab,
+        formatVersion: 0
+    };
+}
+
+export const deserializeState = (state: SerializedGlobalState): Partial<GlobalState> => {
+    const fs = deserializeFS(state.fs);
+    return {
+        fs,
+        openFiles: state.openFiles.map((oldOpenFile) => {
+            const newOpenFile: OpenFile = {
+                node: pathToNode(oldOpenFile.path, fs) as File,
+                cmState: null!
+            };
+            newOpenFile.cmState = deserializeCMState(oldOpenFile.cmState, newOpenFile);
+            return newOpenFile;
+        }),
+        activeTab: state.activeTab
+    };
+}
+

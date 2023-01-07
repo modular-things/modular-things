@@ -14,8 +14,8 @@ export default function Sidebar() {
 
     return (
         <>
-            {tab === 0 && <PanelWrapper><FileTree /></PanelWrapper>}
-            {tab === 1 && <PanelWrapper><Devices /></PanelWrapper>}
+            {tab === 1 && <PanelWrapper><FileTree /></PanelWrapper>}
+            {tab === 0 && <PanelWrapper><Devices /></PanelWrapper>}
             <PanelWrapper sx={{
                 display: tab === 2 ? "initial" : "none"
             }}>
@@ -23,7 +23,7 @@ export default function Sidebar() {
             </PanelWrapper>
             <TabBar
                 direction="vertical"
-                tabs={["Files", "Devices", "View"/*, "Help"*/]}
+                tabs={["Devices", "Files", "View"/*, "Help"*/]}
                 selected={tab}
                 onSelect={(tab) => setTab(tab)}
                 sx={{
@@ -105,7 +105,7 @@ function Devices({ className }: { className?: string }) {
             ))}
             {Object.keys(things).length === 0 && <Text sx={{
                 color: "gray"
-            }}>no things found...</Text>}
+            }}>no things found...<br/>(maybe try scanning?)</Text>}
         </Flex>
     )
 }
