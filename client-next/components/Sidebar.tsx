@@ -23,7 +23,7 @@ export default function Sidebar() {
             </PanelWrapper>
             <TabBar
                 direction="vertical"
-                tabs={["Files", "Devices", "View", "Help"]}
+                tabs={["Files", "Devices", "View"/*, "Help"*/]}
                 selected={tab}
                 onSelect={(tab) => setTab(tab)}
                 sx={{
@@ -69,7 +69,16 @@ function Devices({ className }: { className?: string }) {
                         alignItems: "center"
                     }}>
                         <Heading as="h3">Name: {name}</Heading>
-                        <Button>rename</Button>
+                        <Button variant="secondary" onClick={async () => {
+                            const newName = prompt(`New name for ${name}`);
+                            if(!newName) return;
+                            await thing.vThing.setName(newName);
+                            delete things[name];
+                            things[newName] = thing;
+                            patchStore({
+                                things: {...things}
+                            }); // trigger rerender
+                        }}>rename</Button>
                     </Flex>
                     <Text>Type: {thing.firmwareName}</Text>
                     <Box>
@@ -80,13 +89,13 @@ function Devices({ className }: { className?: string }) {
                                 color: "grey"
                             }}>
                                 <div>{entry.name}({entry.args.map((x: string) => x.split(":")[0]).join(", ")})</div>
-                                {entry.args.map((x: any, i: number) => <div key={i} sx={{ paddingLeft: "10px" }}>${x}</div>)}
+                                {entry.args.map((x: any, i: number) => <div key={i} sx={{ paddingLeft: "10px" }}>{x}</div>)}
                                 {entry.return 
                                     ? <div sx={{
                                         paddingLeft: "10px",
                                         overflow: "scroll",
                                         whiteSpace: "nowrap"
-                                    }}><b>returns:</b> ${entry.return}</div>
+                                    }}><b>returns:</b> {entry.return}</div>
                                     : null
                                 }
                             </Box>

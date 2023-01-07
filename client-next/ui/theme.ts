@@ -36,6 +36,14 @@ export const theme: Theme = {
         primary: {
             transition: "all 0.1s ease-in-out",
         },
+        secondary: {
+            transition: "all 0.1s ease-in-out",
+            color: "text",
+            bg: "muted",
+            "&:hover": {
+                filter: "brightness(0.9)"
+            }
+        },
         icon: {
             bg: "muted",
             p: "0.25rem",
