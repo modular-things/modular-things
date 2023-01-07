@@ -1,3 +1,4 @@
+import { DocumentBlank } from "@carbon/icons-react";
 import { useState } from "react";
 import { Box, Close, Flex, ThemeUIStyleObject } from "theme-ui";
 import { useOnDeleteNode, useOnOpenFile } from "../lib/events";
@@ -37,8 +38,18 @@ export default function Editor(props: { className?: string }) {
     return (
         <Flex sx={{ flexDirection: "column" }} className={props.className}>
             {openFiles.length === 0 ? (
-                <Box>
-                    nothign is open,,,,
+                <Box sx={{
+                    padding: "1rem",
+                    pl: "2rem",
+                    color: "gray",
+                }}>
+                    <DocumentBlank size="glyph" sx={{
+                        width: "100px",
+                        display: "block",
+                        pb: "1rem",
+                        ml: "-18.68333333px" // (100px - width of actual icon path) / 2
+                    }} />
+                    there's nothing open right now
                 </Box>
             ) : (
                 <>

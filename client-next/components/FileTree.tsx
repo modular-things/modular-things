@@ -11,6 +11,8 @@ const [useTreeState, patchTreeState] = createState<{
     selected: null,
 });
 
+const BUTTON_ICON_SIZE = 20;
+
 export default function FileTree() {
     const { fs } = useStore();
     const { selected } = useTreeState();
@@ -54,7 +56,7 @@ export default function FileTree() {
                         });
                     }
                 }}>
-                    <DocumentAdd size={24} />
+                    <DocumentAdd size={BUTTON_ICON_SIZE} />
                 </IconButton>
                 <IconButton aria-label="Add folder" onClick={(e) => {
                     e.stopPropagation();
@@ -79,7 +81,7 @@ export default function FileTree() {
                         });
                     }
                 }}>
-                    <FolderAdd size={24} />
+                    <FolderAdd size={BUTTON_ICON_SIZE} />
                 </IconButton>
                 <IconButton aria-label="Rename" onClick={(e) => {
                     e.stopPropagation();
@@ -92,7 +94,7 @@ export default function FileTree() {
                         });
                     }
                 }}>
-                    <Edit size={24} />
+                    <Edit size={BUTTON_ICON_SIZE} />
                 </IconButton>
                 <IconButton aria-label="Delete" onClick={(e) => {
                     e.stopPropagation();
@@ -114,7 +116,7 @@ export default function FileTree() {
                         }
                     }
                 }}>
-                    <TrashCan size={24} />
+                    <TrashCan size={BUTTON_ICON_SIZE} />
                 </IconButton>
             </Flex>
             <TreeNodeCollection nodes={fs} root />
