@@ -36,27 +36,26 @@ export default function Editor(props: { className?: string }) {
 
     return (
         <Flex sx={{ flexDirection: "column" }} className={props.className}>
-            <Box sx={{
-                overflowX: "auto"
-            }}>
-                <TabBar sx={{
-                    width: "max-content",
-                    minWidth: "100%"
-                }} tabs={openFiles.map(n => (
-                    <>
-                        {n.name}
-                        <Close sx={{
-                            // padding: "0.25rem",
-                            padding: 0,
-                            margin: 0,
-                            ml: "0.25rem",
-                            width: "1rem",
-                            height: "1rem",
-                            "&:hover": {
-                                bg: "white"
-                            }
-                        }} onClick={(e) => {
-                            e.stopPropagation();
+            {openFiles.length === 0 ? (
+                <Box>
+                    nothign is open,,,,
+                </Box>
+            ) : (
+                <>
+                    <Box sx={{
+                        overflowX: "auto"
+                    }}>
+                        <TabBar hasClose sx={{
+                            width: "max-content",
+                            minWidth: "100%"
+                        }} tabs={openFiles.map(n => (
+                            <>
+                                {n.name}
+                            </>
+                        ))} selected={activeTab} onSelect={v => v !== null && patchStore({
+                            activeTab: v
+                        })} onClose={(i) => {
+                            const n = openFiles[i];
                             patchStore({
                                 openFiles: openFiles.filter(v => v !== n)
                             });
@@ -66,14 +65,12 @@ export default function Editor(props: { className?: string }) {
                                 });
                             }
                         }} />
-                    </>
-                ))} selected={activeTab} onSelect={v => v !== null && patchStore({
-                    activeTab: v
-                })} />
-            </Box>
-            <CodeMirror sx={{
-                flex: 1
-            }} />
+                    </Box>
+                    <CodeMirror sx={{
+                        flex: 1
+                    }} />
+                </>
+            )}
         </Flex>
     )
 }
