@@ -1935,10 +1935,9 @@ next@13.1.1:
     "@next/swc-win32-ia32-msvc" "13.1.1"
     "@next/swc-win32-x64-msvc" "13.1.1"
 
-niue@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/niue/-/niue-0.1.2.tgz#dfe70a25b4d645b77f3003cf90c320a3cf7d9756"
-  integrity sha512-bGxF6QbdBMoLbIKOdpVSDTuh0AnaGkeVDCrZGh6ySYriwRNpcPUMp01YfI2f1AQpWhsWZ/p0oiILAg8R3+VHuA==
+"niue@https://github.com/merlin04/niue":
+  version "0.2.0"
+  resolved "https://github.com/merlin04/niue#1deb8b5e10052a9724576dd114c2adbe9fd0dc49"
 
 object-assign@^4.1.1:
   version "4.1.1"

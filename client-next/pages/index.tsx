@@ -1,9 +1,9 @@
 import Head from "next/head";
 import { Flex } from "theme-ui";
+import CompatWarning from "../components/CompatWarning";
 import Editor from "../components/Editor";
 import Sidebar from "../components/Sidebar";
 import Toolbar from "../components/Toolbar";
-import TabBar from "../ui/TabBar";
 
 export default function Index() {
     return (
@@ -29,6 +29,7 @@ export default function Index() {
                     <Sidebar />
                 </Flex>
             </Flex>
+            <CompatWarning />
         </>
     );
 }

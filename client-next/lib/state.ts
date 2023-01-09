@@ -1,10 +1,8 @@
 import { EditorState } from "@codemirror/state";
 import { createState } from "niue";
-import { deserializeCMState } from "../components/CodeMirror";
+import { createCMState, deserializeCMState } from "../components/CodeMirror";
 import { FS, deserializeFS, FSNodeType, File, FSSerialized, serializeFS, getNodePath, pathToNode } from "./fs";
-import type { rescan } from "./modularThingClient";
-
-type Unpromisify<T> = T extends Promise<infer U> ? U : T;
+import type { Thing } from "./modularThingClient";
 
 export type OpenFile = {
     node: File,
@@ -12,7 +10,7 @@ export type OpenFile = {
 };
 
 export type GlobalState = {
-    things: Unpromisify<ReturnType<typeof rescan>>,
+    things: Record<string, Thing>,
     view?: HTMLDivElement | null | undefined,
     fs: FS,
     openFiles: OpenFile[],
@@ -24,64 +22,21 @@ const initialFs: FS = deserializeFS([
         type: FSNodeType.File,
         name: "index.js",
         content: `console.log("Hello, world!");`
-    },
-    // more files and folders for testing file tree
-    {
-        type: FSNodeType.Folder,
-        name: "src",
-        children: [
-            {
-                type: FSNodeType.File,
-                name: "index.js",
-                content: `console.log("Hello, world!");`
-            },
-            {
-                type: FSNodeType.File,
-                name: "index.html",
-                content: `<!DOCTYPE html>`
-            }
-        ]
-    },
-    {
-        type: FSNodeType.Folder,
-        name: "public",
-        children: [
-            {
-                type: FSNodeType.File,
-                name: "index.html",
-                content: `<!DOCTYPE html>`
-            },
-            {
-                type: FSNodeType.Folder,
-                name: "images",
-                children: [
-                    {
-                        type: FSNodeType.File,
-                        name: "logo.png",
-                        content: ``
-                    },
-                    {
-                        type: FSNodeType.File,
-                        name: "favicon.ico",
-                        content: ``
-                    },
-                    {
-                        type: FSNodeType.Folder,
-                        name: "icons",
-                        children: []
-                    }
-                ]
-            }
-        ]
     }
 ]);
 
-export const [useStore, patchStore] = createState<GlobalState>({
+const initialOF: OpenFile = {
+    node: initialFs[0] as File,
+    cmState: null!
+};
+initialOF.cmState = createCMState(initialOF);
+
+export const [useStore, patchStore, getStore] = createState<GlobalState>({
     things: {},
     view: undefined,
     fs: initialFs,
-    openFiles: [],
-    activeTab: null
+    openFiles: [initialOF],
+    activeTab: 0
 });
 
 export type SerializedOpenFile = {
@@ -112,15 +67,16 @@ export const deserializeState = (state: SerializedGlobalState): Partial<GlobalSt
     const fs = deserializeFS(state.fs);
     return {
         fs,
-        openFiles: state.openFiles.map((oldOpenFile) => {
-            const newOpenFile: OpenFile = {
-                node: pathToNode(oldOpenFile.path, fs) as File,
-                cmState: null!
-            };
-            newOpenFile.cmState = deserializeCMState(oldOpenFile.cmState, newOpenFile);
-            return newOpenFile;
-        }),
+        openFiles: state.openFiles.map(o => deserializeOpenFile(o, fs)),
         activeTab: state.activeTab
     };
 }
 
+function deserializeOpenFile(oldOpenFile: SerializedOpenFile, fs: FS): OpenFile {
+    const newOpenFile: OpenFile = {
+        node: pathToNode(oldOpenFile.path, fs) as File,
+        cmState: null!
+    };
+    newOpenFile.cmState = deserializeCMState(oldOpenFile.cmState, newOpenFile);
+    return newOpenFile;
+}

@@ -16,6 +16,7 @@ const BUTTON_ICON_SIZE = 20;
 export default function FileTree() {
     const { fs } = useStore();
     const { selected } = useTreeState();
+    console.log("rerender");
 
     return (
         <Flex sx={{
@@ -47,6 +48,7 @@ export default function FileTree() {
                             parent
                         };
                         parentArr.push(newFile);
+                        console.log("patchstore");
                         patchStore({
                             fs: [...fs] // trigger rerender
                         });
