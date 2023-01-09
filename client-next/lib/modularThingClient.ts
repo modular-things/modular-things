@@ -26,6 +26,8 @@ import accelerometer from "./virtualThings/accelerometer.js";
 import oled from "./virtualThings/oled.js";
 import potentiometer from "./virtualThings/potentiometer.js";
 import servo from "./virtualThings/servo.js";
+import VPortWebSerial from "./osapjs/vport/vPortWebSerial";
+import { patchStore } from "./state";
 
 console.log(`------------------------------------------`)
 console.log("hello modular-things")
@@ -34,7 +36,7 @@ console.log("hello modular-things")
 const osap = new OSAP("modular-things")
 
 // -------------------------------------------------------- SETUP NETWORK / PORT
-const wscVPort = osap.vPort("wscVPort")
+// const wscVPort = osap.vPort("wscVPort")
 
 // -------------------------------------------------------- Like, Application Code ?
 
@@ -170,6 +172,89 @@ export const rescan = async (): Promise<Record<string, Thing>> => {
   // scanning = false;
 }
 
+
+export const setupPort = async (port: SerialPort): Promise<[string, Thing]> => {
+  const vPort = await VPortWebSerial(osap, port, true);
+  const graph = await osap.nr.sweep();
+  let ch = graph.children.find((ch: any) => ch.name === "vp_" + vPort.portName);
+  if(!ch) throw new Error("Connected serial port but could not find OSAP vertex for it");
+  if(!ch.reciprocal) throw new Error("Connected serial port but OSAP vertex doesn't have a reciprocal");
+  if(ch.reciprocal.type == "unreachable") throw new Error("Connected serial port but OSAP vertex's partner is unreachable");
+
+    // we have some name like `rt_firmwareName` that might have `_uniqueName` trailing
+  // so first we can grab the firmwareName like:
+  let [ _rt, firmwareName, uniqueName ] = (ch.reciprocal.parent.name as string).split("_");
+
+  let madeNewUniqueName = false;
+  if (!uniqueName) {
+    // if we don't have a given unique name, make a new one:
+    uniqueName = makeID(5);
+    madeNewUniqueName = true
+  }
+
+  // log...
+  console.log(`found a... "${firmwareName}" with unique name ${uniqueName} module via usb "${ch.name}"`)
+  // TODO: unique-name write to flashmem
+  // jake things unique-names should be more human-typeable,
+  // we also aught to check if the name is unique already, then not-change-it if it is,
+  let thingName = uniqueName;
+
+  // if not, check if we have a matching code for it...
+  if(!(firmwareName in constructors)) throw new Error(`no constructor found for the ${firmwareName} thing...`);
+  //@ts-expect-error
+  const vThing = constructors[firmwareName](
+    osap, ch.reciprocal.parent, thingName
+  );
+  vThing.firmwareName = firmwareName;
+
+  let thing = {
+    vPortName: ch.name,
+    firmwareName,
+    vThing
+  }
+
+  await addSetName(thing.vThing, osap);
+  console.log("add", thingName, thing);
+  await thing.vThing.setup();
+  // finally, rename it to
+  if (madeNewUniqueName) {
+    await thing.vThing.setName(thingName);
+  }
+
+  return [thingName, thing];
+}
+
+export async function initSerial() {
+  // navigator.serial.addEventListener('connect', async (event) => {
+
+  // });
+
+  const ports = await navigator.serial.getPorts();
+  const things: Record<string, Thing> = {};
+  for(const port of ports) {
+    const [name, thing] = await setupPort(port);
+    things[name] = thing;
+  }
+  patchStore({
+    things
+  });
+}
+
+export async function authorizePort() {
+  return await setupPort(await navigator.serial.requestPort());
+}
+
+export const rescanNew = async (): Promise<Record<string, Thing>> => {
+  const ports = await navigator.serial.getPorts();
+  const things: Record<string, Thing> = {};
+
+  for(const port of ports) {
+    const vPort = new VPortWebSerial(osap, port, true);
+    
+  }
+
+}
+
 // setTimeout(rescan, 1000)
 
 /*
@@ -183,7 +268,7 @@ things.rgbbThing_0.handlers.onButtonStateChange = (state) => {
 */
 
 // -------------------------------------------------------- Initializing the WSC Port
-
+/*
 // verbosity
 let LOGPHY = false
 // to test these systems, the client (us) will kickstart a new process
@@ -243,7 +328,7 @@ fetch('http://localhost:8080/startLocal/osapSerialBridge.js').then(async (res) =
   } else {
     console.error('remote OSAP not established', text)
   }
-})
+})*/
 
 const characters       = 'abcdefghijklmnopqrstuvwxyz';
 const charactersLength = characters.length;

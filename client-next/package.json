@@ -31,6 +31,8 @@
     "typescript": "4.9.4"
   },
   "devDependencies": {
-    "@types/carbon__icons-react": "^11.12.0"
+    "@types/carbon__icons-react": "^11.12.0",
+    "@types/w3c-web-serial": "^1.0.3",
+    "nanoid": "^4.0.0"
   }
 }

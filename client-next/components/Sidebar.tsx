@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button, Flex, Heading, Text } from "theme-ui";
+import { authorizePort } from "../lib/modularThingClient";
 import { patchStore, useStore } from "../lib/state";
 import TabBar from "../ui/TabBar";
 import FileTree from "./FileTree";
@@ -61,6 +62,15 @@ function Devices({ className }: { className?: string }) {
             gap: "0.5em"
         }}>
             <Heading as="h2">List of Things</Heading>
+            <Button onClick={async () => {
+                const [name, thing] = await authorizePort();
+                patchStore({
+                    things: {
+                        ...things,
+                        [name]: thing
+                    }
+                });
+            }}>authorize port</Button>
             {Object.entries(things).map(([name, thing]) => (
                 <Box key={name}>
                     <Flex sx={{
