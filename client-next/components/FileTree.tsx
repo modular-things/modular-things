@@ -49,9 +49,7 @@ export default function FileTree() {
                         };
                         parentArr.push(newFile);
                         console.log("patchstore");
-                        patchStore({
-                            fs: [...fs] // trigger rerender
-                        });
+                        patchStore(["fs"]);
                         dispatchOpenFile(newFile);
                         patchTreeState({
                             selected: newFile
@@ -75,9 +73,7 @@ export default function FileTree() {
                             parent
                         };
                         parentArr.push(newFolder);
-                        patchStore({
-                            fs: [...fs] // trigger rerender
-                        });
+                        patchStore(["fs"]);
                         patchTreeState({
                             selected: newFolder
                         });
@@ -91,9 +87,7 @@ export default function FileTree() {
                     const name = prompt("Enter new name");
                     if(selected && name) {
                         selected.name = name;
-                        patchStore({
-                            fs: [...fs] // trigger rerender
-                        });
+                        patchStore(["fs"]);
                     }
                 }}>
                     <Edit size={BUTTON_ICON_SIZE} />
@@ -108,9 +102,7 @@ export default function FileTree() {
                         const index = parentArr.indexOf(selected);
                         if(index !== -1) {
                             parentArr.splice(index, 1);
-                            patchStore({
-                                fs: [...fs] // trigger rerender
-                            });
+                            patchStore(["fs"]);
                             dispatchDeleteNode(selected);
                             patchTreeState({
                                 selected: null

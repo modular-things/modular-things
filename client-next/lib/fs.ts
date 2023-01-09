@@ -73,6 +73,7 @@ export const getNodePath = (node: FSNode) => {
 
 export const pathToNode = (path: string, fs: FS): FSNode => {
     const parts = path.split("/");
+    if(parts[0] === "") parts.shift();
     let node: FSNode | undefined = { type: FSNodeType.Folder, children: fs } as FSNode;
     for (let part of parts) {
         if (node.type === FSNodeType.File) {
