@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Box, Button, Flex, Heading, Text } from "theme-ui";
-import { authorizePort } from "../lib/modularThingClient";
-import { patchStore, useStore } from "../lib/state";
+import { Box } from "theme-ui";
+import { patchStore } from "../lib/state";
 import TabBar from "../ui/TabBar";
+import Devices from "./Devices";
 import FileTree from "./FileTree";
 
 export default function Sidebar() {
@@ -50,72 +50,4 @@ function PanelWrapper({ children, className }: { children: React.ReactNode, clas
             {children}
         </Box>
     );
-}
-
-
-function Devices({ className }: { className?: string }) {
-    const { things } = useStore(["things"]);
-
-    return (
-        <Flex className={className} sx={{
-            flexDirection: "column",
-            gap: "0.5em"
-        }}>
-            <Heading as="h2">List of Things</Heading>
-            <Button onClick={async () => {
-                const [name, thing] = await authorizePort();
-                patchStore({
-                    things: {
-                        ...things,
-                        [name]: thing
-                    }
-                });
-            }}>authorize port</Button>
-            {Object.entries(things).map(([name, thing]) => (
-                <Box key={name}>
-                    <Flex sx={{
-                        justifyContent: "space-between",
-                        paddingBottom: "5px",
-                        alignItems: "center"
-                    }}>
-                        <Heading as="h3">Name: {name}</Heading>
-                        <Button variant="secondary" onClick={async () => {
-                            const newName = prompt(`New name for ${name}`);
-                            if(!newName) return;
-                            await thing.vThing.setName(newName);
-                            delete things[name];
-                            things[newName] = thing;
-                            patchStore({
-                                things: {...things}
-                            }); // trigger rerender
-                        }}>rename</Button>
-                    </Flex>
-                    <Text>Type: {thing.firmwareName}</Text>
-                    <Box>
-                        {thing.vThing.api.map((entry: any) => (
-                            <Box key={entry.name} sx={{
-                                paddingLeft: "25px",
-                                paddingBottom: "5px",
-                                color: "grey"
-                            }}>
-                                <div>{entry.name}({entry.args.map((x: string) => x.split(":")[0]).join(", ")})</div>
-                                {entry.args.map((x: any, i: number) => <div key={i} sx={{ paddingLeft: "10px" }}>{x}</div>)}
-                                {entry.return 
-                                    ? <div sx={{
-                                        paddingLeft: "10px",
-                                        overflow: "scroll",
-                                        whiteSpace: "nowrap"
-                                    }}><b>returns:</b> {entry.return}</div>
-                                    : null
-                                }
-                            </Box>
-                        ))}
-                    </Box>
-                </Box>
-            ))}
-            {Object.keys(things).length === 0 && <Text sx={{
-                color: "gray"
-            }}>no things found...<br/>(maybe try scanning?)</Text>}
-        </Flex>
-    )
 }

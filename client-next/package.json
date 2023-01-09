@@ -24,7 +24,7 @@
     "eslint": "8.31.0",
     "eslint-config-next": "13.1.1",
     "next": "13.1.1",
-    "niue": "^0.1.2",
+    "niue": "https://github.com/merlin04/niue",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "theme-ui": "^0.15.4",

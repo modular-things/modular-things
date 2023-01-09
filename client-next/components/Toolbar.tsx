@@ -21,7 +21,7 @@ export default function Toolbar() {
         }}>
             <Heading as="h1" sx={{ fontSize: "1.1rem" }} px="0.25rem">Modular Things</Heading>
             <RunButton />
-            <ScanButton />
+            {/* <ScanButton /> */}
             <DownloadButton />
             <OpenButton />
         </Flex>
@@ -33,41 +33,6 @@ function RunButton() {
 
     return (
         <Button onClick={() => runCode(getCode() ?? "", state)}>run (shift+enter)</Button>
-    );
-}
-
-enum ScanState {
-    Loading,
-    Error,
-    Idle
-};
-
-function ScanButton() {
-    const [state, setState] = useState<ScanState>(ScanState.Idle);
-
-    return (
-        <Button disabled={state === ScanState.Loading} onClick={async () => {
-            setState(ScanState.Loading);
-            try {
-                patchStore({
-                    things: await rescan()
-                });
-                setState(ScanState.Idle);
-            } catch(e) {
-                setState(ScanState.Error);
-                patchStore({
-                    things: {}
-                });
-                console.error(e);
-            }
-        }}>
-            scan
-            {state === ScanState.Loading && "…"}
-            {state === ScanState.Error && <span sx={{
-                color: "red",
-                ml: "0.25rem"
-            }}>!</span>}
-        </Button>
     );
 }
 
