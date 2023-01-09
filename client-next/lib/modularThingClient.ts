@@ -248,7 +248,7 @@ export const rescanNew = async (): Promise<Record<string, Thing>> => {
   const ports = await navigator.serial.getPorts();
   const things: Record<string, Thing> = {};
 
-  for(const port of ports) {
+  for (const port of ports) {
     const vPort = new VPortWebSerial(osap, port, true);
     
   }
