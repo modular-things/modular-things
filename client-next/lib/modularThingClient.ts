@@ -45,13 +45,12 @@ export type Thing = {
   vPortName: string,
   firmwareName: string,
   vThing: any,
-  setName: (name: string) => Promise<void>
 };
 
 const portThingMap = new Map<SerialPort, string>();
 
 async function setupPort(port: SerialPort): Promise<[string, Thing]> {
-  const vPort = await VPortWebSerial(osap, port, true);
+  const vPort = await VPortWebSerial(osap, port, false);
   const graph = await osap.nr.sweep();
   let ch = graph.children.find((ch: any) => ch.name === "vp_" + vPort.portName);
   if(!ch) throw new Error("Connected serial port but could not find OSAP vertex for it");
@@ -85,18 +84,19 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
   const thing = {
     vPortName: ch.name,
     firmwareName,
-    vThing,
-    async setName(name: string) {
-      try {
-        // add back that "rt_" which designates the vertex as a root... 
-        const newName = `rt_${thing.vThing.firmwareName}_${name}`;
-        console.log(newName);
-        await osap.mvc.renameVertex(thing.vThing.vt.route, newName)
-      } catch (err) {
-        console.error(err)
-      }
-    }
+    vThing
   }
+  vThing["setName"] = async (name: string) => {
+    try {
+      // add back that "rt_" which designates the vertex as a root... 
+      const newName = `rt_${thing.vThing.firmwareName}_${name}`;
+      console.log(newName);
+      await osap.mvc.renameVertex(thing.vThing.vt.route, newName)
+    } catch (err) {
+      console.error(err)
+    }
+  };
+
   console.log("add", thingName, thing);
   await thing.vThing.setup();
   // finally, rename it to
@@ -119,9 +119,17 @@ export async function rescan() {
   patchStore(["things"]);
 }
 
+// React StrictMode renders components twice on dev to detect problems
+// but this can only be run one time
+// so have this check to ensure that
+let serialInitted = false;
 export async function initSerial() {
+  if(serialInitted) return;
+  serialInitted = true;
+
   rescan();
   navigator.serial.addEventListener('connect', async (event) => {
+    console.log("connect!");
     const store = getStore();
     const [name, thing] = await setupPort(event.target as SerialPort);
     store.things[name] = thing;
@@ -129,6 +137,7 @@ export async function initSerial() {
   });
 
   navigator.serial.addEventListener('disconnect', async (event) => {
+    console.log("disconnect!");
     const store = getStore();
     const name = portThingMap.get(event.target as SerialPort);
     if(name) {

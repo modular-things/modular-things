@@ -92,10 +92,14 @@ export default async function VPortWebSerial(osap: OSAP, port: SerialPort, debug
             // Allow the serial port to be closed later.
             writer.releaseLock();
             */
-            const writer = port.writable!.getWriter();
-            await writer.write(keepAlivePacket);
-            writer.releaseLock();
-            keepAliveTxUpdate();
+            if(port.writable) {
+                const writer = port.writable!.getWriter();
+                await writer.write(keepAlivePacket);
+                writer.releaseLock();
+                keepAliveTxUpdate();
+            } else {
+                clearTimeout(keepAliveTimer!);
+            }
         }, SERLINK_KEEPALIVE_TX_TIME);
     };
     // also set last-rx to now, and init keepalive state,
@@ -222,10 +226,12 @@ export default async function VPortWebSerial(osap: OSAP, port: SerialPort, debug
                         reader.releaseLock();
                         break;
                     }
-                    if(value) console.log(value);
+                    // if(value) console.log(value);
                 }
             }
-        } finally {
+        } catch(err) {
+            console.error(err);
+        }finally {
             vport.dissolve();
             await port.close();
             console.log(`SERPORT ${portName} closed`);
