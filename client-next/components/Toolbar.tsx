@@ -29,10 +29,8 @@ export default function Toolbar() {
 }
 
 function RunButton() {
-    const state = useStore(["things", "view"]);
-
     return (
-        <Button onClick={() => runCode(getCode() ?? "", state)}>run (shift+enter)</Button>
+        <Button onClick={() => runCode()}>run (shift+enter)</Button>
     );
 }
 

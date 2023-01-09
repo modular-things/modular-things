@@ -1,13 +1,81 @@
 import { Thing } from "./modularThingClient";
-import { GlobalState } from "./state";
+import { getStore } from "./state";
 import createSynchronizer from "./virtualThings/synchronizer";
+import { rollup } from "@rollup/browser";
+import { FSNodeType, pathToNode } from "./fs";
 
 let intervals: number[] = [];
 let timeouts: number[] = [];
 let loops: boolean[] = [];
 
-export default function runCode(code: string, state: GlobalState) {
+// https://stackoverflow.com/a/62507199
+// what a beautiful solution to this problem
+const resolvePath = (path: string) => (
+    path.split("/")
+        .reduce<string[]>((a, v) => {
+            if(v === ".") {} // do nothing
+            else if(v === "..") {
+                if(a.pop() === undefined) throw new Error(`Unable to resolve path: ${path}`)
+            } else a.push(v);
+            return a;
+        }, [])
+        .join("/")
+);
+
+// not very good, but it works
+const isURL = (id: string) => ["http://", "https://"].find(s => id.startsWith(s));
+
+async function getBundle(): Promise<string> {
+    const { fs } = getStore();
+
+    const build = await rollup({
+        input: "/index.js",
+        plugins: [
+            {
+                name: "fs-resolver",
+                resolveId(source, importer) {
+                    if(["./", "../"].find(s => source.startsWith(s))) {
+                        if(importer) {
+                            const s = importer.split("/");
+                            s.pop();
+                            importer = s.join("/");
+                            return resolvePath(importer + "/" + source);
+                        }
+                        return resolvePath(source);
+                    } else if(source.startsWith("/")) {
+                        if(importer && isURL(importer)) {
+                            const url = new URL(importer);
+                            return resolvePath(url.origin + source);
+                        }
+                        return resolvePath(source);
+                    } else if(isURL(source)){
+                        return source;
+                    }
+                    return { id: source, external: true };
+                },
+                async load(id) {
+                    if(isURL(id)) {
+                        const res = await fetch(id);
+                        return await res.text();
+                    }
+                    const node = pathToNode(id, fs);
+                    if(node.type === FSNodeType.Folder) return null;
+                    return node.content;
+                }
+            }
+        ]
+    });
+    const bundle = await build.generate({
+        format: "iife",
+        sourcemap: "inline"
+    });
+    return bundle.output[0].code;
+}
+
+export default async function runCode() {
     const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
+    const state = getStore();
+    const code = await getBundle();
 
     intervals.forEach(clearInterval);
     timeouts.forEach(clearTimeout);
@@ -63,9 +131,10 @@ export default function runCode(code: string, state: GlobalState) {
       render,
       sleep,
       delay: (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms)),
-      // document: null,
+    //   document: null,
       window: null,
       eval: null,
+      global: globalThis
     }
   
     const names = Object.keys(args);

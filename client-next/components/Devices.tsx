@@ -33,9 +33,7 @@ export default function Devices({ className }: { className?: string; }) {
                             await thing.vThing.setName(newName);
                             delete things[name];
                             things[newName] = thing;
-                            patchStore({
-                                things: { ...things }
-                            }); // trigger rerender
+                            patchStore(["things"]);
                         }}>rename</Button>
                     </Flex>
                     <Text>Type: {thing.firmwareName}</Text>
