@@ -1,15 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Button, Flex, Heading, Text } from "theme-ui";
-import { authorizePort, rescan } from "../lib/modularThingClient";
+import { authorizePort, initSerial, rescan } from "../lib/modularThingClient";
 import { patchStore, useStore } from "../lib/state";
 
 export default function Devices({ className }: { className?: string; }) {
     const { things } = useStore(["things"]);
 
+    useEffect(() => {
+        initSerial();
+    }, []);
+
     return (
         <Flex className={className} sx={{
             flexDirection: "column",
-            gap: "0.5em"
+            gap: "0.5em",
+            maxHeight: "100%"
         }}>
             <Heading as="h2">List of Things</Heading>
             <ScanButton />
@@ -18,49 +23,55 @@ export default function Devices({ className }: { className?: string; }) {
                 things[name] = thing;
                 patchStore(["things"]);
             }}>pair new thing</Button>
-            {Object.entries(things).map(([name, thing]) => (
-                <Box key={name}>
-                    <Flex sx={{
-                        justifyContent: "space-between",
-                        paddingBottom: "5px",
-                        alignItems: "center"
-                    }}>
-                        <Heading as="h3">Name: {name}</Heading>
-                        <Button variant="secondary" onClick={async () => {
-                            const newName = prompt(`New name for ${name}`);
-                            if (!newName)
-                                return;
-                            await thing.vThing.setName(newName);
-                            delete things[name];
-                            things[newName] = thing;
-                            patchStore(["things"]);
-                        }}>rename</Button>
-                    </Flex>
-                    <Text>Type: {thing.firmwareName}</Text>
-                    <Box>
-                        {thing.vThing.api.map((entry: any) => (
-                            <Box key={entry.name} sx={{
-                                paddingLeft: "25px",
-                                paddingBottom: "5px",
-                                color: "grey"
-                            }}>
-                                <div>{entry.name}({entry.args.map((x: string) => x.split(":")[0]).join(", ")})</div>
-                                {entry.args.map((x: any, i: number) => <div key={i} sx={{ paddingLeft: "10px" }}>{x}</div>)}
-                                {entry.return
-                                    ? <div sx={{
-                                        paddingLeft: "10px",
-                                        overflow: "scroll",
-                                        whiteSpace: "nowrap"
-                                    }}><b>returns:</b> {entry.return}</div>
-                                    : null}
-                            </Box>
-                        ))}
+            <Flex sx={{
+                flexDirection: "column",
+                gap: "0.5em",
+                overflow: "auto"
+            }}>
+                {Object.entries(things).map(([name, thing]) => (
+                    <Box key={name}>
+                        <Flex sx={{
+                            justifyContent: "space-between",
+                            paddingBottom: "5px",
+                            alignItems: "center"
+                        }}>
+                            <Heading as="h3">Name: {name}</Heading>
+                            <Button variant="secondary" onClick={async () => {
+                                const newName = prompt(`New name for ${name}`);
+                                if (!newName)
+                                    return;
+                                await thing.vThing.setName(newName);
+                                delete things[name];
+                                things[newName] = thing;
+                                patchStore(["things"]);
+                            }}>rename</Button>
+                        </Flex>
+                        <Text>Type: {thing.firmwareName}</Text>
+                        <Box>
+                            {thing.vThing.api.map((entry: any) => (
+                                <Box key={entry.name} sx={{
+                                    paddingLeft: "25px",
+                                    paddingBottom: "5px",
+                                    color: "grey"
+                                }}>
+                                    <div>{entry.name}({entry.args.map((x: string) => x.split(":")[0]).join(", ")})</div>
+                                    {entry.args.map((x: any, i: number) => <div key={i} sx={{ paddingLeft: "10px" }}>{x}</div>)}
+                                    {entry.return
+                                        ? <div sx={{
+                                            paddingLeft: "10px",
+                                            overflow: "auto",
+                                            whiteSpace: "nowrap"
+                                        }}><b>returns:</b> {entry.return}</div>
+                                        : null}
+                                </Box>
+                            ))}
+                        </Box>
                     </Box>
-                </Box>
-            ))}
-            {Object.keys(things).length === 0 && <Text sx={{
-                color: "gray"
-            }}>no things found...<br />(maybe try scanning or pairing?)</Text>}
+                ))}
+                {Object.keys(things).length === 0 && <Text sx={{
+                    color: "gray"
+                }}>no things found...<br />(maybe try scanning or pairing?)</Text>}
+            </Flex>
         </Flex>
     );
 }

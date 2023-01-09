@@ -45,7 +45,8 @@ function PanelWrapper({ children, className }: { children: React.ReactNode, clas
             borderRadius: "0.25rem",
             padding: "0.25rem",
             minWidth: "20vw",
-            maxWidth: "50vw"
+            maxWidth: "50vw",
+            overflow: "auto"
         }}>
             {children}
         </Box>

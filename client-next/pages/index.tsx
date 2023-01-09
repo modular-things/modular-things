@@ -22,7 +22,7 @@ export default function Index() {
                 height: "100vh"
             }}>
                 <Toolbar />
-                <Flex sx={{ flex: 1 }}>
+                <Flex sx={{ flex: 1, minHeight: 0 }}>
                     <Editor sx={{
                         flex: 1
                     }} />
