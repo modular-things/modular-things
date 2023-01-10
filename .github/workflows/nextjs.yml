@@ -1,4 +1,4 @@
-# based off of https://github.com/upmostly/nextjs-github-pages/blob/main/.github/workflows/nextjs.yml
+# based off of https://github.com/actions/starter-workflows/blob/main/pages/nextjs.yml
 
 name: Deploy Next.js site to Pages
 
@@ -45,6 +45,7 @@ jobs:
                   #
                   # You may remove this line if you want to manage the configuration yourself.
                   static_site_generator: next
+                  generator_config_file: ./client-next/next.config.js
             - name: Restore cache
               uses: actions/cache@v3
               with:
