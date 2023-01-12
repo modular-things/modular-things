@@ -258,6 +258,20 @@ vSquared = ((int64_t)(vel >> FP_STOPCALC_REDUCE) * (int64_t)(vel >> FP_STOPCALC_
 
 w/o the reducing term we overrun the `twoDA` etc calcs when our accels are, like, greater than 1 unit/sec in real space, lol. So - that's feeling stable for now, I think I can rest easy on those laurels for the holiday, proceeding with sequential motion when I return / when I get into machines next. 
 
+## 2023 01 12
+
+OK I'm back to try to merge this into main, but have just noticed that -ve deltas produce not-good results, like, even bad, haha - no motion! 
+
+Should be simple enough, applying an abs() somewhere it isn't yet... 
+
+--- 
+
+## Before the Merge
+
+- use velocity mode ~ randomly 
+- use .absolute mode ~ randomly 
+- likewise .retarget, for ~ following algos 
+
 ---
 
 ## Perf Goals

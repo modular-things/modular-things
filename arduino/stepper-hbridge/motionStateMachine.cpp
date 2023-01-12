@@ -168,8 +168,9 @@ void motion_integrate(void){
       // I think it's like this:
       // (x << 1) == (x * 2), that's gorgus, 
       // and we're going to do this... with a little less prescision, as accel can be punishing:
+
       // that's the (x >> 16) in each of these terms... 
-      twoDA = ((distanceToTarget << 1) >> FP_STOPCALC_REDUCE) * ((int64_t)(maxAccel) >> FP_STOPCALC_REDUCE);
+      twoDA = ((abs(distanceToTarget) << 1) >> FP_STOPCALC_REDUCE) * ((int64_t)(maxAccel) >> FP_STOPCALC_REDUCE);
       //abs(((((int64_t)(2 << fp_scale) * distanceToTarget) >> fp_scale) * (int64_t)(maxAccel)));
       vSquared = ((int64_t)(vel >> FP_STOPCALC_REDUCE) * (int64_t)(vel >> FP_STOPCALC_REDUCE));
       // we can use that to compare when-2-stop, 

@@ -98,6 +98,7 @@ export default function stepper(osap, vt, name) {
 
   let setAccel = async (accel) => {
     if (accel > absMaxAccel) accel = absMaxAccel
+    if (accel < 1) accel = 1  // no lower than this, fks shit up 
     lastAccel = accel
   }
 
