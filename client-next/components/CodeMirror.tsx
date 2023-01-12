@@ -6,6 +6,8 @@ import { syntaxTree, indentUnit } from "@codemirror/language";
 import { indentWithTab } from "@codemirror/commands";
 import { useCallback, useEffect, useState } from "react";
 import { OpenFile } from "../lib/state";
+import { createEvent } from "niue";
+import { jbMono } from "../ui/theme";
 
 const countDocChanges = StateField.define({
   create(state) {
@@ -35,15 +37,28 @@ export function getCode() {
   }) | undefined)?.view.state.doc.toString();
 }
 
+export const [useOnCMChange, dispatchCMChange] = createEvent<void>();
+
+const theme = EditorView.theme({
+  ".cm-content": {
+    fontFamily: jbMono.style.fontFamily,
+    fontSize: "14px"
+  }
+})
+
 const cmExtensions = (openFile: OpenFile) => [
   autocompleteRemoved,
   javascript(),
   keymap.of([indentWithTab]), // TODO: We should put a note about Esc+Tab for accessibility somewhere.
   indentUnit.of("  "),
+  theme,
   // countDocChanges,
   EditorView.updateListener.of((v: ViewUpdate) => {
     openFile.cmState = v.state;
-    if(v.docChanged) openFile.node.content = v.state.doc.toString();
+    if(v.docChanged) {
+      openFile.node.content = v.state.doc.toString();
+      dispatchCMChange();
+    }
   })
 ];
 
@@ -51,14 +66,16 @@ export const createCMState = (openFile: OpenFile) => EditorState.create({ extens
 
 export const deserializeCMState = (state: any, openFile: OpenFile) => EditorState.fromJSON(state, { extensions: cmExtensions(openFile) });
 
+
 export default function CodeMirror({ className, openFile }: { className?: string, openFile?: OpenFile }) {
   const [view, setView] = useState<EditorView>();
 
-  useEffect(() => {
-    // console.log("cm effect", view, openFile);
+  const updateCMState = useCallback(() => {
     if(!view || !openFile) return;
     view.setState(openFile.cmState);
   }, [view, openFile]);
+
+  useEffect(updateCMState, [view, openFile]);
 
   const editorRef = useCallback((node: HTMLDivElement) => {
     if(!node) return;

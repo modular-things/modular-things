@@ -4,6 +4,7 @@ import { patchStore } from "../lib/state";
 import TabBar from "../ui/TabBar";
 import Devices from "./Devices";
 import FileTree from "./FileTree";
+import Help from "./Help";
 
 export default function Sidebar() {
     const [tab, setTab] = useState<number | null>(0);
@@ -22,9 +23,12 @@ export default function Sidebar() {
             }}>
                 <div ref={viewRef} />
             </PanelWrapper>
+            {tab === 3 && <PanelWrapper>
+                <Help />
+            </PanelWrapper>}
             <TabBar
                 direction="vertical"
-                tabs={["Devices", "Files", "View"/*, "Help"*/]}
+                tabs={["Devices", "Files", "View", "Help"]}
                 selected={tab}
                 onSelect={(tab) => setTab(tab)}
                 sx={{
@@ -45,7 +49,7 @@ function PanelWrapper({ children, className }: { children: React.ReactNode, clas
             borderRadius: "0.25rem",
             padding: "0.25rem",
             minWidth: "20vw",
-            maxWidth: "50vw",
+            maxWidth: "min(300px, 40vw)",
             overflow: "auto"
         }}>
             {children}

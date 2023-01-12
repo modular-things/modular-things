@@ -67,7 +67,8 @@ async function getBundle(): Promise<string> {
     });
     const bundle = await build.generate({
         format: "iife",
-        sourcemap: "inline"
+        sourcemap: "inline",
+        inlineDynamicImports: true
     });
     return bundle.output[0].code;
 }
@@ -132,8 +133,9 @@ export default async function runCode() {
       sleep,
       delay: (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms)),
     //   document: null,
-      window: null,
-      eval: null,
+    //   window: null,
+    //   eval: null,
+      viewEl: state.view,
       global: globalThis
     }
   

@@ -1,10 +1,7 @@
-import { useState } from "react";
 import { Button, Flex, Heading } from "theme-ui";
 import download from "../lib/download";
-import { rescan } from "../lib/modularThingClient";
 import runCode from "../lib/run";
-import { deserializeState, patchStore, serializeState, useStore } from "../lib/state";
-import { getCode } from "./CodeMirror";
+import { loadSerializedState, makeNewState, patchStore, serializeState, useStore } from "../lib/state";
 
 export default function Toolbar() {
     return (
@@ -21,8 +18,8 @@ export default function Toolbar() {
         }}>
             <Heading as="h1" sx={{ fontSize: "1.1rem" }} px="0.25rem">Modular Things</Heading>
             <RunButton />
-            {/* <ScanButton /> */}
             <DownloadButton />
+            <NewButton />
             <OpenButton />
         </Flex>
     );
@@ -37,8 +34,18 @@ function RunButton() {
 function DownloadButton() {
     const state = useStore();
     return (
-        <Button onClick={() => download("anon.mt.json", JSON.stringify(serializeState(state)))}>download</Button>
+        <Button onClick={() => download("project.mtjson", JSON.stringify(serializeState(state)))}>download</Button>
     );
+}
+
+function NewButton() {
+    return (
+        <Button onClick={() => {
+            patchStore({
+                ...makeNewState()
+            })
+        }}>new</Button>
+    )
 }
 
 function OpenButton() {
@@ -46,14 +53,14 @@ function OpenButton() {
         <Button onClick={() => {
             const input = document.createElement("input");
             input.type = "file";
-            input.accept = ".mt.json";
+            input.accept = ".mtjson";
             input.onchange = () => {
                 if(input.files?.length) {
                     const file = input.files[0];
                     const reader = new FileReader();
                     reader.onload = () => {
                         if(typeof reader.result === "string") {
-                            patchStore(deserializeState(JSON.parse(reader.result)));
+                            loadSerializedState(JSON.parse(reader.result));
                         }
                     }
                     reader.readAsText(file);

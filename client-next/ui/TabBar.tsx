@@ -61,7 +61,6 @@ export default function TabBar(props: {
                     }}>{tab}</span></Button>
                     {props.hasClose && (
                         <Close sx={{
-                            // padding: "0.25rem",
                             position: "absolute",
                             right: "1rem",
                             top: "50%",
@@ -72,7 +71,6 @@ export default function TabBar(props: {
                             width: "1rem",
                             height: "1rem",
                             "&:hover": {
-                                // bg: "white"
                                 bg: selected === index ? "white" : "muted"
                             }
                         }} onClick={(e) => {

@@ -17,27 +17,46 @@ export type GlobalState = {
     activeTab: number | null,
 };
 
-const initialFs: FS = deserializeFS([
-    {
-        type: FSNodeType.File,
-        name: "index.js",
-        content: `console.log("Hello, world!");`
-    }
-]);
+export const makeNewState = () => {
+    const initialFs: FS = deserializeFS([
+        {
+            type: FSNodeType.File,
+            name: "index.js",
+            content: `// welcome to modular things!
 
-const initialOF: OpenFile = {
-    node: initialFs[0] as File,
-    cmState: null!
+// if you have some things, plug them in
+// and head to the devices panel to pair
+// them and see API docs
+
+// this is a fun little demo showing
+// some of the capabilities of the editor
+
+import { html, render as uRender } from "https://cdn.skypack.dev/uhtml/async";
+
+const div = html\`
+<div>hello, world!</div>
+<button onclick=\${async () => {
+  // you can use ES imports!
+  const { default: confetti } = await import("https://cdn.skypack.dev/canvas-confetti");
+  confetti();
+}}>celebrate!</button>
+\`;
+
+uRender(viewEl, div);`
+        }
+    ]);
+    
+    const initialOF: OpenFile = {
+        node: initialFs[0] as File,
+        cmState: null!
+    };
+    initialOF.cmState = createCMState(initialOF);
+    return {
+        fs: initialFs,
+        openFiles: [initialOF],
+        activeTab: 0
+    };
 };
-initialOF.cmState = createCMState(initialOF);
-
-export const [useStore, patchStore, getStore] = createState<GlobalState>({
-    things: {},
-    view: undefined,
-    fs: initialFs,
-    openFiles: [initialOF],
-    activeTab: 0
-});
 
 export type SerializedOpenFile = {
     path: string,
@@ -63,7 +82,12 @@ export const serializeState = (state: GlobalState): SerializedGlobalState => {
     };
 }
 
-export const deserializeState = (state: SerializedGlobalState): Partial<GlobalState> => {
+export function loadSerializedState(state: SerializedGlobalState) {
+    patchStore(deserializeState(state));
+    // dispatchCMResetState();
+}
+
+const deserializeState = (state: SerializedGlobalState): Partial<GlobalState> => {
     const fs = deserializeFS(state.fs);
     return {
         fs,
@@ -80,3 +104,14 @@ function deserializeOpenFile(oldOpenFile: SerializedOpenFile, fs: FS): OpenFile 
     newOpenFile.cmState = deserializeCMState(oldOpenFile.cmState, newOpenFile);
     return newOpenFile;
 }
+
+
+
+const backup = typeof window !== "undefined" && localStorage.getItem("backup");
+const initialFs = backup ? deserializeState(JSON.parse(backup)) : makeNewState();
+
+export const [useStore, patchStore, getStore] = createState<GlobalState>({
+    things: {},
+    view: undefined,
+    ...initialFs
+} as GlobalState);
