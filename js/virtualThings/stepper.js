@@ -74,7 +74,7 @@ export default function stepper(osap, vt, name) {
   let absMaxVelocity = 4000 / spu
   let absMaxAccel = 10000
   let lastVel = absMaxVelocity
-  let lastAccel = 100             // units / sec
+  let lastAccel = 1000             // units / sec
 
   let setPosition = async (pos) => {
     try {
@@ -102,8 +102,10 @@ export default function stepper(osap, vt, name) {
     lastAccel = accel
   }
 
-  let setAbsMaxAccel = (maxAccel) => { absMaxAccel = maxAccel }
-
+  // these are currently "hidden" i.e. not-reported to user API
+  let setAbsMaxAccel = (maxAccel) => { 
+    absMaxAccel = maxAccel 
+  }
   let setAbsMaxVelocity = (maxVel) => {
     // not beyond this tick-based limit,
     if (maxVel > 4000 / spu) {
@@ -155,7 +157,6 @@ export default function stepper(osap, vt, name) {
     }
   }
 
-
   let getPosition = async () => {
     try {
       let state = await getState()
@@ -185,11 +186,11 @@ export default function stepper(osap, vt, name) {
       return new Promise(async (resolve, reject) => {
         let check = () => {
           getState().then((states) => {
-            console.log(
-`${name}
-acc ${states.accel.toFixed(6)},\t vel ${states.vel.toFixed(2)},\t pos ${states.pos.toFixed(2)},\t dtt ${states.distanceToTarget.toFixed(2)},
-maxAcc ${states.maxAccel.toFixed(6)},\t maxVel ${states.maxVel.toFixed(2)},\t twoDA ${states.twoDA.toFixed(12)},\t vSqr ${states.vSquared.toFixed(12)}`
-)
+            // console.log(
+            // `${name}
+            // acc ${states.accel.toFixed(6)},\t vel ${states.vel.toFixed(2)},\t pos ${states.pos.toFixed(2)},\t dtt ${states.distanceToTarget.toFixed(2)},
+            // maxAcc ${states.maxAccel.toFixed(6)},\t maxVel ${states.maxVel.toFixed(2)},\t twoDA ${states.twoDA.toFixed(12)},\t vSqr ${states.vSquared.toFixed(12)}`
+            // )
             if (Math.abs(states.distanceToTarget) < 0.001) {
               resolve()
             } else {
@@ -270,6 +271,7 @@ maxAcc ${states.maxAccel.toFixed(6)},\t maxVel ${states.maxVel.toFixed(2)},\t tw
       wptr += TS.write("float32", vel * spu, datagram, wptr)  // write max-vel-during
       wptr += TS.write("float32", accel * spu, datagram, wptr)  // write max-accel-during
       // mkheeeey
+      console.warn(`velocity... ${vel}, ${accel}`)
       await targetDataEndpoint.write(datagram, "acked")
     } catch (err) {
       console.error(err)
@@ -324,6 +326,18 @@ maxAcc ${states.maxAccel.toFixed(6)},\t maxVel ${states.maxVel.toFixed(2)},\t tw
         name: "relative",
         args: [
           "delta: number",
+        ]
+      },
+      {
+        name: "target",
+        args: [
+          "targ: number",
+        ]
+      },
+      {
+        name: "velocity",
+        args: [
+          "vel: number",
         ]
       },
       {
