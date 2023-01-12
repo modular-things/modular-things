@@ -264,13 +264,29 @@ OK I'm back to try to merge this into main, but have just noticed that -ve delta
 
 Should be simple enough, applying an abs() somewhere it isn't yet... 
 
---- 
+OK yeah that was that, seems to work. Should test... with ~
 
-## Before the Merge
+```js
+await mtr.setCurrentScale(0.55)
+await mtr.setVelocity(1000)
+await mtr.setAccel(10000)
+for(let v = 0; v < 100; v ++){
+  let targ = (Math.random() - 0.5) * 2000
+  console.warn(`setting targ ${targ.toFixed(2)}`)
+  await mtr.target(targ)
+  await delay(100)
+}
+await mtr.absolute(0)
+await mtr.setCurrentScale(0.00)
+```
 
-- use velocity mode ~ randomly 
-- use .absolute mode ~ randomly 
-- likewise .retarget, for ~ following algos 
+- using random .velocity() calls, OK
+- using random .absolute() calls, OK
+- using random .relative() calls, OK
+- using random .target() calls, OK
+- unfk. the api reporting... 
+
+OK, that all seems done, I'm going to merge this into main and then take another crakko at sequential motion... 
 
 ---
 
