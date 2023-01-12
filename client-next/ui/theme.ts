@@ -2,7 +2,7 @@ import type { Theme } from "theme-ui";
 import { Atkinson_Hyperlegible, JetBrains_Mono } from "@next/font/google";
 
 const atk = Atkinson_Hyperlegible({ subsets: ["latin"], weight: ["400", "700"] });
-const jbMono = JetBrains_Mono({ subsets: ["latin"] });
+export const jbMono = JetBrains_Mono({ subsets: ["latin"] });
 
 export const theme: Theme = {
     fonts: {
@@ -30,6 +30,40 @@ export const theme: Theme = {
             "& *": {
                 fontFamily: "inherit"
             }
+        },
+        h1: {
+            fontSize: 4,
+            margin: 0
+        },
+        h2: {
+            fontSize: 3,
+            margin: 0
+        },
+        h3: {
+            fontSize: 2,
+            margin: 0,
+        },
+        h4: {
+            fontSize: 1,
+            margin: 0
+        },
+        h5: {
+            fontSize: 0,
+            margin: 0
+        },
+        h6: {
+            fontSize: 0,
+            margin: 0
+        },
+        p: {
+            margin: 0
+        },
+        pre: {
+            margin: 0,
+            fontFamily: "monospace"
+        },
+        code: {
+            fontFamily: "monospace"
         }
     },
     buttons: {

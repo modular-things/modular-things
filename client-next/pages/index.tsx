@@ -1,9 +1,17 @@
+import dynamic from "next/dynamic";
 import Head from "next/head";
 import { Flex } from "theme-ui";
+import AutoBackup from "../components/AutoBackup";
 import CompatWarning from "../components/CompatWarning";
-import Editor from "../components/Editor";
 import Sidebar from "../components/Sidebar";
 import Toolbar from "../components/Toolbar";
+
+const Editor = dynamic(() => import("../components/Editor"), {
+    ssr: false,
+    loading: () => <Flex sx={{
+        flex: 1
+    }}></Flex>
+});
 
 export default function Index() {
     return (
@@ -17,6 +25,7 @@ export default function Index() {
                 />
                 <link rel="icon" href="favicon.ico" />
             </Head>
+            <AutoBackup /> {/* doesn't render anything */}
             <Flex sx={{
                 flexDirection: "column",
                 height: "100vh"
