@@ -31,7 +31,7 @@ export default function Index() {
                 height: "100vh"
             }}>
                 <Toolbar />
-                <Flex sx={{ flex: 1, minHeight: 0 }}>
+                <Flex sx={{ flex: 1, minHeight: 0, position: "relative" }}>
                     <Editor sx={{
                         flex: 1
                     }} />

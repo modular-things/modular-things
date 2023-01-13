@@ -4,7 +4,7 @@ const nextMDX = require("@next/mdx");
 const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
-  basePath: process.env.GITHUB_ACTIONS ? "/modular-things" : "/"
+  basePath: process.env.GITHUB_ACTIONS ? "/modular-things" : ""
 }
 
 const withMDX = nextMDX({

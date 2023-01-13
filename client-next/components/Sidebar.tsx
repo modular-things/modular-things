@@ -19,7 +19,15 @@ export default function Sidebar() {
             {tab === 1 && <PanelWrapper><FileTree /></PanelWrapper>}
             {tab === 0 && <PanelWrapper><Devices /></PanelWrapper>}
             <PanelWrapper sx={{
-                display: tab === 2 ? "initial" : "none"
+                display: tab === 2 ? "initial" : "none",
+                position: "absolute",
+                bg: "white",
+                left: "0",
+                bottom: "0",
+                top: "0",
+                right: "37px",
+                minWidth: "unset",
+                maxWidth: "unset"
             }}>
                 <div ref={viewRef} />
             </PanelWrapper>

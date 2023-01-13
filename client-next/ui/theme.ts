@@ -49,11 +49,14 @@ export const theme: Theme = {
         },
         h5: {
             fontSize: 0,
-            margin: 0
+            margin: 0,
+            color: "primary"
         },
         h6: {
-            fontSize: 0,
-            margin: 0
+            // fontSize: 0,
+            fontSize: "0.9rem",
+            margin: 0,
+            fontWeight: 500
         },
         p: {
             margin: 0
