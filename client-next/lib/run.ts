@@ -122,11 +122,23 @@ export default async function runCode() {
     for (const key in state.things) {
       things[key] = state.things[key].vThing;
     }
+
+    // inject items into global scope, or replace existing properties with our own
+    const customGlobal = {
+        setTimeout: patchedTimeout,
+        setInterval: patchedInterval
+    };
+
+    const globalProxy = new Proxy(window, {
+        get: (w, prop) => (
+            //@ts-ignore
+            prop in customGlobal ? customGlobal[prop] : w[prop].bind(w)
+        )
+    });
   
     const args = {
       ...things,
-      setInterval: patchedInterval,
-      setTimeout: patchedTimeout,
+      ...customGlobal,
       createSynchronizer,
       loop,
       render,
@@ -136,7 +148,9 @@ export default async function runCode() {
     //   window: null,
     //   eval: null,
       viewEl: state.view,
-      global: globalThis
+      global: globalProxy,
+      globalThis: globalProxy,
+      window: globalProxy
     }
   
     const names = Object.keys(args);
