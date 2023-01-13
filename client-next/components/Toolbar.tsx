@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button, Flex, Heading } from "theme-ui";
 import download from "../lib/download";
 import runCode from "../lib/run";
@@ -26,6 +27,21 @@ export default function Toolbar() {
 }
 
 function RunButton() {
+    // keyboard shortcut - shift+enter
+    useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            if(e.shiftKey && e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                runCode();
+            }
+        }
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        }
+    }, []);
+
     return (
         <Button onClick={() => runCode()}>run (shift+enter)</Button>
     );
