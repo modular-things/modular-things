@@ -1,7 +1,7 @@
 /*
 netRunner.js
 
-graph search routines, in JS, for OSAP systems 
+graph search routines, in JS, for OSAP systems
 
 Jake Read at the Center for Bits and Atoms
 (c) Massachusetts Institute of Technology 2021
@@ -25,16 +25,16 @@ export default function NetRunner(osap) {
     graph: null
   }
 
-  // runs a sweep, starting at the osap root vertex 
+  // runs a sweep, starting at the osap root vertex
   this.sweep = async () => {
     scanStartTime = TIME.getTimeStamp()
     // to find loops, we keep a list of all of the network-capable vertices (vports and vbusses) that we find,
     allNetworkVertices = []
     return new Promise(async (resolve, reject) => {
       try {
-        // make root from our own root note... 
+        // make root from our own root note...
         let root = await osap.scope(PK.route().end(250, 128), scanStartTime)
-        // try a recursor based on root objects, using also our entry point, 
+        // try a recursor based on root objects, using also our entry point,
         await this.searchContext(root, null)
         console.warn(`SWEEP done in ${TIME.getTimeStamp() - scanStartTime}ms`)
         latestSweep = {
@@ -80,48 +80,48 @@ export default function NetRunner(osap) {
   this.searchContext = async (root, entrance) => {
     try {
       let contextScanTime = TIME.getTimeStamp()
-      // get data for new children... i.e. the entrance should already be all hooked up, 
+      // get data for new children... i.e. the entrance should already be all hooked up,
       for (let c = 0; c < root.children.length; c++) {
         if (root.children[c] == undefined) {
           root.children[c] = await osap.scope(PK.route(root.route).child(c).end(), contextScanTime)
           root.children[c].parent = root
         }
       }
-      // stash flat-list of all network-capable vertices, for loop detection 
+      // stash flat-list of all network-capable vertices, for loop detection
       for (let c = 0; c < root.children.length; c++) {
         allNetworkVertices.push(root.children[c])
       }
-      // now poke through, check on network hops, 
+      // now poke through, check on network hops,
       for (let c = 0; c < root.children.length; c++) {
         let vt = root.children[c]
-        // don't traverse back from whence we came, 
+        // don't traverse back from whence we came,
         if (vt == entrance) continue
-        if (vt.type == VT.VPORT) { //---------------------------------- if vport, find vport partner, 
+        if (vt.type == VT.VPORT) { //---------------------------------- if vport, find vport partner,
           if (vt.linkState) {
-            // we try to catch the reciprocal, or we time out... 
+            // we try to catch the reciprocal, or we time out...
             let reciprocal = {}
             try {
-              // get reciprocal port & reverse-plumb, 
+              // get reciprocal port & reverse-plumb,
               reciprocal = await osap.scope(PK.route(root.route).child(c).pfwd().end(), contextScanTime)
               reciprocal.reciprocal = vt
-              // loop detect... just fail, we did handle these before, 
+              // loop detect... just fail, we did handle these before,
               if (loopDetect(reciprocal)) continue;
-              // and that things' parent, 
+              // and that things' parent,
               reciprocal.parent = await osap.scope(PK.route(reciprocal.route).parent().end(), contextScanTime)
               // if that works, we do a little plumbing:
               reciprocal.parent.children[reciprocal.indice] = reciprocal
-              // then we can carry on to the next, 
+              // then we can carry on to the next,
               await this.searchContext(reciprocal.parent, reciprocal)
             } catch (err) {
               console.warn(`${vt.name} at ${root.name}'s reciprocal traverse error, reason:`, err)
               reciprocal = { type: "unreachable" }
             }
-            // plumb it & reverse it, 
+            // plumb it & reverse it,
             vt.reciprocal = reciprocal
           } else {
             vt.reciprocal = { type: "unreachable" }
           }
-        } else if (vt.type == VT.VBUS) { //--------------------------- if vbus, find bus partner for each... 
+        } else if (vt.type == VT.VBUS) { //--------------------------- if vbus, find bus partner for each...
           allNetworkVertices.push(vt)
           for (let d = 0; d < vt.linkState.length; d++) {
             let reciprocal = {}
@@ -140,7 +140,7 @@ export default function NetRunner(osap) {
             } else {
               reciprocal = { type: "unreachable" }
             }
-            // plumb it, & the reverse... 
+            // plumb it, & the reverse...
             vt.reciprocals[d] = reciprocal
           }
         }
@@ -153,7 +153,7 @@ export default function NetRunner(osap) {
 
   let loopDetect = (nv) => {
     return false
-    // if this has been tagged previously at some time *since* we started the most recent scan, 
+    // if this has been tagged previously at some time *since* we started the most recent scan,
     if (nv.previousTimeTag > scanStartTime) {
       // it's likely a duplicate / loop of something we've already scanned, so go looking:
       for (let v of allNetworkVertices) {
@@ -193,7 +193,7 @@ export default function NetRunner(osap) {
     return list
   }
 
-  // also not loop-safe atm, 
+  // also not loop-safe atm,
   this.find = async (vtName, start) => {
     try {
       let list = await this.findMultiple(vtName, start)
@@ -238,7 +238,7 @@ export default function NetRunner(osap) {
     }
   }
 
-  // mmmm, this would be in "highLevel" and could include options to find-within for each... 
+  // mmmm, this would be in "highLevel" and could include options to find-within for each...
   this.connect = async (headName, tailName) => {
     try {
       let graph = await this.sweep()
@@ -249,7 +249,7 @@ export default function NetRunner(osap) {
       let route = this.findRoute(head, tail)
       //console.warn(`the route betwixt...`, route)
       //PK.logRoute(route)
-      // then we could do this to add the route / make the connection: 
+      // then we could do this to add the route / make the connection:
       await osap.mvc.setEndpointRoute(head.route, route)
       return route
     } catch (err) {
@@ -257,14 +257,14 @@ export default function NetRunner(osap) {
     }
   }
 
-  // walks routes along a virtual graph, returning a list of stops, 
+  // walks routes along a virtual graph, returning a list of stops,
   this.routeWalk = (route, source) => {
     //console.log('walking', route, 'from', source)
     if (!(route.path instanceof Uint8Array)) { throw new Error(`strange route structure in the routeWalk fn, netRunner`) }
-    // we'll make a list... of vvts, which are on this path, 
-    // walking along the route... 
+    // we'll make a list... of vvts, which are on this path,
+    // walking along the route...
     let ptr = 1, indice = 0, vvt = source, list = []
-    // append vvt to head of list, or no? yah, should do 
+    // append vvt to head of list, or no? yah, should do
     list.push(vvt)
     for (let s = 0; s < 16; s++) {
       if (ptr >= route.path.length) {
@@ -273,7 +273,7 @@ export default function NetRunner(osap) {
       switch (route.path[ptr]) {
         case PK.SIB:
           indice = PK.readArg(route.path, ptr)
-          // do we have it ? 
+          // do we have it ?
           if (vvt.parent && vvt.parent.children[indice]) {
             vvt = vvt.parent.children[indice]
             list.push(vvt)
@@ -292,20 +292,20 @@ export default function NetRunner(osap) {
         default:
           return { path: list, state: 'incomplete', reason: 'default switch' }
       }
-      // increment to next, 
+      // increment to next,
       ptr += 2
     }
   }
 
-  // tool to find routes *between* two obj... head & tail should be vvts in the same graph, we want to search betwixt, 
-  // routes are returned as route objects, and are not added in this fn 
+  // tool to find routes *between* two obj... head & tail should be vvts in the same graph, we want to search betwixt,
+  // routes are returned as route objects, and are not added in this fn
   this.findRoute = (head, tail, log = false) => {
     if (log) console.warn(`FR: searching from ${head.name} to ${tail.name}`, head.route, tail.route)
-    // we're going to poke around recursively, but in the cases where we ever exit *up* a bus-drop, 
-    // we need to not traverse back *down* that thing... this is that state, and it's a lazy soln', 
-    // and if we ever have more than one bus in a net we'll be in trouble w/ this 
+    // we're going to poke around recursively, but in the cases where we ever exit *up* a bus-drop,
+    // we need to not traverse back *down* that thing... this is that state, and it's a lazy soln',
+    // and if we ever have more than one bus in a net we'll be in trouble w/ this
     let busDropLatch = 0
-    // we... recursively poke around? this is maybe le-difficult, 
+    // we... recursively poke around? this is maybe le-difficult,
     let recursor = (route, from) => {
       if (log) console.warn(`FR: recurse from ${from.name}, logging route:`)
       if (log) PK.logRoute(route)
@@ -315,22 +315,22 @@ export default function NetRunner(osap) {
         segSize: route.segSize,
         path: new Uint8Array(route.path)
       }
-      // how big ? 
+      // how big ?
       if (route.path.length > 128) {
         throw new Error(`FR: likely excess recursion here... blocking`)
       }
-      // first... look thru siblings at this level, 
+      // first... look thru siblings at this level,
       for (let s in from.parent.children) {
         s = parseInt(s)
         let sib = from.parent.children[s]
         if (false) console.warn(`FR: eval ${sib.name}, ${tail.name}`)
-        // if that's the ticket, ship it, 
+        // if that's the ticket, ship it,
         if (PK.routeMatch(sib.route, tail.route)) {
           if (log) console.warn(`FR: found the target !`)
           return PK.route(route).sib(s).end()
         }
       }
-      // if not, find ports, 
+      // if not, find ports,
       let results = []
       for (let s in from.parent.children) {
         s = parseInt(s)
@@ -338,42 +338,42 @@ export default function NetRunner(osap) {
         if (sib.type == VT.VPORT && sib != from) {
           if (sib.reciprocal && sib.reciprocal.type != "unreachable") {
             // we push potential results into this collection of results & then pass them back up,
-            // there's likely a better way to cancel the recursing once we find a match 
-            // as a warning... this is not loop safe ! 
+            // there's likely a better way to cancel the recursing once we find a match
+            // as a warning... this is not loop safe !
             results.push(recursor(PK.route(route).sib(s).pfwd().end(), sib.reciprocal))
           }
         } else if (sib.type == VT.VBUS) {
-          if (sib.ownRxAddr == 0) { // -------------------- it's the bus head  
+          if (sib.ownRxAddr == 0) { // -------------------- it's the bus head
             for (let d in sib.reciprocals) {
-              // don't go back down to from whence we came, 
+              // don't go back down to from whence we came,
               if (parseInt(d) == busDropLatch) continue
-              // traverse down all other reachable drops... 
+              // traverse down all other reachable drops...
               if (sib.reciprocals[d].type != "unreachable") {
                 results.push(recursor(PK.route(route).sib(s).bfwd(parseInt(d)).end(), sib.reciprocals[d]))
               }
             }
-          } else { // ------------------------------------- it's a bus drop, 
-            // only come back up if we haven't already come *up* from a drop once before 
+          } else { // ------------------------------------- it's a bus drop,
+            // only come back up if we haven't already come *up* from a drop once before
             if (busDropLatch) {
               if (log) console.warn(`FR: latch prevented up-bus traversal`)
               continue
             }
-            // otherwise, we want to pop up to the head, like 
+            // otherwise, we want to pop up to the head, like
             if (log) console.warn(`FR: popping up to the bus-head from '${sib.parent.name} / ${sib.name}' at bus addr ${sib.ownRxAddr}`)
             busDropLatch = sib.ownRxAddr
             results.push(recursor(PK.route(route).sib(s).bfwd(0).end(), sib.reciprocals[0]))
           }
         }
       }
-      // done children-sweep, now look for matches, should only be one... 
+      // done children-sweep, now look for matches, should only be one...
       for (let res of results) {
         if (res != null) return res
       }
-      // these are dead-ends in the recursion 
+      // these are dead-ends in the recursion
       // console.log('returning null...')
       return null
-    } // end recursor 
-    // start recursor w/ initial route-to-self, 
+    } // end recursor
+    // start recursor w/ initial route-to-self,
     return recursor(PK.route().end(), head)
   }
 }
