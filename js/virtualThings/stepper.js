@@ -68,13 +68,13 @@ export default function stepper(osap, vt, name) {
   // -------------------------------------------- Setters
   // how many steps-per-unit,
   // this could be included in a machineSpaceToActuatorSpace transform as well,
-  let spu = 20
+  let spu = 10
   // each has a max-max velocity and acceleration, which are user settings,
   // but velocity is also abs-abs-max'd at our tick rate...
   let absMaxVelocity = 4000 / spu
   let absMaxAccel = 10000
   let lastVel = absMaxVelocity
-  let lastAccel = 100             // units / sec
+  let lastAccel = 1000             // units / sec
 
   let setPosition = async (pos) => {
     try {
@@ -98,11 +98,14 @@ export default function stepper(osap, vt, name) {
 
   let setAccel = async (accel) => {
     if (accel > absMaxAccel) accel = absMaxAccel
+    if (accel < 1) accel = 1  // no lower than this, fks shit up 
     lastAccel = accel
   }
 
-  let setAbsMaxAccel = (maxAccel) => { absMaxAccel = maxAccel }
-
+  // these are currently "hidden" i.e. not-reported to user API
+  let setAbsMaxAccel = (maxAccel) => { 
+    absMaxAccel = maxAccel 
+  }
   let setAbsMaxVelocity = (maxVel) => {
     // not beyond this tick-based limit,
     if (maxVel > 4000 / spu) {
@@ -143,12 +146,16 @@ export default function stepper(osap, vt, name) {
         pos: TS.read("float32", data, 0) / spu,
         vel: TS.read("float32", data, 4) / spu,
         accel: TS.read("float32", data, 8) / spu,
+        distanceToTarget: TS.read("float32", data, 12) / spu,
+        maxVel: TS.read("float32", data, 16) / spu,
+        maxAccel: TS.read("float32", data, 20) / spu,
+        twoDA: TS.read("float32", data, 24) / spu,
+        vSquared: TS.read("float32", data, 28) / spu,
       }
     } catch (err) {
       console.error(err)
     }
   }
-
 
   let getPosition = async () => {
     try {
@@ -179,8 +186,12 @@ export default function stepper(osap, vt, name) {
       return new Promise(async (resolve, reject) => {
         let check = () => {
           getState().then((states) => {
-            // console.log(`${name}\t acc ${states.accel.toFixed(4)},\t vel ${states.vel.toFixed(4)},\t pos ${states.pos.toFixed(4)}`)
-            if (states.vel < 0.001 && states.vel > -0.001) {
+            // console.log(
+            // `${name}
+            // acc ${states.accel.toFixed(6)},\t vel ${states.vel.toFixed(2)},\t pos ${states.pos.toFixed(2)},\t dtt ${states.distanceToTarget.toFixed(2)},
+            // maxAcc ${states.maxAccel.toFixed(6)},\t maxVel ${states.maxVel.toFixed(2)},\t twoDA ${states.twoDA.toFixed(12)},\t vSqr ${states.vSquared.toFixed(12)}`
+            // )
+            if (Math.abs(states.distanceToTarget) < 0.001) {
               resolve()
             } else {
               setTimeout(check, 10)
@@ -260,6 +271,7 @@ export default function stepper(osap, vt, name) {
       wptr += TS.write("float32", vel * spu, datagram, wptr)  // write max-vel-during
       wptr += TS.write("float32", accel * spu, datagram, wptr)  // write max-accel-during
       // mkheeeey
+      console.warn(`velocity... ${vel}, ${accel}`)
       await targetDataEndpoint.write(datagram, "acked")
     } catch (err) {
       console.error(err)
@@ -294,6 +306,7 @@ export default function stepper(osap, vt, name) {
     setCurrentScale,
     setStepsPerUnit,
     // inspect...
+    getState,
     getPosition,
     getVelocity,
     getAbsMaxVelocity,
@@ -313,6 +326,18 @@ export default function stepper(osap, vt, name) {
         name: "relative",
         args: [
           "delta: number",
+        ]
+      },
+      {
+        name: "target",
+        args: [
+          "targ: number",
+        ]
+      },
+      {
+        name: "velocity",
+        args: [
+          "vel: number",
         ]
       },
       {
@@ -351,6 +376,16 @@ export default function stepper(osap, vt, name) {
             accel: number
           }
         `
+      },
+      {
+        name: "getPosition",
+        args: [],
+        return: `number`
+      },
+      {
+        name: "getVelocity",
+        args: [],
+        return: `number`
       },
       {
         name: "getAbsMaxVelocity",
