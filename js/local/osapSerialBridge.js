@@ -31,25 +31,25 @@ osap.description = "node featuring wss to client and usbserial cobs connection t
 
 let wssVPort = osap.vPort("wssVPort")   // 0
 
-// a rescan endpoint 
+// a rescan endpoint
 
 let rescanEndpoint = osap.endpoint("nodeRescan")
 rescanEndpoint.addRoute(PK.route().sib(0).pfwd().sib(1).end())
 
-// then resolves with the connected webSocketServer to us 
-let LOGWSSPHY = false 
+// then resolves with the connected webSocketServer to us
+let LOGWSSPHY = false
 wssVPort.maxSegLength = 16384
 let wssVPortStatus = "opening"
 // here we attach the "clear to send" function,
 // in this case we aren't going to flowcontrol anything, js buffers are infinite
-// and also impossible to inspect  
+// and also impossible to inspect
 wssVPort.cts = () => { return (wssVPortStatus == "open") }
-// we also have isOpen, similarely simple here, 
+// we also have isOpen, similarely simple here,
 wssVPort.isOpen = () => { return (wssVPortStatus == "open") }
 
 WSSPipe.start().then((ws) => {
-  // no loop or init code, 
-  // implement status 
+  // no loop or init code,
+  // implement status
   wssVPortStatus = "open"
   // implement rx,
   ws.onmessage = (msg) => {
@@ -57,13 +57,13 @@ WSSPipe.start().then((ws) => {
     if (LOGWSSPHY) TS.logPacket(msg.data)
     wssVPort.receive(msg.data)
   }
-  // implement transmit 
+  // implement transmit
   wssVPort.send = (buffer) => {
     if (LOGWSSPHY) console.log('PHY WSS Send')
     if (LOGWSSPHY) PK.logPacket(buffer)
     ws.send(buffer)
   }
-  // local to us, 
+  // local to us,
   ws.onerror = (err) => {
     wssVPortStatus = "closed"
     console.log('wss error', err)
@@ -80,10 +80,10 @@ WSSPipe.start().then((ws) => {
 
 // -------------------------------------------------------- USB Serial VPort
 
-// we'd like to periodically poke around and find new ports... 
-// these are "product IDs" that belong to the circuits we would want to hook up... 
+// we'd like to periodically poke around and find new ports...
+// these are "product IDs" that belong to the circuits we would want to hook up...
 let pidCandidates = [
-  '801E', '80CB', '8031', '80CD', '800B', '4557'
+  '801E', '80CB', '8031', '80CD', '800B', '4557', '000A'
 ]
 let activePorts = []
 let portSweeper = () => {
@@ -91,21 +91,21 @@ let portSweeper = () => {
   SerialPort.list().then((ports) => {
     for(let port of ports){
       // console.log(port.productId)
-      // if we have a match to our candidates, 
+      // if we have a match to our candidates,
       let cand = pidCandidates.find(elem => elem == port.productId)
-      // and we don't already have it in the list of actives, 
-      if(cand && !activePorts.find(elem => elem.portName == port.path)){ 
-        // we have a match, but haven't already opened this port, 
+      // and we don't already have it in the list of actives,
+      if(cand && !activePorts.find(elem => elem.portName == port.path)){
+        // we have a match, but haven't already opened this port,
         console.log(`FOUND desired prt at ${port.path}, launching vport...`)
         activePorts.push(new VPortSerial(osap, port.path))
         console.log(activePorts)
-        // should rescan when it's open, or just delay... 
+        // should rescan when it's open, or just delay...
         TIME.delay(250).then(() => {
           rescanEndpoint.write(new Uint8Array([1]), "ackless")
         })
       }
     }
-    // also... check deadies, 
+    // also... check deadies,
     for(let vp of activePorts){
       if(vp.status == "closed"){
         console.log(`CLOSED and rming ${vp.portName}`)
@@ -115,7 +115,7 @@ let portSweeper = () => {
         rescanEndpoint.write(new Uint8Array([1]), "ackless")
       }
     }
-    // set a timeout, 
+    // set a timeout,
     setTimeout(portSweeper, 500)
   })
 }
