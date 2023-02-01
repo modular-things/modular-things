@@ -4,6 +4,7 @@ import SideMenu from './SideMenu'
 import ScanButton from './ScanButton'
 import HelpMarkdown from "./HelpMarkdown.md"
 // how to load this markdown
+import styles from "../styles/HelpMarkdown.module.css"
 
 import { useEffect, useState, useCallback } from 'preact/hooks'
 
@@ -73,7 +74,7 @@ const rightPanels = {
     </div>
   ),
   "help": (helpMd) => (
-    <div style={{ padding: 10 }} dangerouslySetInnerHTML={{ __html: htmlString }}></div>
+    <div class={styles.md} style={{ padding: 10 }} dangerouslySetInnerHTML={{ __html: htmlString }}></div>
   ),
 }
 

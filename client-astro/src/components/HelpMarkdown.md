@@ -4,17 +4,25 @@
 
 Run a function `fn` at least every `minInterval` milliseconds.
 
+---
+
 ##### `async delay(ms)`
 
 Delay for `ms` milliseconds.
+
+---
 
 ##### `render(node)`
 
 Render the DOM node `node` to the View tab.
 
-##### `viewEl`
+---
+
+##### `viewWindow`
 
 A reference to the root node of the View tab.
+
+---
 
 ##### `createSynchronizer(actuators)`
 
