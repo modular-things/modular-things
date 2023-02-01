@@ -58,11 +58,13 @@ const rightPanels = {
   "devices": (things) => (
     <div class="device-panel">
       <div class="device-title">List of Things</div>
-      <div class="device-button-container">
-        <ScanButton/>
-      </div>
-      <div class="device-button-container">
-        <button class="device-button pair-button-trigger">pair new thing</button>
+      <div class="device-buttons">
+        <div class="device-button-container">
+          <ScanButton/>
+        </div>
+        <div class="device-button-container">
+          <button class="device-button pair-button-trigger">pair new thing</button>
+        </div>
       </div>
       {Object.entries(things).length > 0 
         ? Object.entries(things).map(drawThing)
