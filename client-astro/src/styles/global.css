@@ -1,0 +1,115 @@
+*, *::before, *::after { box-sizing: inherit; }
+html { box-sizing: border-box; }
+html, body { 
+	margin: 0;
+	height: 100%; 
+}
+
+:root {
+	--cm-width: 60%;
+}
+
+.root {
+	display: flex;
+	width: 100vw;
+	height: 100vh;
+	flex-direction: column;
+	font-family: Helvetica, Arial, Sans-Serif;
+	background: #fffdf8;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.not-menu-content {
+	flex: 1;
+	display: flex;
+	position: relative;
+}
+
+.right-panel {
+	width:calc(100% - var(--cm-width));
+	overflow: hidden;
+	border-right: .5px solid grey;
+}
+
+.divider {
+	width: 1px;
+	height: 100%;
+	background: black;
+	position: absolute;
+  left: var(--cm-width);
+  transform: translate(-50%, 0);
+}
+
+.divider:hover {
+	width: 7px;
+	background: #33e;
+	cursor: col-resize;
+}
+
+.device-panel {
+	display: flex;
+	flex-direction: column;
+	padding: 5px;
+}
+
+.device-title {
+	margin: 4px;
+	font-size: 1.2rem;
+	font-weight: bold;
+}
+
+.device-button-container {
+	display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.device-button {
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  margin: 4px;
+  background: #33e;
+  color: white;
+  border: 0;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  width: 100%;
+  max-width: 200px;
+}
+
+.device-button:hover {
+	opacity: .9;
+}
+
+.no-things {
+	padding-top: 10px;
+	font-weight: 400;
+	font-size: 1.1rem;
+	color: grey;
+}
+
+.prevent-select {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+
+
+
+
+
+
+
+
+

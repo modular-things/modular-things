@@ -1,0 +1,32 @@
+
+.top-menu {
+  cursor: default;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  background: #33e;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom: solid .3px black;
+}
+
+.menu-item {
+  color: white;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-radius: 5px;
+}
+
+.menu-item:hover {
+  background: #4848f1;
+}
+
+.menu-title {
+  font-size: 17px;
+  padding: 10px;
+  color: white;
+}

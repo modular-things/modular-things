@@ -1,0 +1,8 @@
+.test { 
+	width: var(--cm-width);
+	border-right: 1px solid black;
+}
+
+.test :global(.cm-editor) {
+	height: 100%;
+}
