@@ -29,39 +29,45 @@ async function bundle(code) {
       input: 'main.js',
       plugins: [
         {
-          name: 'url-resolver',
+          name: 'resolve',
           resolveId(source, importer) {
             if (modules.hasOwnProperty(source)) return source;
             
             if(["./", "../"].find(s => source.startsWith(s))) {
-                  if(importer) {
-                      const s = importer.split("/");
-                      s.pop();
-                      importer = s.join("/");
-                      return resolvePath(importer + "/" + source);
-                  }
-                  return resolvePath(source);
-              } else if(source.startsWith("/")) {
-                  if(importer && isURL(importer)) {
-                      const url = new URL(importer);
-                      return resolvePath(url.origin + source);
-                  }
-                  return resolvePath(source);
-              } else if(isURL(source)){
-                  return source;
+              if (importer) {
+                  const s = importer.split("/");
+                  s.pop();
+                  importer = s.join("/");
+                  return resolvePath(importer + "/" + source);
               }
+              
+              return resolvePath(source);
+            } else if (source.startsWith("/")) {
+                if (importer && isURL(importer)) {
+                  const url = new URL(importer);
+                  return resolvePath(url.origin + source);
+                }
 
-              return { id: source, external: true };
+                return resolvePath(source);
+            } else if(isURL(source)){
+                return source;
+            }
+
+            return { id: source, external: true };
           },
           async load(id) {
             if (modules.hasOwnProperty(id)) return modules[id];
+
             const response = await fetch(id);
             return response.text();
           }
         }
       ]
     })
-      .then(bundle => bundle.generate({ format: 'iife', inlineDynamicImports: true }))
+      .then(bundle => bundle.generate({ 
+        format: 'es', 
+        // inlineDynamicImports: true 
+      }))
       .then(({ output }) => output[0].code);
 
   return result;
