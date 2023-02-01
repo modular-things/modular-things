@@ -52,7 +52,7 @@ render(el);
 
 export default function TopMenu() {
   return (
-    <div class={[styles["top-menu"], "prevent-select"].join(" ")}>
+    <div class={[styles["top-menu"], "prevent-select", "top-menu"].join(" ")}>
       <div class={styles["menu-title"]}>Modular Things</div>
       <div class={[styles["menu-item"], "run-button"].join(" ")}>run (shift+enter)</div>
       <div class={[styles["menu-item"], "dropdown"].join(" ")}>
@@ -64,6 +64,9 @@ export default function TopMenu() {
         </div>
       </div>
       <div class={[styles["menu-item"], "download-button"].join(" ")}>download</div>
+      <a class="github-logo" href="https://github.com/modular-things/modular-things">
+        <i class="fa fa-github" style="font-size:24px"></i>
+      </a>
     </div>
   )
 }

@@ -133,6 +133,17 @@ html, body {
 	border-radius: 5px !important;
 }
 
+.top-menu {
+	position: relative;
+}
+
+.github-logo {
+  color: inherit;
+  position: absolute;
+  right: 10px;
+  color: white;
+}
+
 
 
 
