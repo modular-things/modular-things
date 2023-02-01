@@ -28,6 +28,7 @@ export default function TopMenu() {
           <div class={[styles["menu-item"], "dropdown-item"].join(" ")} onClick={() => setCode(SAMPLES["potLoop"])}>read pot loop</div>
           <div class={[styles["menu-item"], "dropdown-item"].join(" ")} onClick={() => setCode(SAMPLES["sychronizer"])}>createSychronizer</div>
           <div class={[styles["menu-item"], "dropdown-item"].join(" ")} onClick={() => setCode(SAMPLES["renderView"])}>render view</div>
+          <div class={[styles["menu-item"], "dropdown-item"].join(" ")} onClick={() => setCode(SAMPLES["importButton"])}>url import</div>
         </div>
       </div>
       <div class={[styles["menu-item"], "download-button"].join(" ")}>download</div>
