@@ -1,6 +1,8 @@
 .test { 
 	width: var(--cm-width);
+	max-width: var(--cm-width);
 	border-right: 1px solid black;
+	background: white;
 }
 
 .test :global(.cm-editor) {

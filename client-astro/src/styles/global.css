@@ -6,7 +6,7 @@ html, body {
 }
 
 :root {
-	--cm-width: 60%;
+	--cm-width: 70%;
 }
 
 .root {
@@ -31,11 +31,12 @@ html, body {
 	flex: 1;
 	display: flex;
 	position: relative;
+	overflow: hidden;
 }
 
 .right-panel {
 	width:calc(100% - var(--cm-width));
-	overflow: hidden;
+	overflow: scroll;
 	border-right: .5px solid grey;
 }
 
