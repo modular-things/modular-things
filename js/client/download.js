@@ -5,5 +5,5 @@ export function download(filename, text) {
   link.href = URL.createObjectURL(blob);
   link.download = `${filename}`;
   link.click();
-  URL.revokeObjectURL(link);
+  URL.revokeObjectURL(link.href);
 }
