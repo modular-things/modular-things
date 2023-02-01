@@ -6,7 +6,7 @@
 - file tree -> load & bundle from url
   - want to be able to develop more complicated projects locally
   - want to be able to pull machines from the web
-- machine set up
+- machine set-up/config
 - typescript types
 - infinite loop check
 - drag and drop upload js
