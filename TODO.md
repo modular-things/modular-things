@@ -12,8 +12,16 @@
 - drag and drop upload js
 - error messages
 - console tab
+- make synchronous, no more awaits?
+- add console
+  - logs
+  - issue commands
+  - program scope available
+- create graph/node editor
+- visualize osap graph
 - [x] deploy
 - [x] view window
+- [x] run programs with imports
 
 ## Firmwares
 

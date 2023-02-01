@@ -629,6 +629,11 @@
   dependencies:
     "@preact/signals-core" "^1.2.3"
 
+"@rollup/browser@^3.12.1":
+  version "3.12.1"
+  resolved "https://registry.yarnpkg.com/@rollup/browser/-/browser-3.12.1.tgz#e3b7274b7519b477093006ade512e4bddbbac851"
+  integrity sha512-j6w1/4NEyUJ8Aq3r2Q7O1YVbWuqn1Qg2hQNnxD/54g4AbWR1chYKM4PmYtiOuSBygqPcX0CYMsWB1dYjDam7tw==
+
 "@types/babel__core@^7.1.19":
   version "7.20.0"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.20.0.tgz#61bc5a4cae505ce98e1e36c5445e4bee060d8891"

@@ -1,11 +1,75 @@
 import { global_state } from "./global_state"; 
 import createSynchronizer from "./virtualThings/synchronizer";
+import { rollup } from '@rollup/browser';
 
 let intervals = [];
 let timeouts = [];
 let loops = [];
 
-export function runCode(code) {
+const resolvePath = (path) => (
+    path.split("/")
+        .reduce((a, v) => {
+            if(v === ".") {} // do nothing
+            else if(v === "..") {
+                if(a.pop() === undefined) throw new Error(`Unable to resolve path: ${path}`)
+            } else a.push(v);
+            return a;
+        }, [])
+        .join("/")
+);
+
+const isURL = (id) => ["http://", "https://"].find(s => id.startsWith(s));
+
+async function bundle(code) {
+  const modules = {
+    'main.js': code,
+  };
+
+  const result = await rollup({
+      input: 'main.js',
+      plugins: [
+        {
+          name: 'url-resolver',
+          resolveId(source, importer) {
+            if (modules.hasOwnProperty(source)) return source;
+            
+            if(["./", "../"].find(s => source.startsWith(s))) {
+                  if(importer) {
+                      const s = importer.split("/");
+                      s.pop();
+                      importer = s.join("/");
+                      return resolvePath(importer + "/" + source);
+                  }
+                  return resolvePath(source);
+              } else if(source.startsWith("/")) {
+                  if(importer && isURL(importer)) {
+                      const url = new URL(importer);
+                      return resolvePath(url.origin + source);
+                  }
+                  return resolvePath(source);
+              } else if(isURL(source)){
+                  return source;
+              }
+
+              return { id: source, external: true };
+          },
+          async load(id) {
+            if (modules.hasOwnProperty(id)) return modules[id];
+            const response = await fetch(id);
+            return response.text();
+          }
+        }
+      ]
+    })
+      .then(bundle => bundle.generate({ format: 'iife', inlineDynamicImports: true }))
+      .then(({ output }) => output[0].code);
+
+  return result;
+}
+
+export async function runCode(code) {
+
+  const bundledCode = await bundle(code);
 
   const AsyncFunction = (async function () {}).constructor;
 
@@ -67,20 +131,20 @@ export function runCode(code) {
     render,
     delay,
     // document: null,
-    window: null,
-    eval: null,
-    global: null,
-    globalThis: null,
+    // window: null,
+    // eval: null,
+    // global: null,
+    // globalThis: null,
     viewWindow: global_state.viewWindow,
-    // global: globalProxy,
-    // globalThis: globalProxy,
-    // window: globalProxy
+    global: globalProxy,
+    globalThis: globalProxy,
+    window: globalProxy
   }
 
   const names = Object.keys(args);
   const values = Object.values(args);
 
-  const f = new AsyncFunction(...names, code);
+  const f = new AsyncFunction(...names, bundledCode);
 
   f(...values);
 }

@@ -11,6 +11,7 @@
   padding-bottom: 0.25rem;
   border-bottom: solid .3px black;
   font-size: .95em;
+  position: relative;
 }
 
 .menu-item {
