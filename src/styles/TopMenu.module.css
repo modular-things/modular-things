@@ -23,7 +23,7 @@
 }
 
 .menu-item:hover {
-  background: #4848f1;
+  background: var(--light-blue);
 }
 
 .menu-title {

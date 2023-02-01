@@ -8,6 +8,7 @@ html, body {
 :root {
 	--cm-width: 70%;
 	--blue: #33e;
+	--light-blue: #4848f1; /* very similar to opacity 0.9 */
 }
 
 .root {
@@ -90,8 +91,14 @@ html, body {
 }
 
 .device-button:hover {
-	opacity: .9;
+	background: var(--light-blue);
 }
+
+/*
+.device-buttons {
+	display: flex;
+}
+*/
 
 .no-things {
 	padding-top: 10px;
