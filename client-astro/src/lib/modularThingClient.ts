@@ -1,31 +1,18 @@
-/*
-modularThingClient.js
+import OSAP from "./osapjs/core/osap";
 
-modular-things client
+import rgbb from "./virtualThings/rgbb";
+import stepper from "./virtualThings/stepper";
+import capacitive from "./virtualThings/capacitive";
+import timeOfFlight from "./virtualThings/timeOfFlight";
+import mosfet from "./virtualThings/mosfet";
+import accelerometer from "./virtualThings/accelerometer";
+import oled from "./virtualThings/oled";
+import potentiometer from "./virtualThings/potentiometer";
+import servo from "./virtualThings/servo";
 
-Jake Read, Leo McElroy and Quentin Bolsee at the Center for Bits and Atoms
-(c) Massachusetts Institute of Technology 2022
-
-This work may be reproduced, modified, distributed, performed, and
-displayed for any purpose, but must acknowledge the open systems assembly protocol (OSAP) and modular-things projects.
-Copyright is retained and must be preserved. The work is provided as is;
-no warranty is provided, and users accept all liability.
-*/
-
-// core elements
-import OSAP from "./osapjs/core/osap.js";
-
-import rgbb from "./virtualThings/rgbb.js";
-import stepper from "./virtualThings/stepper.js";
-import capacitive from "./virtualThings/capacitive.js";
-import timeOfFlight from "./virtualThings/timeOfFlight.js";
-import mosfet from "./virtualThings/mosfet.js";
-import accelerometer from "./virtualThings/accelerometer.js";
-import oled from "./virtualThings/oled.js";
-import potentiometer from "./virtualThings/potentiometer.js";
-import servo from "./virtualThings/servo.js";
 import VPortWebSerial from "./osapjs/vport/vPortWebSerial";
-import { getStore, patchStore } from "./state";
+
+import { global_state } from "./global_state";
 
 const osap = new OSAP("modular-things")
 
@@ -111,12 +98,15 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
 
 export async function rescan() {
   const ports = await navigator.serial.getPorts();
-  const { things } = getStore();
+  const things = global_state.things.value;
   for(const port of ports.filter(p => !portThingMap.has(p))) {
     const [name, thing] = await setupPort(port);
     things[name] = thing;
   }
-  patchStore(["things"]);
+
+  // set things state
+  global_state.things.value = {};
+  global_state.things.value = things;
 }
 
 // React StrictMode renders components twice on dev to detect problems
@@ -128,21 +118,28 @@ export async function initSerial() {
   serialInitted = true;
 
   rescan();
+
   navigator.serial.addEventListener('connect', async (event) => {
     console.log("connect!");
-    const store = getStore();
-    const [name, thing] = await setupPort(event.target as SerialPort);
-    store.things[name] = thing;
-    patchStore(["things"]);
+    const [ name, thing ] = await setupPort(event.target as SerialPort);
+    const things = global_state.things.value;
+    things[name] = thing;
+    
+    // set things state
+    global_state.things.value = {};
+    global_state.things.value = things;
   });
 
   navigator.serial.addEventListener('disconnect', async (event) => {
     console.log("disconnect!");
-    const store = getStore();
+    const things = global_state.things.value;
     const name = portThingMap.get(event.target as SerialPort);
     if(name) {
-      delete store.things[name];
-      patchStore(["things"]);
+      delete things[name];
+      
+      // set things state
+      global_state.things.value = {};
+      global_state.things.value = things;
     }
   });
 }
@@ -151,12 +148,12 @@ export async function authorizePort() {
   return await setupPort(await navigator.serial.requestPort());
 }
 
-const characters       = 'abcdefghijklmnopqrstuvwxyz';
+const characters = 'abcdefghijklmnopqrstuvwxyz';
 const charactersLength = characters.length;
 function makeID(length: number) {
-    let result = '';
-    for ( var i = 0; i < length; i++ ) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
+  let result = '';
+  for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
 }

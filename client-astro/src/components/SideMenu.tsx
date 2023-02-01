@@ -13,7 +13,7 @@ export default function SideMenu() {
           ].join(" ")}
         onClick={() => { 
           if (global_state.panelType.value === "none")
-            document.documentElement.style.setProperty("--cm-width", `60%`);
+            document.documentElement.style.setProperty("--cm-width", `70%`);
 
           global_state.panelType.value = 
             global_state.panelType.value === "devices"
@@ -34,7 +34,7 @@ export default function SideMenu() {
           ].join(" ")} 
         onClick={() => { 
           if (global_state.panelType.value === "none")
-            document.documentElement.style.setProperty("--cm-width", `60%`);
+            document.documentElement.style.setProperty("--cm-width", `70%`);
 
           global_state.panelType.value = 
             global_state.panelType.value === "view"
@@ -55,7 +55,7 @@ export default function SideMenu() {
           ].join(" ")} 
         onClick={() => { 
           if (global_state.panelType.value === "none")
-            document.documentElement.style.setProperty("--cm-width", `60%`);
+            document.documentElement.style.setProperty("--cm-width", `70%`);
 
           global_state.panelType.value = 
             global_state.panelType.value === "help"

@@ -4,8 +4,12 @@ import { createListener } from "./events/listen.js";
 import { addDividerDrag } from "./events/addDividerDrag";
 import { download } from "./download";
 import { runCode } from "./runCode";
+import { authorizePort, initSerial } from "./modularThingClient";
 
-export function addEvents(state) {
+
+export function init(state) {
+  initSerial();
+
   const bodyListener = createListener(document.body);
   addDividerDrag(state, bodyListener);
 
@@ -17,6 +21,18 @@ export function addEvents(state) {
   bodyListener("click", ".download-button", () => {
     const str = global_state.codemirror.state.doc.toString();
     download("anon.js", str);
+  });
+
+  // bodyListener("click", ".scan-button-trigger", () => { });
+
+  bodyListener("click", ".pair-button-trigger", async () => {
+    const things = global_state.things.value;
+    const [name, thing] = await authorizePort();
+    things[name] = thing;
+
+    // set things state
+    global_state.things.value = {};
+    global_state.things.value = things;
   });
 
   window.addEventListener("keydown", (e) => {

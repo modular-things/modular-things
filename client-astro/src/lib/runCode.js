@@ -1,4 +1,5 @@
 import { global_state } from "./global_state"; 
+import createSynchronizer from "./virtualThings/synchronizer";
 
 let intervals = [];
 let timeouts = [];
@@ -38,17 +39,14 @@ export function runCode(code) {
     }
   }
 
-  const viewWindow = document.querySelector(".view-window");
   const render = (node) => {
-    viewWindow.innerHTML = "";
-    viewWindow.append(node);
+    global_state.viewWindow.innerHTML = "";
+    global_state.viewWindow.appendChild(node);
   }
 
+  // why do this?
   const globalProxy = new Proxy(window, {
-      get: (w, prop) => (
-          //@ts-ignore
-          prop in customGlobal ? customGlobal[prop] : w[prop].bind(w)
-      )
+      get: (w, prop) => w[prop].bind(w)
   });
 
   const things = {};
@@ -58,20 +56,22 @@ export function runCode(code) {
   }
 
   const args = {
-    // ...things,
-    // createSynchronizer,
+    ...things,
+    createSynchronizer,
     setInterval: patchedInterval,
     setTimeout: patchedTimeout,
     loop,
     render,
     delay,
     // document: null,
-    // window: null,
-    // eval: null,
-    viewWindow: viewWindow,
-    global: globalProxy,
-    globalThis: globalProxy,
-    window: globalProxy
+    window: null,
+    eval: null,
+    global: null,
+    globalThis: null,
+    viewWindow: global_state.viewWindow,
+    // global: globalProxy,
+    // globalThis: globalProxy,
+    // window: globalProxy
   }
 
   const names = Object.keys(args);
