@@ -3,7 +3,6 @@ import TopMenu from './TopMenu'
 import SideMenu from './SideMenu'
 import ScanButton from './ScanButton'
 import HelpMarkdown from "./HelpMarkdown.md"
-// how to load this markdown
 import styles from "../styles/HelpMarkdown.module.css"
 
 import { useEffect, useState, useCallback } from 'preact/hooks'
@@ -108,6 +107,14 @@ function drawThing([name, thing]) {
 }
 
 function drawApi(entry) {
+
+  const containerStyle = { 
+    "font-size": "1em", 
+    "padding-left": "1em", 
+    "padding-bottom": ".5em", 
+    "color": "grey" 
+  }
+
   const argOrReturnStyle = { 
     "padding-left": "1em", 
     "overflow": "scroll", 
@@ -115,7 +122,7 @@ function drawApi(entry) {
   };
 
   return (
-    <div key={entry.name} style={{ "font-size": "1em", "padding-left": "1em", "padding-bottom": ".5em", color: "grey" }}>
+    <div key={entry.name} style={containerStyle}>
       <div>{entry.name}({entry.args.map(x => x.split(":")[0]).join(", ")})</div>
       {entry.args.map((x, i) => <div key={i} style={argOrReturnStyle}>{x}</div>)}
       {entry.return
