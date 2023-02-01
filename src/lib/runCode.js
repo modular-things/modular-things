@@ -11,6 +11,9 @@ export function runCode(code) {
 
   intervals.forEach(clearInterval);
   timeouts.forEach(clearTimeout);
+  // intervals = [];
+  // timeouts = [];
+  
   loops.forEach((x, i) => { loops[i] = false });
 
   const patchedInterval = (callback, time, ...args) => {
