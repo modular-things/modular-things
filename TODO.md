@@ -1,12 +1,10 @@
-## Parity with next version
+## TODO
 
 - compat warning
 - file tree -> load & bundle from url
 - typescript types
-
-## More
-
+- infinite loop check
 - drag and drop upload js
 - error messages
-- deploy
+- [x] deploy
 - [x] view window
