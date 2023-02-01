@@ -7,7 +7,7 @@ import { signal } from '@preact/signals'
 // };
 
 export const global_state = {
-  panelType: signal("help"),
+  panelType: signal("devices"),
   things: signal({}),
   viewWindow: null,
   codemirror: null
