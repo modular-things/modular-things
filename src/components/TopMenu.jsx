@@ -45,6 +45,12 @@ el.innerHTML = \`
   <button>press this</button>
 \`;
 
+el
+  .querySelector("button")
+  .addEventListener("click", () => {
+    console.log("hello");
+  })
+
 render(el);
 `
 }
