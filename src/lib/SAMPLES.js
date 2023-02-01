@@ -40,5 +40,28 @@ el
   })
 
 render(el);
+`,
+importButton:`import confetti from 'https://cdn.skypack.dev/canvas-confetti';
+
+confetti();
+
+const el = document.createElement("div");
+
+el.style = \`
+  padding: 10px;
+\`
+
+el.innerHTML = \`
+  <div>hello world!</div>
+  <button>press this</button>
+\`;
+
+el
+  .querySelector("button")
+  .addEventListener("click", () => {
+    confetti();
+  })
+
+render(el);
 `
 }
