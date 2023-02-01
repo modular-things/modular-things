@@ -7,6 +7,7 @@ html, body {
 
 :root {
 	--cm-width: 70%;
+	--blue: #33e;
 }
 
 .root {
@@ -51,7 +52,7 @@ html, body {
 
 .divider:hover {
 	width: 7px;
-	background: #33e;
+	background: var(--blue);
 	cursor: col-resize;
 }
 
@@ -79,7 +80,7 @@ html, body {
   padding-top: 8px;
   padding-bottom: 8px;
   margin: 4px;
-  background: #33e;
+  background: var(--blue);
   color: white;
   border: 0;
   border-radius: 4px;
@@ -103,6 +104,33 @@ html, body {
   -webkit-user-select: none; /* Safari */
   -ms-user-select: none; /* IE 10 and IE 11 */
   user-select: none; /* Standard syntax */
+}
+
+.dropdown {
+	position: relative;
+}
+
+.inner-dropdown {
+	position: absolute;
+	visibility: hidden;
+	transition: visibility 0.2s linear;
+	z-index: 10;
+	background: var(--blue);
+	left: 0;
+	top: calc(100% + 8px);
+	border-radius: 5px;
+}
+
+.dropdown:hover .inner-dropdown {
+	visibility: visible;
+}
+
+.inner-dropdown:hover {
+	visibility: visible;
+}
+
+.dropdown-item { 
+	border-radius: 5px !important;
 }
 
 
