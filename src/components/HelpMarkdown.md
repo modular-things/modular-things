@@ -1,5 +1,9 @@
 ## API reference
 
+You can use your browser's DevTools. Open the console with `cmd + shift + j`.
+
+---
+
 ##### `async loop(fn, minInterval = 0)`
 
 Run a function `fn` at least every `minInterval` milliseconds.
