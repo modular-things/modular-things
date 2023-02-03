@@ -8,6 +8,9 @@ import { authorizePort, initSerial } from "./modularThingClient";
 
 
 export function init(state) {
+  if(!navigator.serial){
+    alert("🚨 Your browser doesn't seem to support the Web Serial API, which is required for Modular Things to be able to connect to hardware. You can still use the site to write code, but for full functionality, use Chrome or Edge version 89 or above.") 
+  }
   initSerial();
 
   const bodyListener = createListener(document.body);
