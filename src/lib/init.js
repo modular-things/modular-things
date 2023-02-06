@@ -38,6 +38,18 @@ export function init(state) {
     global_state.things.value = things;
   });
 
+  bodyListener("click", ".disconnect-button-trigger", async () => {
+    const things = global_state.things.value;
+    
+    for (const name in things) {
+      const thing = things[name];
+      thing.close();
+    }
+
+    // set things state
+    global_state.things.value = {};
+  });
+
   window.addEventListener("keydown", (e) => {
     const code = global_state.codemirror.state.doc.toString();
 

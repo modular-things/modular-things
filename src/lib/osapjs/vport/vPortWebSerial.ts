@@ -161,6 +161,7 @@ export default async function VPortWebSerial(osap: OSAP, port: SerialPort, debug
 
     // implement tx
     //@ts-expect-error
+    let writer = null;
     vport.send = async (buffer: Uint8Array) => {
         // double guard, idk
         if (!flowCondition()) return;
@@ -179,9 +180,10 @@ export default async function VPortWebSerial(osap: OSAP, port: SerialPort, debug
         // ship eeeet
         if (debug) console.log("SERPORT Tx", outAwaiting);
 
-        const writer = port.writable!.getWriter();
+        writer = port.writable!.getWriter();
         await writer.write(outAwaiting);
         writer.releaseLock();
+        writer = null;
 
         keepAliveTxUpdate();
         // retry timeout, in reality USB is robust enough, but codes sometimes bungle messages too
@@ -205,11 +207,12 @@ export default async function VPortWebSerial(osap: OSAP, port: SerialPort, debug
         }, SERLINK_RETRY_TIME);
     };
 
+    let reader = null;
     new Promise(async () => {
         try {
             let data: number[] = [];
             while(port.readable) {
-                const reader = port.readable.getReader();
+                reader = port.readable.getReader();
                 while(true) {
                     const { value, done } = await reader.read();
                     if(value) {
@@ -224,6 +227,7 @@ export default async function VPortWebSerial(osap: OSAP, port: SerialPort, debug
                     }
                     if (done) {
                         reader.releaseLock();
+                        reader = null;
                         break;
                     }
                     // if(value) console.log(value);
@@ -231,13 +235,28 @@ export default async function VPortWebSerial(osap: OSAP, port: SerialPort, debug
             }
         } catch(err) {
             console.error(err);
-        }finally {
-            vport.dissolve();
-            await port.close();
-            console.log(`SERPORT ${portName} closed`);
-            status = "closed";
         }
+
+        // finally {
+        //     vport.dissolve();
+        //     await port.close();
+        //     console.log(`SERPORT ${portName} closed`);
+        //     status = "closed";
+        // }
     });
 
-    return { status, portName };
+    async function close() {
+        console.log(reader, port);
+        if (reader) reader.releaseLock();
+        if (writer) writer.releaseLock();
+
+        vport.dissolve();
+        await port.close();
+        console.log(`SERPORT ${portName} closed`);
+        status = "closed";
+        reader = null;
+        writer = null;
+    }
+
+    return { status, portName, close };
 }
