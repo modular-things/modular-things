@@ -235,14 +235,9 @@ export default async function VPortWebSerial(osap: OSAP, port: SerialPort, debug
             }
         } catch(err) {
             console.error(err);
+        } finally {
+            close();
         }
-
-        // finally {
-        //     vport.dissolve();
-        //     await port.close();
-        //     console.log(`SERPORT ${portName} closed`);
-        //     status = "closed";
-        // }
     });
 
     async function close() {

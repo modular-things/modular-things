@@ -148,9 +148,10 @@ export async function initSerial() {
       acc.set(value.port, key);
       return acc;
     }, new Map());
-    
+
     const name = portThingMap.get(event.target);
     if (name) {
+      things[name].close();
       delete things[name];
       
       // set things state
