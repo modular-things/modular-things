@@ -64,6 +64,9 @@ const rightPanels = {
         <div class="device-button-container">
           <button class="device-button pair-button-trigger">pair new thing</button>
         </div>
+        <div class="device-button-container">
+          <button class="device-button disconnect-button-trigger">disconnect all</button>
+        </div>
       </div>
       {Object.entries(things).length > 0 
         ? Object.entries(things).map(drawThing)

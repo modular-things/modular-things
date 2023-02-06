@@ -34,7 +34,7 @@ export type Thing = {
   vThing: any,
 };
 
-const portThingMap = new Map<SerialPort, string>();
+// const portThingMap = new Map<SerialPort, string>();
 
 async function setupPort(port: SerialPort): Promise<[string, Thing]> {
   const vPort = await VPortWebSerial(osap, port, false);
@@ -71,8 +71,13 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
   const thing = {
     vPortName: ch.name,
     firmwareName,
-    vThing
+    vThing,
+    close: () => {
+      vPort.close();
+    },
+    port
   }
+
   vThing["setName"] = async (name: string) => {
     try {
       // add back that "rt_" which designates the vertex as a root... 
@@ -91,7 +96,7 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
     await thing.vThing.setName(thingName);
   }
 
-  portThingMap.set(port, thingName);
+  // portThingMap.set(port, thingName);
 
   return [thingName, thing];
 }
@@ -99,7 +104,9 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
 export async function rescan() {
   const ports = await navigator.serial.getPorts();
   const things = global_state.things.value;
-  for(const port of ports.filter(p => !portThingMap.has(p))) {
+  const usedPorts = Object.values(things).map(x => x.port);
+  for(const port of ports) {
+    if (usedPorts.includes(port)) continue;
     const [name, thing] = await setupPort(port);
     things[name] = thing;
   }
@@ -133,8 +140,17 @@ export async function initSerial() {
   navigator.serial.addEventListener('disconnect', async (event) => {
     console.log("disconnect!");
     const things = global_state.things.value;
-    const name = portThingMap.get(event.target as SerialPort);
-    if(name) {
+
+    const port = event.target;
+
+    const portThingMap = Object.entries(things).reduce((acc, cur) => {
+      const [ key, value ] = cur;
+      acc.set(value.port, key);
+      return acc;
+    }, new Map());
+    
+    const name = portThingMap.get(event.target);
+    if (name) {
       delete things[name];
       
       // set things state
