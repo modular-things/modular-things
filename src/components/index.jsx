@@ -44,7 +44,11 @@ export default function Page() {
           <div class="right-panel">
             {global_state.panelType.value === "devices" && rightPanels["devices"](global_state.things.value)}
             {global_state.panelType.value === "help" && rightPanels["help"]()}
-            <div ref={viewRef} style={{ display: global_state.panelType.value === "view" ? "block" : "none" }}></div>
+            <div ref={viewRef} style={{ 
+              display: global_state.panelType.value === "view" ? "block" : "none",
+              height: "100%",
+              width: "100%", 
+            }}></div>
           </div>
         </div>
         <SideMenu/>

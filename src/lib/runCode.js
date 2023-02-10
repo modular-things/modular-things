@@ -142,9 +142,9 @@ export async function runCode(code) {
     // global: null,
     // globalThis: null,
     viewWindow: global_state.viewWindow,
-    global: globalProxy,
-    globalThis: globalProxy,
-    window: globalProxy
+    // global: globalProxy,
+    // globalThis: globalProxy,
+    // window: globalProxy
   }
 
   const names = Object.keys(args);
