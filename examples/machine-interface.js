@@ -1,6 +1,14 @@
 import { html, svg, render } from "https://unpkg.com/lit-html@2.6.1/lit-html.js";
 import { flattenSVG } from 'https://cdn.jsdelivr.net/npm/flatten-svg@0.3.0/+esm'
 
+/*
+TODO
+
+- differentiate by color
+
+*/
+
+
 const state = {
   position: {
     x: 0,
@@ -8,11 +16,13 @@ const state = {
   },
   shapes: {},
   transformations: {},
+  strokes: {},
   selectedShapes: new Set(),
   workArea: {
     width: 200,
     height: 500,
   },
+  transforming: false,
   panZoomFuncs: null,
 };
 
@@ -81,6 +91,7 @@ const view = (state) => html`
       background: white;
       border-left: 1px solid black;
       border-bottom: 1px solid black;
+      transform: scale(1, -1);
     }
 
     .jobs {
@@ -150,6 +161,7 @@ const view = (state) => html`
       background: #fff7f7;
       border: 1px solid black;
       border-bottom: none;
+      z-index: 10;
     }
 
     .transform-term {
@@ -164,9 +176,14 @@ const view = (state) => html`
     }
 
     .transform-inputs > * {
-      width: 40px;
+      width: 50px;
       margin: 5px;
       box-sizing: border-box;
+    }
+
+    .translate-handle:hover {
+      fill: orange;
+      cursor: pointer;
     }
   </style>
   <div class="interface-container">
@@ -215,25 +232,17 @@ const view = (state) => html`
     <svg class="svg-viewer">
       <g class="transform-group">
         <rect class="work-area" width="${state.workArea.width}" height="${state.workArea.height}" />
-        ${Object.entries(state.shapes).map(shape => {
+        ${ true ? "" :
+        Object.entries(state.shapes).map(shape => {
           let d = "";
           const transform = state.transformations[shape[0]];
-          // apply transforms
-          // console.log(transforms);
-          const center = getCenter(shape[1].flat());
-          console.log(center);
-          shape[1].forEach(pl => pl.forEach((pt, i) => {
-            
-            pt = rotate(pt, center, transform.rotate)
-            pt = scale(pt, center, [transform.scaleX, transform.scaleY]);
-            pt = [
-              pt[0] + transform.dx,
-              pt[1] + transform.dy
-            ];
-            
+         
+          const transformedShape = getTransformedShape(shape[0]);
+          transformedShape.forEach(pl => pl.forEach((pt, i) => {
             if (i === 0) d += `M ${pt[0]} ${pt[1]}`;
             else d += `L ${pt[0]} ${pt[1]}`
           }))
+
           return svg`<path 
             class="shape"
             @mousedown=${(e) => {
@@ -250,8 +259,12 @@ const view = (state) => html`
             vector-effect="non-scaling-stroke" 
             d="${d}">
             </path>`
-        })}
+        })
+        }
+        ${getColoredShapes(state)}
+        <circle r="${5/(state.panZoomFuncs ? state.panZoomFuncs.scale() : 1)}" fill="teal" cx=${0} cy=${0}></circle>
         <circle r="${5/(state.panZoomFuncs ? state.panZoomFuncs.scale() : 1)}" fill="red" cx=${state.position.x} cy=${state.position.y}></circle>
+        ${transformHandle(state)}
       </g>
     </svg>
   </div>
@@ -440,6 +453,55 @@ function addMoveOnClick(el, state) {
 
 addMoveOnClick(svgEl, state);
 
+function addTranslateHandle(el, state) {
+  const listenSVG = createListener(el);
+  let moved = false;
+  let clickedPt = null;
+  let ogDxs = {};
+  let ogDys = {};
+
+  listenSVG("mousedown", ".translate-handle", e => {
+    state.transforming = true;
+    clickedPt = state.panZoomFuncs.svgPoint({ x: e.offsetX, y: e.offsetY });
+    [...state.selectedShapes].forEach(id => {
+      const { dx, dy } = state.transformations[id];
+      ogDxs[id] = dx;
+      ogDys[id] = dy;
+    })
+  })
+
+  listenSVG("mousemove", "", e => {
+    if (!clickedPt) return;
+    const pt = state.panZoomFuncs.svgPoint({ x: e.offsetX, y: e.offsetY });
+
+    const dx = pt.x - clickedPt.x;
+    const dy = pt.y - clickedPt.y;
+
+    [...state.selectedShapes].forEach(id => {
+      state.transformations[id].dx = Math.round((dx + ogDxs[id])*100)/100;
+      state.transformations[id].dy = Math.round((dy + ogDys[id])*100)/100;
+    })
+
+    r();
+  })
+
+  listenSVG("mouseup", "", (e) => {
+    state.transforming = false;
+    clickedPt = null;
+    ogDxs = {};
+    ogDys = {};
+  })
+
+  listenSVG("mouseleave", "", (e) => {
+    state.transforming = false;
+    clickedPt = null;
+    ogDxs = {};
+    ogDys = {};
+  })
+}
+
+addTranslateHandle(svgEl, state);
+
 function addSVGDropUpload(el, state) {
   const listenSVG = createListener(el);
   let moved = false;
@@ -469,6 +531,7 @@ svgEl.addEventListener("wheel", () => {
 
 function onHomeClick() {
   console.log("you clicked home");
+  console.log(getColoredShapes(state));
 }
 
 function onCutClick() {
@@ -490,20 +553,45 @@ function readFileSVG(file) {
     const doc = parser.parseFromString(text, "image/svg+xml");
     const svg = doc.querySelector("svg");
     const pls = flattenSVG(svg, { maxError: 0.001 });
+    
+    const seperatedColors = [];
 
-    const id = Date.now();
-    state.shapes[id] = pls.map(x => x.points);
-    state.transformations[id] = {
-      dx: 0,
-      dy: 0,
-      rotate: 0,
-      scaleX: 1,
-      scaleY: 1,
-    };
+    const colors = {};
+    pls.forEach(pl => {
+      if (!(pl.stroke in colors)) colors[pl.stroke] = [ pl ];
+      else colors[pl.stroke].push(pl);
+    })
+
+    for (const color in colors) {
+      seperatedColors.push(colors[color])
+    }
+
+    const makeNewShape = (pls) => {
+      const id = guidGenerator();
+      // map imported points
+      state.shapes[id] = pls.map(x => x.points.map( ([x, y]) => [x, -y] ));
+      state.strokes[id] = pls.map(x => x.stroke);
+      state.transformations[id] = {
+        dx: 0,
+        dy: 0,
+        rotate: 0,
+        scaleX: 1,
+        scaleY: 1,
+      };
+    }
+
+    seperatedColors.forEach(makeNewShape);
 
     r();
   };
 
+}
+
+function guidGenerator() {
+    var S4 = function() {
+       return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    };
+    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
 }
 
 function addDropUpload(el, state) {
@@ -549,6 +637,22 @@ function pauseEvent(e) {
     return false;
 }
 
+function transformHandle(state) {
+  if (state.selectedShapes.size === 0) return "";
+  const selectedShapes = [...state.selectedShapes].map(id => getTransformedShape(id));
+  const [x, y] = getCenter(selectedShapes.flat(2));
+
+  return svg`
+    <circle 
+      class="translate-handle"
+      r="${5/(state.panZoomFuncs ? state.panZoomFuncs.scale() : 1)}" 
+      fill="blue" 
+      cx=${x} 
+      cy=${y}>
+      </circle>
+  `
+}
+
 function transformWidget(state) {  
   return html`
     <div class="transform-toolbox">
@@ -558,18 +662,12 @@ function transformWidget(state) {
           <input 
             data-type="dx"
             .value=${state.transformations[[...state.selectedShapes][0]].dx}
-            @input=${e => {
-              const val = Number(e.target.value);
-              state.tempTransformation.dx = val;
-            }}
+            @input=${e => {}}
             />
           <input 
             data-type="dy"
             .value=${state.transformations[[...state.selectedShapes][0]].dy}
-            @input=${e => {
-              const val = Number(e.target.value);
-              state.tempTransformation.dy = val;
-            }}
+            @input=${e => {}}
             />
         </span>
       </div>
@@ -580,10 +678,7 @@ function transformWidget(state) {
           <input 
             data-type="rotate"
             .value=${state.transformations[[...state.selectedShapes][0]].rotate}
-            @input=${e => {
-              const val = Number(e.target.value);
-              state.tempTransformation.rotate = val;
-            }}
+            @input=${e => {}}
             />
         </span>
       </div>
@@ -594,18 +689,12 @@ function transformWidget(state) {
           <input 
             data-type="scaleX"
             .value=${state.transformations[[...state.selectedShapes][0]].scaleX}
-            @input=${e => {
-              const val = Number(e.target.value);
-              state.tempTransformation.scaleX = val;
-            }}
+            @input=${e => {}}
             />
           <input 
             data-type="scaleY"
             .value=${state.transformations[[...state.selectedShapes][0]].scaleY}
-            @input=${e => {
-              const val = Number(e.target.value);
-              state.tempTransformation.scaleY = val;
-            }}
+            @input=${e => {}}
             />
         </span>
       </div>
@@ -620,7 +709,9 @@ function transformWidget(state) {
 function applyTransformation() {
   const id = [...state.selectedShapes][0];
   const transforms = state.transformations[id];
-  const transformInputs = viewWindow.querySelectorAll("input");
+  const transformInputs = viewWindow
+    .querySelector(".transform-toolbox")
+    .querySelectorAll("input");
   const transform = {};
   for (const input of transformInputs) {
     transform[input.dataset.type] = Number(input.value);
@@ -685,6 +776,63 @@ function extrema(pts) {
     yMin,
     yMax
   };
+}
+
+function getTransformedShape(id) {
+  const shape = state.shapes[id];
+  const transform = state.transformations[id];    
+  const center = getCenter(shape.flat());
+
+  const newShape = shape.map(pl => pl.map(pt => {
+    pt = rotate(pt, center, transform.rotate)
+    pt = scale(pt, center, [transform.scaleX, transform.scaleY]);
+    pt = [
+      pt[0] + transform.dx,
+      pt[1] + transform.dy
+    ];
+
+    return pt;
+  }))
+
+  return newShape;   
+}
+
+function getColoredShapes(state) {
+  const groups = Object.entries(state.shapes).map(shape => {
+    const [id, points] = shape;
+    const paths = [];
+    const transformedShape = getTransformedShape(id);
+    transformedShape.forEach((pl, i) => {
+      let d = "";   
+
+      pl.forEach((pt, j) => {
+        if (j === 0) d += `M ${pt[0]} ${pt[1]}`;
+        else d += `L ${pt[0]} ${pt[1]}`
+      })
+
+      paths.push(svg`
+        <path 
+          @mousedown=${(e) => {
+            if (state.selectedShapes.has(id)) {
+              state.selectedShapes.delete(id);
+            } else {
+              state.selectedShapes.add(id);
+            }
+            r();
+            pauseEvent(e);
+          }} 
+          fill="none" 
+          stroke=${state.selectedShapes.has(id) ? "red" : state.strokes[id][i]}
+          vector-effect="non-scaling-stroke" 
+          d="${d}">
+          </path>
+      `)
+    })
+
+    return svg`<g class="shape">${paths}</g>`;
+  })
+
+  return groups
 }
 
 // function uploadSVG(file) {
