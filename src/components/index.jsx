@@ -38,7 +38,10 @@ export default function Page() {
         cm.dispatch({
           changes: { from: 0, to: currentProg.length, insert: text }
         });
-        
+
+        global_state.panelType.value = "view";
+        document.documentElement.style.setProperty("--cm-width", `1%`);
+        document.querySelector(".run-button").click();
       });
     }
 
@@ -65,6 +68,7 @@ export default function Page() {
               display: global_state.panelType.value === "view" ? "block" : "none",
               height: "100%",
               width: "100%", 
+              overflow: "hidden"
             }}></div>
           </div>
         </div>
