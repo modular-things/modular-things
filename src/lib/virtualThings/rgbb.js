@@ -42,7 +42,7 @@ export default function rgbbThing(osap, vt, name) {
       // whose index we can know...
       // given that we know ~ what the topology looks like in these cases (browser...node...usb-embedded)
       // we should be able to dead-reckon the route up:
-      let routeUp = PK.route().sib(0).pfwd().sib(0).pfwd().sib(buttonRxEndpoint.indice).end()
+      let routeUp = PK.route().sib(0).pfwd().sib(buttonRxEndpoint.indice).end()
       // the source of our button presses is here... the 2nd endpoint at our remote thing
       let source = vt.children[2]
       // rm any previous,
