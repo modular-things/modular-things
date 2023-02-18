@@ -23,7 +23,7 @@ float singleThingFunc(uint16_t arg){
   return 0.22F;
 }
 
-RPCVertex<float, uint16_t> rpcOne(&osap, "singleThingFunc", singleThingFunc);
+RPCVertex<float, uint16_t> rpcOne(&osap, "singleThingFunc", "arg", singleThingFunc);
 
 /*
 ... little demos for leo 
@@ -55,14 +55,14 @@ RPCVertex<Array<char, 256>, Array<char, 256>> rpcOne(&osap, "name", singleThingF
 // ---------------------------------------------- 2th Vertex: RPC two
 
 // list args, list return:
-Array<uint16_t, 10> multipleThingsFunc(Array<boolean, 2> arg){
+Array<uint16_t, 10> multipleThingsFunc(Array<boolean, 2> multiBoolArg){
   Array<uint16_t, 10> ret;
   ret.val[1] = 11;
   ret.val[2] = 12;
   return ret;
 }
 
-RPCVertex<Array<uint16_t, 10>, Array<boolean, 2>> rpcTwo(&osap, "multipleThingsFunc", multipleThingsFunc);
+RPCVertex<Array<uint16_t, 10>, Array<boolean, 2>> rpcTwo(&osap, "multipleThingsFunc", "multiBoolArg", multipleThingsFunc);
 
 // ---------------------------------------------- 3th Vertex: RPC three
 
@@ -71,7 +71,7 @@ int32_t singleMultiple(Array<boolean, 3> arg){
   return 65000;
 }
 
-RPCVertex<int32_t, Array<boolean, 3>> rpcThree(&osap, "singleMultiple", singleMultiple);
+RPCVertex<int32_t, Array<boolean, 3>> rpcThree(&osap, "singleMultiple", "tripelBoolArg", singleMultiple);
 
 // ---------------------------------------------- 4th Vertex: RPC four
 
@@ -84,7 +84,7 @@ Array<int32_t, 8> multiSingle(float arg){
   return ret;
 }
 
-RPCVertex<Array<int32_t, 8>, float> rpcFour(&osap, "multiSingle", multiSingle);
+RPCVertex<Array<int32_t, 8>, float> rpcFour(&osap, "multiSingle", "singleFloatArg", multiSingle);
 
 // OK i'd like to forwards w/ an args-type definition... 
 // float myFunc(int16_t arg){

@@ -106,6 +106,8 @@ TS.read = (type, data, start) => {
   }
   // read it... 
   switch (type) {
+    case 'void':
+      return null 
     case 'int32':
       return new Int32Array(data.buffer.slice(start, start + 4))[0]
     case 'uint8':
@@ -152,6 +154,8 @@ TS.write = (type, value, data, start) => {
   }
   // write types... 
   switch (type) {
+    case 'void':
+      return 0 
     case 'uint8':
       data[start] = value & 255
       return 1
@@ -212,6 +216,10 @@ TS.write = (type, value, data, start) => {
 // I'm not proud of any of this; 
 
 let typeKeyMap = []
+typeKeyMap[1] = {
+  str: 'void',
+  len: 0
+}
 typeKeyMap[2] = {
   str: 'boolean',
   len: 1

@@ -40,11 +40,15 @@ export default function RPCTools(osap) {
         payload[1] = RPC.CALL_REQ
         payload[2] = id
         // we'll be writing multiples... 
-        for(let a = 0; a < info.argLen; a ++){
-          TS.write(TS.keyToString(info.argKey), arg[a], payload, 3 + a * (info.argSize / info.argLen))
+        if (info.argKey != 1) {
+          for (let a = 0; a < info.argLen; a++) {
+            TS.write(TS.keyToString(info.argKey), arg[a], payload, 3 + a * (info.argSize / info.argLen))
+          }
+          // TS.write(TS.keyToString(info.argKey), arg, payload, 3)
+          console.warn(`payload with ${arg} as `, payload)
+        } else {
+          console.warn(`void payload`)
         }
-        // TS.write(TS.keyToString(info.argKey), arg, payload, 3)
-        console.warn(`payload with ${arg} as `, payload)
         let datagram = PK.writeDatagram(info.route, payload)
         // aaand we can ship it, then await ?
         osap.handle(datagram, VT.STACK_ORIGIN)
@@ -56,9 +60,9 @@ export default function RPCTools(osap) {
             id: id,
             onResponse: function (data) {
               clearTimeout(timeout)
-              if(info.retLen > 1){
+              if (info.retLen > 1) {
                 let retVals = []
-                for(let r = 0; r < info.retLen; r ++){
+                for (let r = 0; r < info.retLen; r++) {
                   retVals.push(TS.read(TS.keyToString(info.retKey), data, r * (info.retSize / info.retLen)))
                 }
                 console.warn(`resolving multiples, `, retVals)
