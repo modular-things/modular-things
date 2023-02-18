@@ -1,4 +1,5 @@
 import OSAP from "./osapjs/core/osap";
+import { TS } from './osapjs/core/ts.js';
 
 import rgbb from "./virtualThings/rgbb";
 import stepper from "./virtualThings/stepper";
@@ -39,6 +40,7 @@ export type Thing = {
 async function setupPort(port: SerialPort): Promise<[string, Thing]> {
   const vPort = await VPortWebSerial(osap, port, false);
   const graph = await osap.nr.sweep();
+  console.log(graph)
   let ch = graph.children.find((ch: any) => ch.name === "vp_" + vPort.portName);
   if(!ch) throw new Error("Connected serial port but could not find OSAP vertex for it");
   if(!ch.reciprocal) throw new Error("Connected serial port but OSAP vertex doesn't have a reciprocal");
@@ -46,7 +48,8 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
 
   // we have some name like `rt_firmwareName` that might have `_uniqueName` trailing
   // so first we can grab the firmwareName like:
-  let [ _rt, firmwareName, uniqueName ] = (ch.reciprocal.parent.name as string).split("_");
+  let vt = ch.reciprocal.parent 
+  let [ _rt, firmwareName, uniqueName ] = (vt.name as string).split("_");
 
   let madeNewUniqueName = false;
   if (!uniqueName) {
@@ -61,13 +64,54 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
   // we also aught to check if the name is unique already, then not-change-it if it is,
   let thingName = uniqueName;
 
-  if(!(firmwareName in constructors)) throw new Error(`no constructor found for the ${firmwareName} thing...`);
-  //@ts-expect-error
-  const vThing = constructors[firmwareName](
-    osap, ch.reciprocal.parent, thingName
-  );
-  vThing.firmwareName = firmwareName;
+  let vThing
 
+  if(!(firmwareName in constructors)){
+    // this is the unknown device...
+    console.log(vt)
+    // get each fn that is an RPC in this device, 
+    let rpcs = vt.children.filter((ch: any) => ch.name.includes("rpc_"))
+    console.log(`found rpcs`, rpcs)
+    // get their infos, 
+    rpcs = await Promise.all(rpcs.map((vvt) => { 
+      return osap.mvc.getRPCInfo(vvt) 
+    }))
+    console.log(`info'd rpcs`, rpcs)
+    // get them funcs 
+    let funcs = rpcs.map(info => osap.rpc.rollup(info))
+    console.log(`func'd rpcs`, funcs)
+    // let's build an object from it ? 
+    let obj = {
+      firmwareName,
+      setup: () => {},
+      vt: vt, 
+      api: []
+    }
+    // and assign functions, 
+    for(let f in rpcs){
+      obj[rpcs[f].name] = funcs[f] 
+      obj.api.push({
+        name: rpcs[f].name,
+        // other args do "argName: type (opt: range)"
+        // return values are just values, 
+        // should convert these to types... and name 'em 
+        args: [`${TS.keyToString(rpcs[f].argKey)}`],
+        return: [`${TS.keyToString(rpcs[f].retKey)}`]
+      })
+    }
+    console.log(obj)
+    vThing = obj 
+    console.warn(`dropping unknown thing in...`)
+    // we don't have a match, let's try to find some RPC info... 
+    // throw new Error(`no constructor found for the ${firmwareName} thing...`);
+  } else {
+    vThing = constructors[firmwareName](
+      osap, vt, thingName
+    );
+    vThing.firmwareName = firmwareName;  
+  }
+
+  //@ts-expect-error
   const thing = {
     vPortName: ch.name,
     firmwareName,
