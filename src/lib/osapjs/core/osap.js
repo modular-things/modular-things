@@ -24,6 +24,7 @@ import { osapLoop } from './loop.js'
 import NetRunner from './netRunner.js'
 import OMVC from './mvc.js'
 import HighLevel from './highLevel.js'
+import RPCTools from './rpc.js'
 
 // root is also a vertex, yah 
 export default class OSAP extends Vertex {
@@ -105,6 +106,8 @@ export default class OSAP extends Vertex {
   connect = this.netRunner.connect
   // mvc tool, 
   mvc = new OMVC(this)
+  // rpc tool(s) ?
+  rpc = new RPCTools(this)
   // we ship MVC msgs from the root node, so their responses arrive here... 
   destHandler = this.mvc.destHandler
   // we have a high level hookup, 
