@@ -40,7 +40,6 @@ export type Thing = {
 async function setupPort(port: SerialPort): Promise<[string, Thing]> {
   const vPort = await VPortWebSerial(osap, port, false);
   const graph = await osap.nr.sweep();
-  console.log(graph)
   let ch = graph.children.find((ch: any) => ch.name === "vp_" + vPort.portName);
   if(!ch) throw new Error("Connected serial port but could not find OSAP vertex for it");
   if(!ch.reciprocal) throw new Error("Connected serial port but OSAP vertex doesn't have a reciprocal");
@@ -89,14 +88,26 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
     }
     // and assign functions, 
     for(let f in rpcs){
-      obj[rpcs[f].name] = funcs[f] 
+      obj[rpcs[f].name] = funcs[f]
+      // array args or else... 
+      let args, ret 
+      if(rpcs[f].argLen > 1){
+        args = [`${rpcs[f].argName}: Array(${rpcs[f].argLen}) [${TS.keyToString(rpcs[f].argKey)}]`]
+      } else {
+        args = [`${rpcs[f].argName}: ${TS.keyToString(rpcs[f].argKey)}`]
+      }
+      if(rpcs[f].retLen > 1){
+        ret = [`Array(${rpcs[f].retLen}) ${TS.keyToString(rpcs[f].retKey)}`] 
+      } else {
+         ret =  [`${TS.keyToString(rpcs[f].retKey)}`] 
+      }
       obj.api.push({
         name: rpcs[f].name,
         // other args do "argName: type (opt: range)"
         // return values are just values, 
         // should convert these to types... and name 'em 
-        args: [`${TS.keyToString(rpcs[f].argKey)}`],
-        return: [`${TS.keyToString(rpcs[f].retKey)}`]
+        args: args,
+        return: ret 
       })
     }
     console.log(obj)

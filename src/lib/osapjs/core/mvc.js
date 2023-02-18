@@ -64,6 +64,7 @@ export default function OMVC(osap) {
               retKey: data[5],
               retLen: TS.read("uint16", data, 6),
               retSize: TS.read("uint16", data, 8),
+              argName: TS.read("string", data, 10).value, 
             }
             resolve(res)
           }
