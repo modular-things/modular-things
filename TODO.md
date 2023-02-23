@@ -19,6 +19,8 @@
   - program scope available
 - create graph/node editor
 - visualize osap graph
+- event handler for when modules are added
+- be able to access list of 
 - [x] deploy
 - [x] view window
 - [x] run programs with imports
