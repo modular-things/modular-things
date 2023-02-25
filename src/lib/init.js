@@ -1,5 +1,5 @@
 import { global_state } from "./global_state";
-
+import { setThingsState } from "./setThingsState";
 import { createListener } from "./events/listen.js";
 import { addDividerDrag } from "./events/addDividerDrag";
 import { download } from "./download";
@@ -34,9 +34,7 @@ export function init(state) {
     const [name, thing] = await authorizePort();
     things[name] = thing;
 
-    // set things state
-    global_state.things.value = {};
-    global_state.things.value = things;
+    setThingsState(things);
   });
 
   bodyListener("click", ".disconnect-button-trigger", async () => {
@@ -47,8 +45,7 @@ export function init(state) {
       thing.close();
     }
 
-    // set things state
-    global_state.things.value = {};
+    setThingsState({});
   });
 
   window.addEventListener("keydown", (e) => {

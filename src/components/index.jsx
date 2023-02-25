@@ -9,6 +9,7 @@ import { useEffect, useState, useCallback } from 'preact/hooks'
 
 import { init } from "../lib/init";
 import { global_state } from "../lib/global_state";
+import { setThingsState } from "../lib/setThingsState";
 
 const md = await HelpMarkdown();
 const htmlString = md.props.children.toString();
@@ -116,9 +117,7 @@ function drawThing([name, thing]) {
       delete things[name];
       things[newName] = thing;
 
-      // set things state
-      global_state.things.value = {};
-      global_state.things.value = things;
+      setThingsState(things);
   }
 
   return (
