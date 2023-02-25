@@ -14,6 +14,7 @@ import servo from "./virtualThings/servo";
 import VPortWebSerial from "./osapjs/vport/vPortWebSerial";
 
 import { global_state } from "./global_state";
+import { setThingsState } from "./setThingsState";
 
 const osap = new OSAP("modular-things")
 
@@ -166,9 +167,7 @@ export async function rescan() {
     things[name] = thing;
   }
 
-  // set things state
-  global_state.things.value = {};
-  global_state.things.value = things;
+  setThingsState(things);
 }
 
 // React StrictMode renders components twice on dev to detect problems
@@ -187,9 +186,7 @@ export async function initSerial() {
     const things = global_state.things.value;
     things[name] = thing;
     
-    // set things state
-    global_state.things.value = {};
-    global_state.things.value = things;
+    setThingsState(things);
   });
 
   navigator.serial.addEventListener('disconnect', async (event) => {
@@ -209,9 +206,7 @@ export async function initSerial() {
       things[name].close();
       delete things[name];
       
-      // set things state
-      global_state.things.value = {};
-      global_state.things.value = things;
+      setThingsState(things);
     }
   });
 }
