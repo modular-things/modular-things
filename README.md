@@ -3,7 +3,9 @@
 uses ~ virtualization ~ to make it easier to write programs that run across multiple hardware devices
 
 The Modular-Things project is an approach to building modular hardware systems which can be composed in software.
-The underlying technology is a small networking library for packetizing and routing messages across devices ([OSAP](http://osap.tools/)) and a [web-based editor](https://modular-things.github.io/modular-things/) for composing that hardware into functional systems in software.
+The underlying technology is a small networking library for packetizing and routing messages across devices ([OSAP](http://osap.tools/)) and a [web-based editor](https://modular-things.github.io/modular-things/) for composing that hardware into functional systems in software. 
+
+For a succinct introduction (3 min) check out our video for CHI2023 by clicking below.
 
 [![xylophone_teaser](https://user-images.githubusercontent.com/27078897/227839123-76ac63d5-3384-4ed5-862e-2ece6add0404.jpg)](https://vimeo.com/811895279)
 
