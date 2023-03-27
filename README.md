@@ -11,7 +11,7 @@ For a succinct introduction (3 min) check out our video for CHI2023 by clicking 
 
 [![xylophone_teaser](https://user-images.githubusercontent.com/27078897/227839123-76ac63d5-3384-4ed5-862e-2ece6add0404.jpg)](https://vimeo.com/811895279)
 
-An example modular things construction kit can be seen below with [circuits available here](https://github.com/modular-things/modular-things-circuits).
+An example Modular Things construction kit can be seen below with [circuits available here](https://github.com/modular-things/modular-things-circuits).
 
 ![all-things](https://user-images.githubusercontent.com/27078897/227838793-23ff9302-8a19-44f2-bb30-a2155078a1fb.jpg)
 
