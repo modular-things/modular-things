@@ -22,9 +22,7 @@ It is based on the [surprising performance of modern USB](log/2022-11_usb-motion
 # Installation and Usage 
 
 * install [node.js](https://nodejs.org/en/) - please use version 16.15.1 or above
-
 * clone this repo
-
 * navigate to `<this-repo>/js` and run `yarn && yarn dev` in the terminal
 
 --- 
