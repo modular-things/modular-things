@@ -1,6 +1,6 @@
 # Softening Hardware with Modular-Things
 
-uses *virtualization* to make it easier to write programs that run across multiple hardware devices
+use *virtualization* to easily write programs that run across multiple hardware devices
 
 The Modular-Things project is an approach to building modular hardware systems which can be composed in software.
 The underlying technology is a small networking library for packetizing and routing messages across devices ([OSAP](http://osap.tools/)) and a [web-based editor](https://modular-things.github.io/modular-things/) for composing that hardware into functional systems in software. 
