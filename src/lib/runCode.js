@@ -128,6 +128,10 @@ export async function runCode(code) {
     things[key] = global_state.things.value[key].vThing;
   }
 
+  let _log = console.log;
+  let _warn = console.warn;
+  let _error = console.error;
+
   const args = {
     ...things,
     createSynchronizer,
@@ -136,6 +140,20 @@ export async function runCode(code) {
     loop,
     render,
     delay,
+    console: {
+      log: (...args) => {
+        _log(...args)
+        global_state.logs.value = [...global_state.logs.value, args.join(" ")]
+      },
+      warn: (...args) => {
+        _warn(...args)
+        global_state.logs = [...global_state.logs.value, args.join(" ")]
+      },
+      error: (...args) => {
+        _error(...args)
+        global_state.logs = [...global_state.logs.value, args.join(" ")]
+      }
+    },
     // document: null,
     // window: null,
     // eval: null,
