@@ -18,6 +18,8 @@ let VT = {
   MODULE: 23,
   ENDPOINT: 24,
   QUERY: 25,
+  CODE: 27,
+  RPC: 28,
   VPORT: 44,
   VBUS: 45,
   STACK_ORIGIN: 0,
@@ -65,6 +67,15 @@ let RT = {
   RENAME_RES: 172
 }
 
+// rpc keys
+let RPC = {
+  INFO_REQ: 181,
+  INFO_RES: 182,
+  CALL_REQ: 183,
+  CALL_RES: 184
+}
+
+// multisegment endpoint keys (depricated ?)
 let EPMSEG = {
   QUERY: 141,
   QUERY_RES: 142,
@@ -95,6 +106,8 @@ TS.read = (type, data, start) => {
   }
   // read it... 
   switch (type) {
+    case 'void':
+      return null 
     case 'int32':
       return new Int32Array(data.buffer.slice(start, start + 4))[0]
     case 'uint8':
@@ -141,6 +154,8 @@ TS.write = (type, value, data, start) => {
   }
   // write types... 
   switch (type) {
+    case 'void':
+      return 0 
     case 'uint8':
       data[start] = value & 255
       return 1
@@ -148,6 +163,11 @@ TS.write = (type, value, data, start) => {
       // little endian: lsb is at the lowest address
       data[start] = value & 255
       data[start + 1] = (value >> 8) & 255
+      return 2
+    case 'int16':
+      tempArr = Int16Array.from([value])
+      tempBytes = new Uint8Array(tempArr.buffer)
+      data.set(tempBytes, start)
       return 2
     case 'int32':
       tempArr = Int32Array.from([value])
@@ -187,16 +207,77 @@ TS.write = (type, value, data, start) => {
       }
       return 1
     default:
-      console.error('no code for this type write')
+      console.error(`no code for this type "${type}" write`)
       return null
       break;
   }
+}
+
+// I'm not proud of any of this; 
+
+let typeKeyMap = []
+typeKeyMap[1] = {
+  str: 'void',
+  len: 0
+}
+typeKeyMap[2] = {
+  str: 'boolean',
+  len: 1
+}
+typeKeyMap[4] = {
+  str: 'uint8',
+  len: 1
+}
+typeKeyMap[5] = {
+  str: 'int8',
+  len: 1
+}
+typeKeyMap[6] = {
+  str: 'uint16',
+  len: 2
+}
+typeKeyMap[7] = {
+  str: 'int16',
+  len: 2
+}
+typeKeyMap[8] = {
+  str: 'uint32',
+  len: 4
+}
+typeKeyMap[9] = {
+  str: 'int32',
+  len: 4
+}
+typeKeyMap[10] = {
+  str: 'uint64',
+  len: 8
+}
+typeKeyMap[11] = {
+  str: 'int64',
+  len: 8
+}
+typeKeyMap[26] = {
+  str: 'float32',
+  len: 4
+}
+typeKeyMap[28] = {
+  str: 'float64',
+  len: 8
+}
+
+TS.keyToString = (key) => {
+  return typeKeyMap[key].str
+}
+
+TS.keyToLen = (key) => {
+  return typeKeyMap[key].len
 }
 
 export {
   TS,     // typeset 
   VT,     // object types 
   EP,     // endpoint keys 
+  RPC,    // rpc keys 
   EPMSEG, // mseg endpoint keys,
   VBUS,   // vbus mvc keys 
   RT,     // root mvc keys 

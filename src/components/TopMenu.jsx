@@ -26,7 +26,7 @@ export default function TopMenu() {
         examples
         <div class="inner-dropdown">
           <div class={[styles["menu-item"], "dropdown-item"].join(" ")} onClick={() => setCode(SAMPLES["potLoop"])}>read pot loop</div>
-          <div class={[styles["menu-item"], "dropdown-item"].join(" ")} onClick={() => setCode(SAMPLES["sychronizer"])}>createSychronizer</div>
+          <div class={[styles["menu-item"], "dropdown-item"].join(" ")} onClick={() => setCode(SAMPLES["synchronizer"])}>createSynchronizer</div>
           <div class={[styles["menu-item"], "dropdown-item"].join(" ")} onClick={() => setCode(SAMPLES["renderView"])}>render view</div>
           <div class={[styles["menu-item"], "dropdown-item"].join(" ")} onClick={() => setCode(SAMPLES["importButton"])}>url import</div>
         </div>

@@ -1,5 +1,5 @@
 /*
-osapMVC.js
+mvc.js
 
 getters and setters, etc, for remote elements 
 
@@ -16,7 +16,7 @@ Copyright is retained and must be preserved. The work is provided as is;
 no warranty is provided, and users accept all liability.
 */
 
-import { TS, VT, EP, VBUS, RT } from './ts.js'
+import { TS, VT, EP, VBUS, RT, RPC } from './ts.js'
 import TIME from './time.js'
 import PK from './packets.js'
 
@@ -33,6 +33,47 @@ export default function OMVC(osap) {
     return runningQueryID
   }
   let queriesAwaiting = []
+
+  // ------------------------------------------------------ RPC Info Collect
+  // uses existing virtual vertex, froma .sweep(), 
+  this.getRPCInfo = async (vvt) => {
+    try {
+      let route = vvt.route
+      if (vvt.type != VT.RPC) throw new Error(`attempt to do RPC.getInfo() on a non-rpc endpoint`)
+      await osap.awaitStackAvailableSpace(VT.STACK_ORIGIN)
+      let id = getNewQueryID()
+      let payload = new Uint8Array([PK.DEST, RPC.INFO_REQ, id])
+      let datagram = PK.writeDatagram(route, payload)
+      osap.handle(datagram, VT.STACK_ORIGIN)
+      return new Promise((resolve, reject) => {
+        let timeoutFn = () => {
+          reject(`timed out`)
+        }
+        let timeout = setTimeout(timeoutFn, 1000)
+        queriesAwaiting.push({
+          id: id,
+          onResponse: function (data) {
+            clearTimeout(timeout)
+            // build reply & issue it, 
+            let res = {
+              name: vvt.name.slice(4),
+              route: route,
+              argKey: data[0],
+              argLen: TS.read("uint16", data, 1),   // # in array 
+              argSize: TS.read("uint16", data, 3),   // total bytes 
+              retKey: data[5],
+              retLen: TS.read("uint16", data, 6),
+              retSize: TS.read("uint16", data, 8),
+              argName: TS.read("string", data, 10).value, 
+            }
+            resolve(res)
+          }
+        })
+      })
+    } catch (err) {
+      throw err
+    }
+  }
 
   // ------------------------------------------------------ Context Debuggen 
   this.getContextDebug = async (route, stream = "none", maxRetries = 3) => {
@@ -451,7 +492,7 @@ export default function OMVC(osap) {
           reject('rename request timed out')
         }, 2500),
         onResponse: function (data) {
-          if(data[0]){
+          if (data[0]) {
             resolve()
           } else {
             reject(`badness error code ${data[0]} from vertex on rename-request, maybe no-flash-mem in this micro`)
@@ -477,6 +518,7 @@ export default function OMVC(osap) {
       case RT.ERR_RES:
       case RT.DBG_RES:
       case RT.RENAME_RES:
+      case RPC.INFO_RES:
         {
           // match to id, send to handler, carry on... 
           let rqid = item.data[ptr + 3]
@@ -492,6 +534,10 @@ export default function OMVC(osap) {
           console.warn(`recvd mvc response ${rqid}, but no matching req awaiting... of ${queriesAwaiting.length}`)
           break;
         }
+        break;
+      case RPC.CALL_RES:
+        osap.rpc.destHandler(item, ptr)
+        break;
       default:
         console.error(`unrecognized key in osap root / mvc dest handler, ${item.data[ptr]}`)
         PK.logPacket(item.data)

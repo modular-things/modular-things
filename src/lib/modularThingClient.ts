@@ -1,4 +1,5 @@
 import OSAP from "./osapjs/core/osap";
+import { TS } from './osapjs/core/ts.js';
 
 import rgbb from "./virtualThings/rgbb";
 import stepper from "./virtualThings/stepper";
@@ -13,6 +14,7 @@ import servo from "./virtualThings/servo";
 import VPortWebSerial from "./osapjs/vport/vPortWebSerial";
 
 import { global_state } from "./global_state";
+import { setThingsState } from "./setThingsState";
 
 const osap = new OSAP("modular-things")
 
@@ -46,7 +48,8 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
 
   // we have some name like `rt_firmwareName` that might have `_uniqueName` trailing
   // so first we can grab the firmwareName like:
-  let [ _rt, firmwareName, uniqueName ] = (ch.reciprocal.parent.name as string).split("_");
+  let vt = ch.reciprocal.parent 
+  let [ _rt, firmwareName, uniqueName ] = (vt.name as string).split("_");
 
   let madeNewUniqueName = false;
   if (!uniqueName) {
@@ -61,13 +64,66 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
   // we also aught to check if the name is unique already, then not-change-it if it is,
   let thingName = uniqueName;
 
-  if(!(firmwareName in constructors)) throw new Error(`no constructor found for the ${firmwareName} thing...`);
-  //@ts-expect-error
-  const vThing = constructors[firmwareName](
-    osap, ch.reciprocal.parent, thingName
-  );
-  vThing.firmwareName = firmwareName;
+  let vThing
 
+  if(!(firmwareName in constructors)){
+    // this is the unknown device...
+    console.log(vt)
+    // get each fn that is an RPC in this device, 
+    let rpcs = vt.children.filter((ch: any) => ch.name.includes("rpc_"))
+    console.log(`found rpcs`, rpcs)
+    // get their infos, 
+    rpcs = await Promise.all(rpcs.map((vvt) => { 
+      return osap.mvc.getRPCInfo(vvt) 
+    }))
+    console.log(`info'd rpcs`, rpcs)
+    // get them funcs 
+    let funcs = rpcs.map(info => osap.rpc.rollup(info))
+    console.log(`func'd rpcs`, funcs)
+    // let's build an object from it ? 
+    let obj = {
+      firmwareName,
+      setup: () => {},
+      vt: vt, 
+      api: []
+    }
+    // and assign functions, 
+    for(let f in rpcs){
+      obj[rpcs[f].name] = funcs[f]
+      // array args or else... 
+      let args, ret 
+      if(rpcs[f].argLen > 1){
+        args = [`${rpcs[f].argName}: Array(${rpcs[f].argLen}) [${TS.keyToString(rpcs[f].argKey)}]`]
+      } else {
+        args = [`${rpcs[f].argName}: ${TS.keyToString(rpcs[f].argKey)}`]
+      }
+      if(rpcs[f].retLen > 1){
+        ret = [`Array(${rpcs[f].retLen}) ${TS.keyToString(rpcs[f].retKey)}`] 
+      } else {
+         ret =  [`${TS.keyToString(rpcs[f].retKey)}`] 
+      }
+      obj.api.push({
+        name: rpcs[f].name,
+        // other args do "argName: type (opt: range)"
+        // return values are just values, 
+        // should convert these to types... and name 'em 
+        args: args,
+        return: ret 
+      })
+    }
+    console.log(obj)
+    vThing = obj 
+    console.warn(`dropping unknown thing in...`)
+    // we don't have a match, let's try to find some RPC info... 
+    // throw new Error(`no constructor found for the ${firmwareName} thing...`);
+  } else {
+    vThing = constructors[firmwareName](
+      osap, vt, thingName
+    );
+    vThing.firmwareName = firmwareName;  
+  }
+
+  //@ts-expect-error
   const thing = {
     vPortName: ch.name,
     firmwareName,
@@ -111,9 +167,7 @@ export async function rescan() {
     things[name] = thing;
   }
 
-  // set things state
-  global_state.things.value = {};
-  global_state.things.value = things;
+  setThingsState(things);
 }
 
 // React StrictMode renders components twice on dev to detect problems
@@ -132,9 +186,7 @@ export async function initSerial() {
     const things = global_state.things.value;
     things[name] = thing;
     
-    // set things state
-    global_state.things.value = {};
-    global_state.things.value = things;
+    setThingsState(things);
   });
 
   navigator.serial.addEventListener('disconnect', async (event) => {
@@ -154,9 +206,7 @@ export async function initSerial() {
       things[name].close();
       delete things[name];
       
-      // set things state
-      global_state.things.value = {};
-      global_state.things.value = things;
+      setThingsState(things);
     }
   });
 }

@@ -4,13 +4,13 @@ export const SAMPLES = {
   console.log(val);
 }, 50);
 `,
-  sychronizer: `await motor0.setCurrentScale(0.7);
+  synchronizer: `await motor0.setCurrentScale(0.7);
 await motor0.setStepsPerUnit(200);
 
 await motor1.setCurrentScale(0.7);
 await motor1.setStepsPerUnit(200);
 
-const machine = createSychronizer([motor0, motor1]);
+const machine = createSynchronizer([motor0, motor1]);
 
 machine.setPosition([0, 0]);
 
