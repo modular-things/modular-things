@@ -19,6 +19,8 @@
   - program scope available
 - create graph/node editor
 - visualize osap graph
+- event handler for when modules are added
+- be able to access list of 
 - [x] deploy
 - [x] view window
 - [x] run programs with imports
@@ -38,3 +40,8 @@
 
 - nice machine interface
 - computer vision integration
+
+
+Pairing virtual objects with hardware devices leads to versioning issues. This makes a strong case for self-describing devices.
+I think a good notion to keep in mind is software that composes hardware is fine but (1 software object takes many hardware objects) but having to have twins is problematic (1 software to 1 hardware).
+
