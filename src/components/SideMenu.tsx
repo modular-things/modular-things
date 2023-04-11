@@ -23,6 +23,15 @@ export default function SideMenu() {
         View
         </div>
       <div 
+        class={getStyle("console")}
+        onClick={() => { 
+          openPanel();
+          togglePanel("console");
+          closePanel();
+        }}>
+        Console
+        </div>
+      <div 
         class={getStyle("help")} 
         onClick={() => { 
           openPanel();

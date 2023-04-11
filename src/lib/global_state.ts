@@ -9,6 +9,7 @@ import { signal } from '@preact/signals'
 export const global_state = {
   panelType: signal("devices"),
   things: signal({}),
+  logs: signal([]),
   viewWindow: null,
   codemirror: null
 }

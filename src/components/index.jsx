@@ -5,10 +5,14 @@ import ScanButton from './ScanButton'
 import HelpMarkdown from "./HelpMarkdown.md"
 import styles from "../styles/HelpMarkdown.module.css"
 
+import * as acorn from 'acorn' ;
+import {runCode} from "../lib/runCode";
+
 import { useEffect, useState, useCallback } from 'preact/hooks'
 
 import { init } from "../lib/init";
 import { global_state } from "../lib/global_state";
+import { signal } from '@preact/signals'
 import { setThingsState } from "../lib/setThingsState";
 
 const md = await HelpMarkdown();
@@ -19,7 +23,7 @@ export default function Page() {
   useEffect(() => {
     if (initialized) return;
     init(global_state);
-
+    
     const cache = window.localStorage.getItem("cache");
     const cm = global_state.codemirror;
     cm.dispatch({
@@ -65,6 +69,7 @@ export default function Page() {
           <div class="right-panel">
             {global_state.panelType.value === "devices" && rightPanels["devices"](global_state.things.value)}
             {global_state.panelType.value === "help" && rightPanels["help"]()}
+            {global_state.panelType.value === "console" && rightPanels["console"](global_state.logs.value)}
             <div ref={viewRef} style={{ 
               display: global_state.panelType.value === "view" ? "block" : "none",
               height: "100%",
@@ -103,6 +108,59 @@ const rightPanels = {
       }
     </div>
   ),
+  "console": (logs) => {
+    return (
+      <div class="console-panel" style="padding:1%; height:100%;">
+        <h3>
+          Console
+        </h3>
+        <div class="console-content">
+          {logs.map((x, i) => (
+            <>
+              <hr style={{ "color": "black" }}/>
+              <div key={i}>{x}</div>
+            </>
+          ))}
+        </div>
+        <hr />
+        <div class="console-input">
+          <input type="text"
+            style={{ "background-color": "transparent", "border": "none", "outline": "none", "color": "black", "font-size": "1em", width: "100%", "padding": "5px" }}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                const text = e.target.value;
+                e.target.value = "";
+                let current_code = global_state.codemirror.state.doc.toString();
+
+                const parsedCode = acorn.parse(current_code, { ecmaVersion: "latest" });
+                const functionDeclarations = parsedCode.body.filter(
+                  (node) => node.type === "FunctionDeclaration"
+                );
+
+                let functionString = "";
+
+                for (const declaration of functionDeclarations) {
+                  functionString += current_code.slice(
+                  declaration.start,
+                  declaration.end
+                  ) + "\n";
+                }
+
+                runCode(functionString + text);
+              }
+            }}
+            onblur={(e) => {
+              // check if click is on console
+              console.log(e.relatedTarget?.className)
+              if (e.relatedTarget?.className === "cm-content") return;
+              document.querySelector(".console-input input").focus()
+            }}
+            autofocus
+          />
+        </div>
+      </div>
+    )
+  },
   "help": (helpMd) => (
     <div class={styles.md} style={{ padding: 10 }} dangerouslySetInnerHTML={{ __html: htmlString }}></div>
   ),
