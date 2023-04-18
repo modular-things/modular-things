@@ -14,13 +14,36 @@ is; no warranty is provided, and users accept all liability.
 
 #include "stepperDriver.h"
 
-#define AIN1_PIN 0
-#define AIN1_BM (uint32_t)(1 << AIN1_PIN)
+#define RPSTEPPER_IS_NEWSHIT
+
+// AFAIK this is using "GPIO nums" on the RP2040... 
+
+#ifdef RPSTEPPER_IS_NEWSHIT
+
+#define AIN1_PIN 6
 #define AIN2_PIN 7
-#define AIN2_BM (uint32_t)(1 << AIN2_PIN)
-#define BIN1_PIN 2
-#define BIN1_BM (uint32_t)(1 << BIN1_PIN)
+#define BIN1_PIN 28
 #define BIN2_PIN 4
+#define APWM_PIN 27
+#define BPWM_PIN 29
+
+#else 
+
+// #define AIN1_PIN 0
+// #define AIN2_PIN 7
+// #define BIN1_PIN 2
+// #define BIN2_PIN 4
+// #define APWM_PIN 6
+// #define BPWM_PIN 1
+
+#endif 
+
+#define APWM_BM (uint32_t)(1 << APWM_PIN)
+#define BPWM_BM (uint32_t)(1 << BPWM_PIN) 
+
+#define AIN1_BM (uint32_t)(1 << AIN1_PIN)
+#define AIN2_BM (uint32_t)(1 << AIN2_PIN)
+#define BIN1_BM (uint32_t)(1 << BIN1_PIN)
 #define BIN2_BM (uint32_t)(1 << BIN2_PIN)
 
 #define AIN1_HI sio_hw->gpio_set = AIN1_BM
@@ -40,14 +63,6 @@ is; no warranty is provided, and users accept all liability.
 #define B_UP BIN2_LO; BIN1_HI 
 #define B_OFF BIN2_LO; BIN1_LO
 #define B_DOWN BIN1_LO; BIN2_HI
-
-// on TCC0-6 (F) or TCC2-0 (E)
-#define APWM_PIN 6
-#define APWM_BM (uint32_t)(1 << APWM_PIN)
-
-// on TCC0-0 (E)
-#define BPWM_PIN 1
-#define BPWM_BM (uint32_t)(1 << BPWM_PIN) 
 
 uint16_t slice_num_a;
 uint16_t slice_num_b;
