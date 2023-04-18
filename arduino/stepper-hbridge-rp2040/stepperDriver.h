@@ -21,7 +21,7 @@ is; no warranty is provided, and users accept all liability.
 #include "hardware/pwm.h"
 
 // this is the "limit" pin
-#define PIN_BUT 27
+#define PIN_BUT 26
 
 void stepper_init(void);
 void stepper_step(uint8_t microSteps, boolean dir);
