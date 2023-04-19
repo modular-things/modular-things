@@ -12,13 +12,13 @@ Copyright is retained and must be preserved. The work is provided as is;
 no warranty is provided, and users accept all liability.
 */
 
-function cobsEncode(buf) {
+function cobsEncode(buf: Uint8Array): Uint8Array {
   var dest = [0];
   // vfpt starts @ 1,
   var code_ptr = 0;
   var code = 0x01;
 
-  function finish(incllast) {
+  function finish(incllast?:any) {
     dest[code_ptr] = code;
     code_ptr = dest.length;
     incllast !== false && dest.push(0x00);
@@ -47,7 +47,7 @@ function cobsEncode(buf) {
 // COBS decode, tailing zero, that was used to delineate this buffer,
 // is assumed to already be chopped, thus the end is the end 
 
-function cobsDecode(buf) {
+function cobsDecode(buf: Uint8Array): Uint8Array {
   var dest = [];
   for (var i = 0; i < buf.length;) {
     var code = buf[i++];
@@ -61,7 +61,9 @@ function cobsDecode(buf) {
   return Uint8Array.from(dest)
 }
 
-export default {
+const COBS = {
   encode: cobsEncode,
-  decode: cobsDecode
+  decode: cobsDecode,
 }
+
+export default COBS 
