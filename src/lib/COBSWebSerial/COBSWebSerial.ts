@@ -179,12 +179,11 @@ export class COBSWebSerial {
 
   // shut 'em all down,
   disconnectAll = async () => {
-    // erp
-    for(let link of this.openLinks){
-      // this will close each, and each will trigger 
-      // subsequent .onClose() code... and should also wipe from our internal ?
+    // lol, we've to pair it off since each action also changes the arr, 
+    let links = this.openLinks.slice();
+    links.forEach((link) => {
       link.close();
-    }
+    })
     console.warn(`disconnect all complete, our map is `, this.openLinks)
   }
 }
