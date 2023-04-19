@@ -31,10 +31,14 @@ export function init(state) {
 
   bodyListener("click", ".pair-button-trigger", async () => {
     const things = global_state.things.value;
-    const [name, thing] = await authorizePort();
-    things[name] = thing;
+    // was like... 
+    // const [name, thing] = await authorizePort();
+    // things[name] = thing;
 
-    setThingsState(things);
+    // setThingsState(things);
+    // shold just do 
+    await authorizePort();
+    // and let handlers... handle new ports 
   });
 
   bodyListener("click", ".disconnect-button-trigger", async () => {
