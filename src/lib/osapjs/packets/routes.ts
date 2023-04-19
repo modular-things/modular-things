@@ -62,8 +62,8 @@ export default class Route {
   // constructor to build routes by pullen 'em from packets, 
   static from = (packet: Packet): Route => {
     // extract MSS and PHTTL from the packet, 
-    let maxSegmentSize = Serializers.readUint16(packet.data, 1);
-    let perHopTimeToLive = Serializers.readUint16(packet.data, 3);
+    let perHopTimeToLive = Serializers.readUint16(packet.data, 1);
+    let maxSegmentSize = Serializers.readUint16(packet.data, 3);
     // use this ute to find the packet terminus 
     let pathEnd = this.routeEndScan(packet);
     // and resolve a new Route 

@@ -7,7 +7,7 @@ export default class SequentialIDResolver {
   // users can write 'em 
   writeNew = () => {
     // increment and wrap to one-byte-wide, 
-    console.warn(this.lastID)
+    // console.warn(this.lastID)
     this.lastID = (this.lastID + 1) & 255;
     return this.lastID;
   }

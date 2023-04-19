@@ -6,6 +6,7 @@ import DeviceNameManager from "./deviceNameManager";
 import { NamedPortKeys, NamedPortNameManager } from "./namedPortNameManager";
 
 import SequentialIDResolver from "../utils/sequentialIDResolver";
+import Time from "../utils/time";
 
 import { PortTypeKeys } from "../utils/keys";
 import { Map } from "../discovery/netRunner";
@@ -44,8 +45,14 @@ export default class NamedPortDispatcher {
   };
 
   // take an incomplete map, add device and port names (where possible) 
+  private fillMapIsRunning = false;
   fillMapNames = async (map: Map): Promise<Map> => {
     try {
+      // don't overlap calls 
+      if (this.fillMapIsRunning) throw new Error(`overlapped-calling of osap.fillMapNames()...`);
+      this.fillMapIsRunning = true;
+      // carry on 
+      let fillStartTime = Time.getTimeStamp();
       // let's get device names in each runtime: 
       for (let rt = 0; rt < map.runtimes.length; rt++) {
         // is there a deviceName thing here ? 
@@ -64,12 +71,17 @@ export default class NamedPortDispatcher {
         }
         // we're done ! 
       }
+      // how long ?
+      console.warn(`name-fill completes after ${(Time.getTimeStamp() - fillStartTime).toFixed(0)}ms`)
       // this is ours now:
       this.map = map;
       // and we return the same, which anyways was just modified... 
       return map;
     } catch (err) {
       throw err
+    } finally {
+      // we're done, 
+      this.fillMapIsRunning = false;
     }
   }
 

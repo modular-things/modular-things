@@ -30,7 +30,7 @@ export function init(state) {
   // bodyListener("click", ".scan-button-trigger", () => { });
 
   bodyListener("click", ".pair-button-trigger", async () => {
-    const things = global_state.things.value;
+    // const things = global_state.things.value;
     // was like... 
     // const [name, thing] = await authorizePort();
     // things[name] = thing;
@@ -42,7 +42,7 @@ export function init(state) {
   });
 
   bodyListener("click", ".disconnect-button-trigger", async () => {
-    const things = global_state.things.value;
+    // const things = global_state.things.value;
     
     for (const name in things) {
       const thing = things[name];

@@ -57,7 +57,7 @@ export default class NetRunnerAtomics {
       this.runtime.requestLoopCycle();
       // this will hang here until we get a resolution... 
       let res = await this.resolver.request(requestID, 'getRuntimeInfo');
-      console.warn(`res`, res)
+      // console.warn(`res`, res)
       // now we would demux res and return the obj, 
       return {
         route,
