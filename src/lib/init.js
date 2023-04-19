@@ -4,8 +4,7 @@ import { createListener } from "./events/listen.js";
 import { addDividerDrag } from "./events/addDividerDrag";
 import { download } from "./download";
 import { runCode } from "./runCode";
-import { authorizePort, initSerial } from "./modularThingClient";
-
+import { authorizePort, initSerial, disconnectAll } from "./modularThingClient";
 
 export function init(state) {
   if(!navigator.serial){
@@ -42,14 +41,13 @@ export function init(state) {
   });
 
   bodyListener("click", ".disconnect-button-trigger", async () => {
+    await disconnectAll();
     // const things = global_state.things.value;
-    
-    for (const name in things) {
-      const thing = things[name];
-      thing.close();
-    }
-
-    setThingsState({});
+    // for (const name in things) {
+    //   const thing = things[name];
+    //   thing.close();
+    // }
+    // setThingsState({});
   });
 
   window.addEventListener("keydown", (e) => {

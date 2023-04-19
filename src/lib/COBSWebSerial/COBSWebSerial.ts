@@ -7,6 +7,7 @@ export type COBSWebSerialLink = {
   send: ((data: Uint8Array) => void);                     // func to ship data with 
   onData: ((data: Uint8Array) => void);                   // user-setup data callback  
   onClose: (() => void);                                  // user-setup close callback 
+  close: (() => void);                                    // trigger the close (callback fires apres)
 }
 
 type SerialPort = any;
@@ -30,19 +31,33 @@ export class COBSWebSerial {
       // open it up, 
       await port.open({ baudRate: 9600 });
       console.log(`port open... `);
+      // we need external access to these for closing...
+      let writer = null;
+      let reader = null;
       // rollup some funcs, 
       let send = async (data: Uint8Array) => {
         // pack is encoded 
         let pck = COBS.encode(data)
         // get a writer, write, and bail, 
-        let writer = port.writable!.getWriter();
+        writer = port.writable!.getWriter();
         await writer.write(pck)
         // console.log(`wrote`, pck)
         writer.releaseLock();
+        writer = null;
       }
       // for now these are dummies... 
       let clearToSend = () => { return true; }
       let isOpen = () => { return true; }
+      let close = () => {
+        if(writer) writer.releaseLock();
+        if(reader) {
+          reader.cancel();
+          reader.releaseLock();
+        }
+        port.close();
+        // and rm from our world, 
+        this.removePort(port);
+      }
       // make a new port w/ these things, 
       let link = {
         underlyingPort: port,
@@ -51,6 +66,7 @@ export class COBSWebSerial {
         send: send,
         onData: function (data: Uint8Array) { console.warn(`default COBSWebSerialLink.onData()...`) },
         onClose: function () { console.warn(`default COBSWebSerialLink.onClose()...`) },
+        close: close,
       };
       // reading looks like a PITA, I'm looking at modular-things code and also 
       // this https://developer.chrome.com/articles/serial/ 
@@ -58,8 +74,7 @@ export class COBSWebSerial {
       let infLoop = async () => {
         try {
           let data: number[] = [];
-          let reader = null;
-          while (port.readable) {
+          outer: while (port.readable) {
             reader = port.readable.getReader();
             while (true) {
               let { value, done } = await reader.read();
@@ -83,14 +98,16 @@ export class COBSWebSerial {
               if (done) {
                 reader.releaseLock();
                 reader = null;
-                break;
+                break outer;
               }
             }
           }
         } catch (err) {
+          console.error(`ERR`)
           console.error(err)
         } finally {
-          close();
+          console.warn(`FINALLY`)
+          // close();
         }
       } // end infloop 
       // kickoff the infinite loop, 
@@ -123,16 +140,21 @@ export class COBSWebSerial {
     // disconnects...
     // @ts-expect-error
     navigator.serial.addEventListener('disconnect', async (event) => {
+      // this func, though, *doesn't* fire when we disconnect manually, 
       console.warn(`serial disconnects...`, event.target);
-      // let's close it and wipe it, 
-      let portIndex = this.openLinks.findIndex(cand => cand.underlyingPort == event.target);
-      // if you've never opened a port, can you really close it ? 
-      if (portIndex == -1) throw new Error(`a port that wasn't in our list-of-ports has closed (?)`);
-      // carrying on, we close it:
-      this.openLinks[portIndex].onClose();
-      // and delete it 
-      this.openLinks.splice(portIndex, 1);
+      this.removePort(event.target);
     })
+  }
+
+  private removePort = (port: SerialPort) => {
+    // let's close it and wipe it, 
+    let portIndex = this.openLinks.findIndex(cand => cand.underlyingPort == port);
+    // if you've never opened a port, can you really close it ? 
+    if (portIndex == -1) throw new Error(`a port that wasn't in our list-of-ports has closed (?)`);
+    // carrying on, we close it:
+    this.openLinks[portIndex].onClose();
+    // and delete it 
+    this.openLinks.splice(portIndex, 1);
   }
 
   // scan for changes ? 
@@ -153,5 +175,16 @@ export class COBSWebSerial {
   authorizeNewPort = async () => {
     // @ts-expect-error
     return await this.setupPort(await navigator.serial.requestPort());
+  }
+
+  // shut 'em all down,
+  disconnectAll = async () => {
+    // erp
+    for(let link of this.openLinks){
+      // this will close each, and each will trigger 
+      // subsequent .onClose() code... and should also wipe from our internal ?
+      link.close();
+    }
+    console.warn(`disconnect all complete, our map is `, this.openLinks)
   }
 }

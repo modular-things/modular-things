@@ -73,6 +73,12 @@ export async function authorizePort(){
   return await webSerialHelper.authorizeNewPort();
 }
 
+export async function disconnectAll(){
+  // wipe 'em all, 
+  await webSerialHelper.disconnectAll();
+  // and... that should fire the re-scans, eh? 
+}
+
 // central to this is that we diff states... 
 // old-maps-of-stuff, and new ones... 
 let mapIsAlreadyUpdating = false;
