@@ -57,7 +57,6 @@ export default class NetRunner {
       // current search... 
       let recursor = async (rtInfo: RuntimeInfo) => {
         try {
-          console.warn(`RTINFO: `, JSON.parse(JSON.stringify(rtInfo)));
           // we'll build this object as a "runtime" thing, 
           // and stash it in our array of those... 
           let rtMirror = {
@@ -73,12 +72,9 @@ export default class NetRunner {
           runtimes.push(rtMirror);
           // now we want to recurse down any availabe link-gateways:
           for (let l = 0; l < rtMirror.lgateways.length; l++) {
-            console.warn(`link ${l} from ${rtMirror.build}... id ${traverseID[0]}`)
             if (rtMirror.lgateways[l].isOpen) {
               // if this is open, we can build a new route to search down, 
-              console.warn(`traversen across link ${l} from ${rtMirror.build}... id ${traverseID[0]}`, rtMirror.lgateways[l])
               let searchRoute = Route.build(rtMirror.route).link(l).end()
-              console.warn(`ROUTE: `, searchRoute);
               // and get info on whatever lays across it... 
               let nextRtInfo = await this.atomics.getRuntimeInfo(searchRoute, traverseID)
               // check if we have scanned this mf' before, don't chase tails: 

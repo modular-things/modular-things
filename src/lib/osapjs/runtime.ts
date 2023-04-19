@@ -65,6 +65,7 @@ export default class Runtime {
     }
     // and add the dissolution function, 
     lGateway.dissolve = () => {
+      console.log(`dissolving...`)
       // get and check an index, 
       let index = this.lGateways.findIndex(cand => cand == lGateway);
       if(index == -1) throw new Error(`mysterious dissolution of non-existent lGateway, tf?`);
@@ -206,9 +207,7 @@ export default class Runtime {
             // or (check it out), we can get a reversed route, then 
             // check the 1st instruction au-manuel,
             let revRoute = Route.from(packet)
-            console.warn(`REQ Route.from()`, JSON.parse(JSON.stringify(revRoute)));
             revRoute.reverse()
-            console.warn(`REQ Route.reverse()`, JSON.parse(JSON.stringify(revRoute)));
             // now... this is either empty, linkf, or busf
             // at most it's 5 bytes total, so we're just going to take up 
             // as many each time... 
