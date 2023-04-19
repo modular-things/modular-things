@@ -48,10 +48,14 @@ webSerialHelper.onNewLink = async (link: COBSWebSerialLink) => {
     link.onData = osapLink.ingestPacket;
     // and we have this to do the dissolution,
     // TODO: maybe some cases where we need to ~ basically debounce this... 
-    link.onClose = osapLink.dissolve;
+    link.onClose = async () => {
+      // dissolve the link, osap-wise, 
+      osapLink.dissolve();
+      // and let's get an update in this case, 
+      triggerMapUpdate();
+    }
     // uuuh 
-    let map = await osap.updateMap();
-    console.log(`map apres...`, map)    
+    triggerMapUpdate();
   } catch (err) {
     console.error(err)
   }
@@ -67,6 +71,37 @@ export async function rescan(){
 
 export async function authorizePort(){
   return await webSerialHelper.authorizeNewPort();
+}
+
+// central to this is that we diff states... 
+// old-maps-of-stuff, and new ones... 
+let mapIsAlreadyUpdating = false;
+let mapShouldRescan = false;
+let triggerMapUpdate = async () => {
+  // we don't want to overlap scans, 
+  // but if we missed a trigger... and since scan starts 
+  // from the root, if we've just added a link up here, 
+  // we actually should re-scan once it's finished... 
+  if(mapIsAlreadyUpdating){
+    mapShouldRescan = true;
+    return;
+  }
+  try {
+    mapIsAlreadyUpdating = true;
+    // do it, then 
+    let newMap = await osap.updateMap();
+    console.log(`yu've got a new map, lad`, newMap)  
+    // uuuhh...
+    if(mapShouldRescan){
+      mapIsAlreadyUpdating = false;
+      mapShouldRescan = false;
+      triggerMapUpdate();
+    }
+  } catch (err) {
+    console.error(err)
+  } finally {
+    mapIsAlreadyUpdating = false;
+  }
 }
 
 // const portThingMap = new Map<SerialPort, string>();

@@ -44,6 +44,7 @@ export default class LGateway {
     // (1) check that the packet is at least roughly as expected:
     if (pck[pck[0]] != TransportKeys.LINKF) { throw new Error(`rx'd a poorly formed packet at this link, tossing it !`); }
     // (2) insert our own index, for the reversal, 
+    console.warn(`INSERT INDEX ${this.index}`)
     Serializers.writeUint16(pck, pck[0] + 1, this.index);
     // (3) increment the pointer along 
     pck[0] += TransportKeys.getIncrement(TransportKeys.LINKF);

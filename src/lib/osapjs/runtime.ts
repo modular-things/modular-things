@@ -53,12 +53,14 @@ export default class Runtime {
     typeKey: number
   }) => {
     // build a newey,
-    let lGateway = new LGateway(this, this.lGateways.length, implementation);
+    let lGateway: LGateway;
     // stash it, in an open slot if we can find one: 
     let lostIndex = this.lGateways.findIndex(cand => cand == undefined);
     if(lostIndex >= 0){
+      lGateway = new LGateway(this, lostIndex, implementation);
       this.lGateways[lostIndex] = lGateway;
     } else {
+      lGateway = new LGateway(this, this.lGateways.length, implementation)
       this.lGateways.push(lGateway);
     }
     // and add the dissolution function, 
@@ -68,8 +70,9 @@ export default class Runtime {
       if(index == -1) throw new Error(`mysterious dissolution of non-existent lGateway, tf?`);
       // replace with *nooothing*
       this.lGateways[index] = undefined;
-      // ~ should trigger an update, maybe ? 
-      console.warn(`lost a port...`, this.lGateways)
+      // if this is in the tail, we should just resize the array also... 
+      // ~ should trigger an update, maybe ? but... nah, that's application code, innit ? 
+      console.log(`after dissolve of ${index}, `, this.lGateways)
     }
     // resolve it 
     return lGateway;
@@ -93,11 +96,12 @@ export default class Runtime {
     // (1) collect packets, 
     let packets: Packet[] = [];
     // from our ports' stacks,
-    this.ports.forEach(port => {
+    this.ports.forEach((port) => {
       packets = packets.concat(port.getPacketsToService())
     });
 
-    this.lGateways.forEach(lGateway => {
+    this.lGateways.forEach((lGateway) => {
+      if(lGateway == undefined) return;
       packets = packets.concat(lGateway.getPacketsToService())
     })
     // TODO for(let l in gateways)... 
@@ -166,7 +170,7 @@ export default class Runtime {
                 this.requestLoopCycle();
               }
             } else {
-              console.warn(`attempted tx along non-existent link-gateway ${index}`);
+              console.warn(`attempted tx along non-existent link-gateway ${index}`, packet.data, packet.source);
               packet.delete();
             }
             // increment pointer & stuff returnal (?) 
@@ -202,7 +206,9 @@ export default class Runtime {
             // or (check it out), we can get a reversed route, then 
             // check the 1st instruction au-manuel,
             let revRoute = Route.from(packet)
+            console.warn(`REQ Route.from()`, JSON.parse(JSON.stringify(revRoute)));
             revRoute.reverse()
+            console.warn(`REQ Route.reverse()`, JSON.parse(JSON.stringify(revRoute)));
             // now... this is either empty, linkf, or busf
             // at most it's 5 bytes total, so we're just going to take up 
             // as many each time... 

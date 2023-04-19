@@ -34,7 +34,11 @@ export default class NetRunner {
     this.atomics = new NetRunnerAtomics(runtime);
   }
 
+  private mapDiscoveryIsRunning = false;
   getSystemMap = async (): Promise<Map> => {
+    // don't overlap calls
+    if (this.mapDiscoveryIsRunning) throw new Error(`overlapped-calling of osap.getSystemMap()...`);
+    this.mapDiscoveryIsRunning = true;
     // track beginnings... 
     let sweepStartTime = Time.getTimeStamp();
     let traverseID = RandomIDGen.getNew();
@@ -53,6 +57,7 @@ export default class NetRunner {
       // current search... 
       let recursor = async (rtInfo: RuntimeInfo) => {
         try {
+          console.warn(`RTINFO: `, JSON.parse(JSON.stringify(rtInfo)));
           // we'll build this object as a "runtime" thing, 
           // and stash it in our array of those... 
           let rtMirror = {
@@ -68,9 +73,12 @@ export default class NetRunner {
           runtimes.push(rtMirror);
           // now we want to recurse down any availabe link-gateways:
           for (let l = 0; l < rtMirror.lgateways.length; l++) {
+            console.warn(`link ${l} from ${rtMirror.build}... id ${traverseID[0]}`)
             if (rtMirror.lgateways[l].isOpen) {
               // if this is open, we can build a new route to search down, 
+              console.warn(`traversen across link ${l} from ${rtMirror.build}... id ${traverseID[0]}`, rtMirror.lgateways[l])
               let searchRoute = Route.build(rtMirror.route).link(l).end()
+              console.warn(`ROUTE: `, searchRoute);
               // and get info on whatever lays across it... 
               let nextRtInfo = await this.atomics.getRuntimeInfo(searchRoute, traverseID)
               // check if we have scanned this mf' before, don't chase tails: 
@@ -133,13 +141,13 @@ export default class NetRunner {
         }
         // if it's all good, swap in link info... 
         links.push([
-          [sourceRuntimeIndex, tempLinks[l].sourceIndex], 
+          [sourceRuntimeIndex, tempLinks[l].sourceIndex],
           [destRuntimeIndex, tempLinks[l].destIndex]
         ])
       }
       // now check... and we should rebuild w/ indices (not routes) 
       console.warn(`sweep comletes after ${(Time.getTimeStamp() - sweepStartTime).toFixed(0)}ms`)
-      // 
+      // ok 
       return {
         runtimes,
         links,
@@ -147,6 +155,9 @@ export default class NetRunner {
     } catch (err) {
       console.error(`getSystemGraph sweep fails after ${(Time.getTimeStamp() - sweepStartTime).toFixed(0)}ms`)
       throw err
+    } finally {
+      // we're done, 
+      this.mapDiscoveryIsRunning = false;
     }
   }
 }
