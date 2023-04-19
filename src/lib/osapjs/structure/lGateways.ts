@@ -15,6 +15,8 @@ export default class LGateway {
   clearToSend: (() => boolean);
   send: ((data: Uint8Array) => void);
   isOpen: (() => boolean);
+  // we define, runtime provides 
+  dissolve = () => {};
   // this prop
   typeKey: number = LGatewayTypeKeys.Unknown;
   // constructor collects all callbacks, 

@@ -46,11 +46,32 @@ export default class Runtime {
   }
 
   // add a link, 
-  linkGateway = (implementation: { clearToSend: (() => boolean), send: ((data: Uint8Array) => void), isOpen: (() => boolean), typeKey: number }) => {
+  linkGateway = (implementation: {
+    isOpen: (() => boolean),
+    clearToSend: (() => boolean),
+    send: ((data: Uint8Array) => void),
+    typeKey: number
+  }) => {
     // build a newey,
     let lGateway = new LGateway(this, this.lGateways.length, implementation);
-    // stash it & resolve it, 
-    this.lGateways.push(lGateway);
+    // stash it, in an open slot if we can find one: 
+    let lostIndex = this.lGateways.findIndex(cand => cand == undefined);
+    if(lostIndex >= 0){
+      this.lGateways[lostIndex] = lGateway;
+    } else {
+      this.lGateways.push(lGateway);
+    }
+    // and add the dissolution function, 
+    lGateway.dissolve = () => {
+      // get and check an index, 
+      let index = this.lGateways.findIndex(cand => cand == lGateway);
+      if(index == -1) throw new Error(`mysterious dissolution of non-existent lGateway, tf?`);
+      // replace with *nooothing*
+      this.lGateways[index] = undefined;
+      // ~ should trigger an update, maybe ? 
+      console.warn(`lost a port...`, this.lGateways)
+    }
+    // resolve it 
     return lGateway;
   }
 
