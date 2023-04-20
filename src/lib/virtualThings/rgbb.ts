@@ -27,7 +27,7 @@ export default function rgbbThing(name: string) {
       datagram[0] = 255 - r * 255;
       datagram[1] = 255 - g * 255;
       datagram[2] = 255 - (b * 255) / 2;
-      return await osap.send(name, "setRGB", datagram);
+      await osap.send(name, "setRGB", datagram);
     },
     getButtonState: async() => {
       let res = await osap.send(name, "getButtonState", new Uint8Array([]));
