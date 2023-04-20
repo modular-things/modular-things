@@ -10,6 +10,8 @@ import { runCode } from "../lib/runCode";
 
 import { useEffect, useState, useCallback } from 'preact/hooks'
 
+import { osap } from '../lib/osapjs/osap'
+
 import { init } from "../lib/init";
 import { global_state } from "../lib/global_state";
 import { signal } from '@preact/signals'
@@ -170,14 +172,20 @@ function drawThing([name, thing]) {
   console.log(`drawThing`, name, thing)
   // TODO: this is modified since.... 
   const renameThing = async () => {
-    console.error(`expect an error, this is old code...`)
+    // get a new name... 
     const newName = prompt(`New name for ${name}`);
     if (!newName) return;
-    await thing.vThing.setName(newName);
+    console.warn(`new name... "${newName}"`)
+    // rename the thing (will update internal map as well)
+    await osap.rename(name, newName);
+    // grab ref to old thing, 
     const things = global_state.things.value;
+    // swap obj keys 
     delete things[name];
     things[newName] = thing;
-
+    // upd8 the name:
+    thing.updateName(newName);
+    // and redraw / etc, 
     setThingsState(things);
   }
 
