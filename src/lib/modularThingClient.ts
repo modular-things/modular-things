@@ -1,7 +1,7 @@
 import { osap } from "../lib/osapjs/osap"
 import { COBSWebSerial, COBSWebSerialLink } from "./COBSWebSerial/COBSWebSerial";
 
-// import rgbb from "./virtualThings/rgbb";
+import rgbb from "./virtualThings/rgbb";
 // import stepper from "./virtualThings/stepper";
 // import capacitive from "./virtualThings/capacitive";
 // import timeOfFlight from "./virtualThings/timeOfFlight";
@@ -16,7 +16,7 @@ import { LGatewayTypeKeys } from "./osapjs/utils/keys";
 import { setThingsState } from "./setThingsState";
 
 const constructors = {
-  // rgbb,
+  rgbb,
   // stepper,
   // capacitive,
   // timeOfFlight,
@@ -123,6 +123,27 @@ let triggerMapUpdate = async () => {
         }
         // add it then, 
         nameSet.add(rt.uniqueName);
+      } // end rename-cycle, 
+      // (2) check against existing-things... if no-thing, friggen, make one 
+      for(let rt of newMap.runtimes){
+        // ignore these 
+        if(rt.uniqueName == '') continue;
+        // check if we have one... 
+        if(global_state.things.value[rt.uniqueName]){
+          // it exists 
+          console.warn(`... looks as though ${rt.uniqueName} exists already...`)
+        } else {
+          if(constructors[rt.typeName]){
+            console.warn(`building a new "${rt.typeName}" thing...`)
+            let thing = constructors[rt.typeName](rt.uniqueName);
+            // it works, huzzah ! 
+            console.log(thing)
+            let res = await thing.setRGB(0.0, 0.0, 0.25);
+            console.log(`done...`)
+          } else {
+            console.warn(`couldn't find a constructor for a "${rt.typeName}" thing...`)
+          }
+        }
       }
 
     }
