@@ -40,8 +40,17 @@ export default class NamedPortDispatcher {
   }
 
   // pass-through, idk
-  rename = async (route: Route, newUniqueName: string) => {
+  rename = async (device: Route | string, newUniqueName: string) => {
     try {
+      // if "device" is a string, we need to resolve a route:
+      let route: Route;
+      if(typeof device == 'string'){
+        let runtime = this.map.runtimes.find(cand => cand.uniqueName == device);
+        if(!runtime) throw new Error(`on .rename(device: string, ...), couldn't find the device`);
+        route = runtime.route;
+      }  else {
+        route = device;
+      }
       // we aught to check (against the map) that thing has a name-port, 
       let rt = this.map.runtimes.find(cand => Route.equality(cand.route, route));
       if(!rt) throw new Error(`during a rename-request, no runtime is found at the provided route`);
