@@ -1,6 +1,4 @@
 #include <osap.h>
-#include <vt_endpoint.h>
-#include <vp_arduinoSerial.h>
 
 // ---------------------------------------------- Pins
 #define PIN_R 14
@@ -8,34 +6,37 @@
 #define PIN_B 16
 #define PIN_BUT 17
 
-// message-passing memory allocation 
-#define OSAP_STACK_SIZE 10
-VPacket messageStack[OSAP_STACK_SIZE];
-// ---------------------------------------------- OSAP central-nugget 
-OSAP osap("rgbb-rpc", messageStack, OSAP_STACK_SIZE);
+// the runtime, 
+OSAP_Runtime osap;
 
-// ---------------------------------------------- 0th Vertex: OSAP USB Serial
-VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
+// the usb link, 
+OSAP_Gateway_USBSerial serLink(&Serial);
 
-// ---------------------------------------------- 1th Vertex: RGB Inputs Endpoint 
-EP_ONDATA_RESPONSES onRGBData(uint8_t* data, uint16_t len){
-  // we did the float -> int conversion in js 
+// our name-setting-thing
+OSAP_Port_DeviceNames namePort("rgbb");
+
+// button-state getter, 
+boolean lastButtonState = false;
+
+size_t onButtonReq(uint8_t* data, size_t len, uint8_t* reply){
+  // then write-into reply:
+  lastButtonState ? reply[0] = 1 : reply[0] = 0;
+  return 1;
+}
+
+OSAP_Port_Named getButtonState("getButtonState", onButtonReq);
+
+void onRGBPacket(uint8_t* data, size_t len){
   analogWrite(PIN_R, data[0]);
   analogWrite(PIN_G, data[1]);
   analogWrite(PIN_B, data[2]);
-  return EP_ONDATA_ACCEPT;
 }
 
-Endpoint rgbEndpoint(&osap, "rgbValues", onRGBData);
-
-// ---------------------------------------------- 2nd Vertex: Button Endpoint 
-Endpoint buttonEndpoint(&osap, "buttonState");
+OSAP_Port_Named setRGB("setRGB", onRGBPacket);
 
 void setup() {
   // uuuh... 
-  osap.init();
-  // run the commos 
-  vp_arduinoSerial.begin();
+  osap.begin();
   // "hardware"
   analogWriteResolution(8);
   pinMode(PIN_R, OUTPUT);
@@ -50,7 +51,6 @@ void setup() {
 
 uint32_t debounceDelay = 10;
 uint32_t lastButtonCheck = 0;
-boolean lastButtonState = false;
 
 void loop() {
   // do graph stuff
@@ -61,16 +61,7 @@ void loop() {
     boolean newState = digitalRead(PIN_BUT);
     if(newState != lastButtonState){
       lastButtonState = newState;
-      buttonEndpoint.write(lastButtonState);
     }
   }
 }
 
-// prg size log
-// 9828 (blank arduino)
-// 10844 (leds, blinking) 
-// 17712 (+ osap w/ no vertices)
-// 18956 (+ serial vport)
-// 21280 (+ 2x endpoints)
-// 21960 (+ handlers and button code)
-// 23944 (+ readFloat)
