@@ -1,42 +1,28 @@
 #include <osap.h>
-#include <vt_endpoint.h>
-#include <vp_arduinoSerial.h>
-#include <core/ts.h>
-#include <Wire.h>
 #include <VL53L1X.h> // https://www.arduino.cc/reference/en/libraries/vl53l1x/ (pololu version)
+// #include <Wire.h>
 
 VL53L1X sensor;
 
-// message-passing memory allocation 
-#define OSAP_STACK_SIZE 10
-VPacket messageStack[OSAP_STACK_SIZE];
-// type of board (firmware name)
-OSAP osap("timeOfFlight", messageStack, OSAP_STACK_SIZE);
+OSAP_Runtime osap;
+OSAP_Gateway_USBSerial serLink(&Serial);
+OSAP_Port_DeviceNames namePort("time-of-flight");
 
-// ---------------------------------------------- 0th Vertex: OSAP USB Serial
-VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
-
-// ---------------------------------------------- 1 Vertex
-boolean preTOFQuery(void);
-
-Endpoint tofEndpoint(&osap, "tofQuery", preTOFQuery);
-
-boolean preTOFQuery(void) {
-  uint8_t buf[2];
+size_t readTOF(uint8_t* data, size_t len, uint8_t* reply) {
   sensor.read();
   uint16_t value = sensor.ranging_data.range_mm;
-  buf[0] = value & 0xFF;
-  buf[1] = value >> 8 & 0xFF;
-  tofEndpoint.write(buf, 2);
-  return true;
+  reply[0] = value & 0xFF;
+  reply[1] = value >> 8 & 0xFF;
+  return 2;
 }
+
+OSAP_Port_Named readTOF_port("readTOF", readTOF);
 
 void setup() {
   osap.init();
-  vp_arduinoSerial.begin();
 
-  Wire.begin();
-  Wire.setClock(400000); // 400 KHz I2C
+  // Wire.begin();
+  // Wire.setClock(400000); // 400 KHz I2C
   sensor.setTimeout(500);
   sensor.init();
 

@@ -2,14 +2,15 @@ import { osap } from "../lib/osapjs/osap"
 import { COBSWebSerial, COBSWebSerialLink } from "./COBSWebSerial/COBSWebSerial";
 
 import rgbb from "./virtualThings/rgbb";
+import capacitive from "./virtualThings/capacitive";
+import timeOfFlight from "./virtualThings/timeOfFlight";
+import mosfet from "./virtualThings/mosfet";
+import accelerometer from "./virtualThings/accelerometer";
+import oled from "./virtualThings/oled";
+import potentiometer from "./virtualThings/potentiometer";
+import servo from "./virtualThings/servo";
 // import stepper from "./virtualThings/stepper";
-// import capacitive from "./virtualThings/capacitive";
-// import timeOfFlight from "./virtualThings/timeOfFlight";
-// import mosfet from "./virtualThings/mosfet";
-// import accelerometer from "./virtualThings/accelerometer";
-// import oled from "./virtualThings/oled";
-// import potentiometer from "./virtualThings/potentiometer";
-// import servo from "./virtualThings/servo";
+
 
 import { global_state } from "./global_state";
 import { LGatewayTypeKeys } from "./osapjs/utils/keys";
@@ -18,13 +19,13 @@ import { setThingsState } from "./setThingsState";
 const constructors = {
   rgbb,
   // stepper,
-  // capacitive,
-  // timeOfFlight,
-  // mosfet,
-  // oled,
-  // accelerometer,
-  // potentiometer,
-  // servo
+  capacitive,
+  timeOfFlight,
+  mosfet,
+  oled,
+  accelerometer,
+  potentiometer,
+  servo
 };
 
 // TODO: cleanup, rm this... 
