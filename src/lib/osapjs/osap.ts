@@ -29,6 +29,8 @@ class OSAP {
       // grab names for each of those objects... 
       let namedMap = await this.dispatcher.fillMapNames(map);
       console.warn(`rx'd a named map...`, JSON.parse(JSON.stringify(namedMap)))
+      // we stash it, 
+      this.localMap = namedMap;
       // return to user as a bonus 
       return namedMap;
     } catch (err) {
@@ -40,6 +42,7 @@ class OSAP {
   private dispatcher = new NamedPortDispatcher(this.rt);
 
   send = this.dispatcher.send;
+  rename = this.dispatcher.rename;
 
   // we *could* do an explicit-route overloading of this send func, as below, 
   // but I think I prefer the clarity: if you want to use `Route, Number` addressing, do it 

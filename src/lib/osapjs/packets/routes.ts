@@ -102,6 +102,17 @@ export default class Route {
     }
   }
 
+  static equality = (a: Route, b: Route) => {
+    // easy, 
+    if(a.encodedPath.length != b.encodedPath.length) return false;
+    // ok then,
+    for(let i = 0; i < a.encodedPath.length; i ++){
+      if(a.encodedPath[i] != b.encodedPath[i]) return false;
+    }
+    // finally 
+    return true;
+  }
+
   // in-place reverser
   reverse = (): void => {
     // copy-out the old, into a new instance of the TypedArray 
