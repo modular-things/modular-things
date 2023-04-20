@@ -1,8 +1,5 @@
 #include "Adafruit_FreeTouch.h"
 #include <osap.h>
-#include <vt_endpoint.h>
-#include <vp_arduinoSerial.h>
-#include <core/ts.h>
 
 #define PIN_LED_R 16
 #define PIN_LED_G 22
@@ -14,17 +11,11 @@ const int pins_piano[N_PAD] = {2, 3, 4, 5, 6, 7};
 
 Adafruit_FreeTouch qt_array[N_PAD];
 
-// message-passing memory allocation 
-#define OSAP_STACK_SIZE 10
-VPacket messageStack[OSAP_STACK_SIZE];
-// type of board (firmware name)
-OSAP osap("capacitive", messageStack, OSAP_STACK_SIZE);
+OSAP_Runtime osap;
+OSAP_Gateway_USBSerial serLink(&Serial);
+OSAP_Port_DeviceNames namePort("accelerometer");
 
-// ---------------------------------------------- 0th Vertex: OSAP USB Serial
-VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
-
-// ---------------------------------------------- 1 Vertex
-EP_ONDATA_RESPONSES setRGB(uint8_t* data, uint16_t len) {
+void setRGB(uint8_t* data, uint16_t len) {
   analogWrite(PIN_LED_R, data[0]);
   analogWrite(PIN_LED_G, data[1]);
   analogWrite(PIN_LED_B, data[2]);
@@ -35,35 +26,28 @@ EP_ONDATA_RESPONSES setRGB(uint8_t* data, uint16_t len) {
     digitalWrite(PIN_LED_B, 1);
   }
 
-  return EP_ONDATA_ACCEPT;
 }
 
-Endpoint rgbEndpoint(&osap, "setRGB", setRGB);
+size_t readPads(uint8_t* data, size_t len, uint8_t* reply) {
 
-// ---------------------------------------------- 2 Vertex
-boolean prePadQuery(void);
-
-Endpoint capacitiveEndpoint(&osap, "capacitivePads", prePadQuery);
-
-boolean prePadQuery(void){
-  // stuff vals into yonder buffer
-  uint8_t buf[N_PAD * 2];
-  uint16_t wptr = 0;
   for(uint8_t p = 0; p < N_PAD; p ++){
-    // void ts_writeUint16(uint16_t val, unsigned char* buf, uint16_t* ptr); 
-    ts_writeUint16(qt_array[p].measure(), buf, &wptr);
+    uint16_t measurement = qt_array[p].measure();
+    reply[p*2] = measurement & 0xFF;
+    reply[(p*2)+1] = measurement >> 8 & 0xFF;
   }
-  capacitiveEndpoint.write(buf, N_PAD * 2);
-  return true;
+  
+  return N_PAD * 2;
 }
+
+
+OSAP_Port_Named readPads_port("readPads", readPads);
+OSAP_Port_Named setRGB_port("setRGB", setRGB);
+
+
+
 
 void setup() {
-  osap.init();
-  vp_arduinoSerial.begin();
-  // RGB LED
-  // digitalWrite(PIN_LED_R, HIGH);
-  // digitalWrite(PIN_LED_G, HIGH);
-  // digitalWrite(PIN_LED_B, HIGH);
+  osap.begin();
   pinMode(PIN_LED_R, OUTPUT);
   pinMode(PIN_LED_G, OUTPUT);
   pinMode(PIN_LED_B, OUTPUT);
