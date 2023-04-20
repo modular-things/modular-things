@@ -39,6 +39,7 @@ export class COBSWebSerial {
         // pack is encoded 
         let pck = COBS.encode(data)
         // get a writer, write, and bail, 
+
         writer = port.writable!.getWriter();
         await writer.write(pck)
         // console.log(`wrote`, pck)

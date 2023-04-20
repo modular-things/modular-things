@@ -106,6 +106,8 @@ export default class NamedPortDispatcher {
   }
 
   send = (device: string, port: string, data: Uint8Array) => {
+    if (!data) data = new Uint8Array([]);
+    
     return new Promise(async (resolve, reject) => {
       try {
         // 1st op is to check that the device is in the map... 
