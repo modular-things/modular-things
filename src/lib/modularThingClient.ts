@@ -27,6 +27,7 @@ const constructors = {
   // servo
 };
 
+// TODO: cleanup, rm this... 
 export type Thing = {
   vPortName: string,
   firmwareName: string,
@@ -116,10 +117,10 @@ let triggerMapUpdate = async () => {
           // trouble, give it a new random name:
           // osap.rename() is going *also* to modify that map... 
           // TBD if that's the sensible behaviour... 
-          console.warn(`a double here: ${rt.uniqueName}`)
+          console.log(`a double here: ${rt.uniqueName}`)
           let newName = makeID(5);
           await osap.rename(rt.route, makeID(5));
-          console.warn(`renamed!`)
+          console.log(`renamed!`)
         }
         // add it then, 
         nameSet.add(rt.uniqueName);
@@ -131,15 +132,30 @@ let triggerMapUpdate = async () => {
         // check if we have one... 
         if(global_state.things.value[rt.uniqueName]){
           // it exists 
-          console.warn(`... looks as though ${rt.uniqueName} exists already...`)
+          console.log(`... looks as though ${rt.uniqueName} exists already...`)
         } else {
           if(constructors[rt.typeName]){
-            console.warn(`building a new "${rt.typeName}" thing...`)
+            console.log(`building a new "${rt.typeName}" thing...`)
+            // constructor-it, 
             let thing = constructors[rt.typeName](rt.uniqueName);
+            // add the typeName,
+            thing.typeName = rt.typeName;
+            console.log(`built that, it is this:`, thing)
             // it works, huzzah ! 
-            console.log(thing)
-            let res = await thing.setRGB(0.0, 0.0, 0.25);
-            console.log(`done...`)
+            // now we want to push that into global state, just... the thing itself, 
+            // IDK what this all is ... but it looks like we should do:
+            // pull this from globals, 
+            let things = global_state.things.value;
+            // add to it, 
+            things[rt.uniqueName] = thing;
+            // and update with this
+            setThingsState(things); 
+            console.log(`did setThingsState...`)
+            // direct-write would be this:           
+            global_state.things.value[rt.uniqueName] = thing
+            // that should be it, whatever else happens after ".things.value" is updated ? 
+            // console.log(thing)
+            // let res = await thing.setRGB(0.0, 0.0, 0.25);
           } else {
             console.warn(`couldn't find a constructor for a "${rt.typeName}" thing...`)
           }

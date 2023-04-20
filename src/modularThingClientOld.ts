@@ -4,14 +4,14 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
   const vPort = await VPortWebSerial(osap, port, false);
   const graph = await osap.nr.sweep();
   let ch = graph.children.find((ch: any) => ch.name === "vp_" + vPort.portName);
-  if(!ch) throw new Error("Connected serial port but could not find OSAP vertex for it");
-  if(!ch.reciprocal) throw new Error("Connected serial port but OSAP vertex doesn't have a reciprocal");
-  if(ch.reciprocal.type == "unreachable") throw new Error("Connected serial port but OSAP vertex's partner is unreachable");
+  if (!ch) throw new Error("Connected serial port but could not find OSAP vertex for it");
+  if (!ch.reciprocal) throw new Error("Connected serial port but OSAP vertex doesn't have a reciprocal");
+  if (ch.reciprocal.type == "unreachable") throw new Error("Connected serial port but OSAP vertex's partner is unreachable");
 
   // we have some name like `rt_firmwareName` that might have `_uniqueName` trailing
   // so first we can grab the firmwareName like:
-  let vt = ch.reciprocal.parent 
-  let [ _rt, firmwareName, uniqueName ] = (vt.name as string).split("_");
+  let vt = ch.reciprocal.parent
+  let [_rt, firmwareName, uniqueName] = (vt.name as string).split("_");
 
   let madeNewUniqueName = false;
   if (!uniqueName) {
@@ -28,10 +28,10 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
 
   let vThing
 
-  if(!(firmwareName in constructors)){
+  if (!(firmwareName in constructors)) {
     // this was RPC code... 
-  //   // this is the unknown device...
-  //   console.log(vt)
+    //   // this is the unknown device...
+    //   console.log(vt)
     // get each fn that is an RPC in this device, 
     // let rpcs = vt.children.filter((ch: any) => ch.name.includes("rpc_"))
     // console.log(`found rpcs`, rpcs)
@@ -83,7 +83,7 @@ async function setupPort(port: SerialPort): Promise<[string, Thing]> {
     vThing = constructors[firmwareName](
       osap, vt, thingName
     );
-    vThing.firmwareName = firmwareName;  
+    vThing.firmwareName = firmwareName;
   }
 
   //@ts-expect-error
@@ -124,7 +124,7 @@ export async function rescan() {
   const ports = await navigator.serial.getPorts();
   const things = global_state.things.value;
   const usedPorts = Object.values(things).map(x => x.port);
-  for(const port of ports) {
+  for (const port of ports) {
     if (usedPorts.includes(port)) continue;
     const [name, thing] = await setupPort(port);
     things[name] = thing;
@@ -133,22 +133,22 @@ export async function rescan() {
   setThingsState(things);
 }
 
-React StrictMode renders components twice on dev to detect problems
-but this can only be run one time
-so have this check to ensure that
+// React StrictMode renders components twice on dev to detect problems
+// but this can only be run one time
+// so have this check to ensure that
 let serialInitted = false;
 export async function initSerial() {
-  if(serialInitted) return;
+  if (serialInitted) return;
   serialInitted = true;
 
   rescan();
 
   navigator.serial.addEventListener('connect', async (event) => {
     console.log("connect!");
-    const [ name, thing ] = await setupPort(event.target as SerialPort);
+    const [name, thing] = await setupPort(event.target as SerialPort);
     const things = global_state.things.value;
     things[name] = thing;
-    
+
     setThingsState(things);
   });
 
@@ -159,7 +159,7 @@ export async function initSerial() {
     const port = event.target;
 
     const portThingMap = Object.entries(things).reduce((acc, cur) => {
-      const [ key, value ] = cur;
+      const [key, value] = cur;
       acc.set(value.port, key);
       return acc;
     }, new Map());
@@ -168,7 +168,7 @@ export async function initSerial() {
     if (name) {
       things[name].close();
       delete things[name];
-      
+
       setThingsState(things);
     }
   });
