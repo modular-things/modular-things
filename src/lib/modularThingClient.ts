@@ -84,6 +84,7 @@ export async function disconnectAll(){
 // old-maps-of-stuff, and new ones... 
 let mapIsAlreadyUpdating = false;
 let mapShouldRescan = false;
+// 
 let triggerMapUpdate = async () => {
   // we don't want to overlap scans, 
   // but if we missed a trigger... and since scan starts 
@@ -108,6 +109,7 @@ let triggerMapUpdate = async () => {
       triggerMapUpdate();
     } else {
       // we have a map ! 
+
       // (1) let's catch and rename any doubled unique-names 
       // we'll make a set of the unique-names, 
       let nameSet = new Set<string>();
@@ -125,6 +127,7 @@ let triggerMapUpdate = async () => {
         // add it then, 
         nameSet.add(rt.uniqueName);
       } // end rename-cycle, 
+
       // (2) check against existing-things... if no-thing, friggen, make one 
       for(let rt of newMap.runtimes){
         // ignore these 
@@ -152,7 +155,7 @@ let triggerMapUpdate = async () => {
             setThingsState(things); 
             console.log(`did setThingsState...`)
             // direct-write would be this:           
-            global_state.things.value[rt.uniqueName] = thing
+            // global_state.things.value[rt.uniqueName] = thing;
             // that should be it, whatever else happens after ".things.value" is updated ? 
             // console.log(thing)
             // let res = await thing.setRGB(0.0, 0.0, 0.25);
