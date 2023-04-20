@@ -163,6 +163,18 @@ let triggerMapUpdate = async () => {
             console.warn(`couldn't find a constructor for a "${rt.typeName}" thing...`)
           }
         }
+      } // end add-step, 
+
+      // (3) check that every "thing" still exists (in the map)
+      for(let t in global_state.things.value){
+        let thing = global_state.things.value[t];
+        // nice to have the key, since...
+        if(newMap.runtimes.findIndex(cand => cand.uniqueName == t) == -1){
+          console.warn(`looks like you deleted ${t}...`)
+          let things = global_state.things.value;
+          delete things[t];
+          setThingsState(things);
+        }
       }
 
     }
