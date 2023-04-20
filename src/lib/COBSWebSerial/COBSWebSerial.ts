@@ -47,7 +47,13 @@ export class COBSWebSerial {
         writer = null;
       }
       // for now these are dummies... 
-      let clearToSend = () => { return true; }
+      let clearToSend = () => { 
+        if(writer){
+          return false;
+        } else {
+          return true;
+        }
+      }
       let isOpen = () => { return true; }
       let close = () => {
         if(writer) writer.releaseLock();
