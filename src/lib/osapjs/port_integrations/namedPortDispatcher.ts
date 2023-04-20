@@ -2,6 +2,7 @@
 
 import Runtime from "../runtime";
 import Port from "../structure/ports";
+import Route from "../packets/routes";
 import DeviceNameManager from "./deviceNameManager";
 import { NamedPortKeys, NamedPortNameManager } from "./namedPortNameManager";
 
@@ -36,6 +37,25 @@ export default class NamedPortDispatcher {
       // each msg demuxes based on a simple ID 
       this.resolver.find(data, 1);
     })
+  }
+
+  // pass-through, idk
+  rename = async (route: Route, newUniqueName: string) => {
+    try {
+      // we aught to check (against the map) that thing has a name-port, 
+      let rt = this.map.runtimes.find(cand => Route.equality(cand.route, route));
+      if(!rt) throw new Error(`during a rename-request, no runtime is found at the provided route`);
+      // likewise, find the deviceNames port there,
+      let index = rt.ports.findIndex(cand => cand.typeName == 'DeviceNames');
+      if(index < 0) throw new Error(`during a rename-request, no 'DeviceNames' port was found in the runtime`);
+      // ok, we can finally 
+      await this.deviceNameManager.setUniqueName(route, index, newUniqueName);
+      // assuming that passed, we can modify the map ! 
+      rt.uniqueName = newUniqueName;
+      // we're done ! 
+    } catch (err) {
+      throw err 
+    }
   }
 
   // we keep a map... it's a graph... with names... 
