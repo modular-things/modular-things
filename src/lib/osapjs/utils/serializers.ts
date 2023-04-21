@@ -20,17 +20,17 @@ let Serializers = {
   // read a zero-delimited string from a buffer, 
   readString: function (source: Uint8Array, offset: number): string {
     // find the closest-zero,
-    let zero = undefined 
-    for(let z = offset; z < source.length; z ++){
-      if(source[z] == 0){
+    let zero = undefined
+    for (let z = offset; z < source.length; z++) {
+      if (source[z] == 0) {
         zero = z;
         break;
       }
     }
-    if(zero == undefined) throw new Error(`couldn't find your string's zero-delimiter...`)
+    if (zero == undefined) throw new Error(`couldn't find your string's zero-delimiter...`)
     // carry on, 
     let str = textDecoder.decode(source.subarray(offset, zero));
-    return str; 
+    return str;
   },
   // write the string and return the # of bytes written 
   writeString: function (dest: Uint8Array, offset: number, value: string): number {
@@ -38,6 +38,16 @@ let Serializers = {
     dest.set(stringStream, offset);
     dest[offset + stringStream.length] = 0;
     return stringStream.length + 1;
+  },
+  // fluts 
+  readFloat32: function (source: Uint8Array, offset: number): number {
+    return new Float32Array(source.buffer.slice(offset, offset + 4))[0];
+  },
+  writeFloat32: function (dest: Uint8Array, offset: number, value: number): number {
+    let tempArr = Float32Array.from([value]);
+    let tempBytes = new Uint8Array(tempArr.buffer);
+    dest.set(tempBytes, offset);
+    return 4;
   }
 }
 

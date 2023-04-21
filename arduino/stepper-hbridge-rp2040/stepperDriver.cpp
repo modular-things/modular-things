@@ -125,19 +125,6 @@ void stepper_init(void){
 
 void stepper_publishCurrents(void){
   // position in LUT
-  pwm_set_chan_level(slice_num_a, channel_a, LUT_CURRENTS[lutPtrA] >> 3);
-  pwm_set_chan_level(slice_num_b, channel_b, LUT_CURRENTS[lutPtrB] >> 3);
-}
-
-void stepper_step(uint8_t microSteps, boolean dir){
-  // step LUT ptrs thru table, increment and wrap w/ bit logic 
-  if(dir){
-    lutPtrA += microSteps; lutPtrA = lutPtrA & 0b00111111;
-    lutPtrB += microSteps; lutPtrB = lutPtrB & 0b00111111;
-  } else {
-    lutPtrA -= microSteps; lutPtrA = lutPtrA & 0b00111111;
-    lutPtrB -= microSteps; lutPtrB = lutPtrB & 0b00111111;
-  }
   // depending on sign of phase, set up / down on gates 
   if(LUT_1022[lutPtrA] > 511){
     A_UP;
@@ -152,6 +139,19 @@ void stepper_step(uint8_t microSteps, boolean dir){
     B_DOWN;
   } else {
     B_OFF;
+  }
+  pwm_set_chan_level(slice_num_a, channel_a, LUT_CURRENTS[lutPtrA] >> 3);
+  pwm_set_chan_level(slice_num_b, channel_b, LUT_CURRENTS[lutPtrB] >> 3);
+}
+
+void stepper_step(uint8_t microSteps, boolean dir){
+  // step LUT ptrs thru table, increment and wrap w/ bit logic 
+  if(dir){
+    lutPtrA += microSteps; lutPtrA = lutPtrA & 0b00111111;
+    lutPtrB += microSteps; lutPtrB = lutPtrB & 0b00111111;
+  } else {
+    lutPtrA -= microSteps; lutPtrA = lutPtrA & 0b00111111;
+    lutPtrB -= microSteps; lutPtrB = lutPtrB & 0b00111111;
   }
   stepper_publishCurrents();
 }
