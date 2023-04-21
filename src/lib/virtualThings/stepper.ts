@@ -176,7 +176,7 @@ export default function stepper(name: string) {
       await target(pos, vel, accel)
       // then we could do... await-move-done ?
       await awaitMotionEnd()
-      console.log(`abs move to ${pos} done`)
+      // console.log(`abs move to ${pos} done`)
     } catch (err) {
       console.error(err)
     }
@@ -229,7 +229,7 @@ export default function stepper(name: string) {
   // we return fns that user can call,
   return {
     // operate w/
-    target,
+    target,           // this is hidden (not in 'api' return), but used by sync 
     absolute,
     relative,
     velocity,
