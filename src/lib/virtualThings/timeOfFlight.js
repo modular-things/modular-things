@@ -10,7 +10,8 @@ export default function(name) {
     },
     readDistance: async () => {
       try {
-        const data = osap.send(name, "readDistance");
+        const data = await osap.send(name, "readDistance");
+        console.log(data);
         const val = readUint16(data, 0);
         return val;
       } catch (err) {
