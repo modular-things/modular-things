@@ -76,6 +76,33 @@ loop(async () => {
 
   await cap.setRGB(val, val, val);
 }, 50)
+`,
+potVisualization: `
+const el = document.createElement("div");
+
+const potValue = 1 // 0 to 1
+
+const angle =  -180*(1-potValue); // -180 to 0
+
+el.innerHTML = \`
+  <div style="
+    position: absolute;
+    transform: translate(85px, 127px);
+  ">\${potValue.toFixed(2)}</div>
+  <svg>
+    <path 
+    stroke-width="10"
+    fill="none"
+    stroke="green"
+    d="
+      M 50 150
+      A 50 50, 0, 1, 1, 150 150"
+    transform-origin="100 150"
+    transform="rotate(\${angle})" /> 
+  </svg>
+\`
+
+render(el);
 `
 }
 
