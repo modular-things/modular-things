@@ -6,10 +6,11 @@ loop(async () => {
 }, 50);
 `,
   synchronizer: `
-await motor0.setCurrentScale(0.7);
+// warning: without a powered usb-hub, currentScale > 0.5 are likely to fail 
+await motor0.setCurrentScale(0.35);
 await motor0.setStepsPerUnit(200);
 
-await motor1.setCurrentScale(0.7);
+await motor1.setCurrentScale(0.35);
 await motor1.setStepsPerUnit(200);
 
 const machine = createSynchronizer([motor0, motor1]);
