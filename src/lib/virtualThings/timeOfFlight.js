@@ -11,9 +11,12 @@ export default function(name) {
     readDistance: async () => {
       try {
         const data = await osap.send(name, "readDistance");
-        console.log(data);
-        const val = readUint16(data, 0);
-        return val;
+        if(data[0] == 1){
+          const val = readUint16(data, 1);
+          return val;  
+        } else {
+          throw new Error(`TOF timed out, try rebooting the board... or check hardware...`)
+        }
       } catch (err) {
         console.error(err)
       }
