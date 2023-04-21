@@ -1,19 +1,19 @@
 /* MACHINE DEFINITION */
 
-// await motor0.setCurrentScale(0.7);
-// await motor0.setStepsPerUnit(200);
+await motor0.setCurrentScale(0.7);
+await motor0.setStepsPerUnit(200);
 
-// await motor1.setCurrentScale(0.7);
-// await motor1.setStepsPerUnit(200);
+await motor1.setCurrentScale(0.7);
+await motor1.setStepsPerUnit(200);
 
-// const machine = createSynchronizer([motor0, motor1]);
+const machine = createSynchronizer([motor0, motor1]);
 
 async function penUp() {
-  await servo.writeAngle(0);
+  await servo.writeMicroseconds(4);
 }
 
 async function penDown() {
-  await servo.writeAngle(180);
+  await servo.writeMicroseconds(7);
   await delay(500);
 }
 
@@ -368,7 +368,7 @@ function addPanZoom(el) {
 const machineWidth = 5;
 const machineHeight = 4;
 
-const SCALE = [10, -10];
+const SCALE = [-1, -1];
 
 const t = new Turtle();
 
