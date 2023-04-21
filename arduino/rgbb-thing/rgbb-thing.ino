@@ -6,16 +6,10 @@
 #define PIN_B 16
 #define PIN_BUT 17
 
-// the runtime, 
 OSAP_Runtime osap;
-
-// the usb link, 
 OSAP_Gateway_USBSerial serLink(&Serial);
-
-// our name-setting-thing
 OSAP_Port_DeviceNames namePort("rgbb");
 
-// button-state getter, 
 boolean lastButtonState = false;
 
 size_t onButtonReq(uint8_t* data, size_t len, uint8_t* reply){
