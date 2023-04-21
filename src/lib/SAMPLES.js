@@ -1,10 +1,12 @@
 export const SAMPLES = {
-  potLoop:`loop(async () => {
+  potLoop:`
+loop(async () => {
   const val = await pot.readPotentiometer(0);
   console.log(val);
 }, 50);
-`,
-  synchronizer: `await motor0.setCurrentScale(0.7);
+`.trim(),
+  synchronizer: `
+await motor0.setCurrentScale(0.7);
 await motor0.setStepsPerUnit(200);
 
 await motor1.setCurrentScale(0.7);
@@ -21,8 +23,9 @@ for (let i = 0; i < 6; i++) {
   await delay(1000);
 }
 
-`,
-  renderView: `const el = document.createElement("div");
+`.trim(),
+  renderView: `
+const el = document.createElement("div");
 
 el.style = \`
   padding: 10px;
@@ -40,8 +43,9 @@ el
   })
 
 render(el);
-`,
-importButton:`import confetti from 'https://cdn.skypack.dev/canvas-confetti';
+`.trim(),
+importButton:`
+import confetti from 'https://cdn.skypack.dev/canvas-confetti';
 
 confetti();
 
@@ -63,5 +67,5 @@ el
   })
 
 render(el);
-`
+`.trim()
 }

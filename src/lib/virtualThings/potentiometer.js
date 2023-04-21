@@ -5,6 +5,9 @@ const readUint16 = Serializers.readUint16;
 export default function(name) {
 
   return {
+    updateName: (newName) => {
+      name = newName;
+    },
     readPotentiometer: async (index) => {
       const data = await osap.send(name, "readPotentiometer");
 

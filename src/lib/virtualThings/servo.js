@@ -42,6 +42,9 @@ export default function servo(name) {
   }
 
   return {
+    updateName: (newName) => {
+      name = newName;
+    },
     writeMicroseconds,
     writeAngle,
     setCalibration,

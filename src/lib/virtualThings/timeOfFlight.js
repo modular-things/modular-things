@@ -5,6 +5,9 @@ const readUint16 = Serializers.readUint16;
 export default function(name) {
 
   return {
+    updateName: (newName) => {
+      name = newName;
+    },
     readDistance: async () => {
       try {
         const data = osap.send(name, "readDistance");

@@ -1,9 +1,11 @@
 import { osap } from "../osapjs/osap";
 
 export default function(name) {
-
-
+  
   return {
+    updateName: (newName) => {
+      name = newName;
+    },
     writeText: async (text, textSize=2) => {
       try {
         const utf8Encode = new TextEncoder();
