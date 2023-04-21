@@ -3,6 +3,9 @@ import { osap } from "../osapjs/osap";
 export default function mosfetThing(name) {
 
   return {
+    updateName: (newName) => {
+      name = newName;
+    },
     setGate: async (value) => {
       try {
         const datagram = new Uint8Array([ 255 * value ])

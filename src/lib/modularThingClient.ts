@@ -11,7 +11,6 @@ import potentiometer from "./virtualThings/potentiometer";
 import servo from "./virtualThings/servo";
 // import stepper from "./virtualThings/stepper";
 
-
 import { global_state } from "./global_state";
 import { LGatewayTypeKeys } from "./osapjs/utils/keys";
 import { setThingsState } from "./setThingsState";

@@ -60,4 +60,35 @@ export function init(state) {
       e.preventDefault();
     }
   })
+
+  const cache = window.localStorage.getItem("cache");
+  const cm = global_state.codemirror;
+  cm.dispatch({
+    changes: { from: 0, insert: cache ?? "" }
+  });
+
+  const search = window.location.search;
+  const file = new URLSearchParams(search).get("file");
+  if (file) {
+    let file_url = file;
+    if (!file.startsWith("http")) file_url = `examples/${file}`;
+    fetch(file_url).then(async (res) => {
+      const text = await res.text();
+
+      const currentProg = cm.state.doc.toString();
+
+      cm.dispatch({
+        changes: { from: 0, to: currentProg.length, insert: text }
+      });
+
+      global_state.panelType.value = "view";
+      document.documentElement.style.setProperty("--cm-width", `1%`);
+      document.querySelector(".run-button").click();
+
+      // TODO: weird bug with this
+      setTimeout(() => {
+        document.querySelector(".run-button").click();
+      }, 500);
+    });
+  }
 }

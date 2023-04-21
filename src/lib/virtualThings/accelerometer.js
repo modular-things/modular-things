@@ -4,8 +4,6 @@ const readUint16 = Serializers.readUint16;
 
 export default function(name) {
 
-  
-
   return {
     readAccGyro: async () => {
       try {
@@ -23,6 +21,9 @@ export default function(name) {
       } catch (err) {
         console.error(err);
       }
+    },
+    updateName: (newName) => {
+      name = newName;
     },
     api: [
       {

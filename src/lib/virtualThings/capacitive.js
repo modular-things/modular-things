@@ -7,6 +7,9 @@ let N_PADS = 6
 export default function(name) {
 
   return {
+    updateName: (newName) => {
+      name = newName;
+    },
     setRGB: async (r, g, b) => {
       try {
         const datagram = new Uint8Array([
