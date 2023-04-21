@@ -114,7 +114,7 @@ export default class NamedPortDispatcher {
     }
   }
 
-  send = (device: string, port: string, data: Uint8Array) => {
+  send = (device: string, port: string, data: Uint8Array): Promise<Uint8Array> => {
     if (!data) data = new Uint8Array([]);
     
     return new Promise(async (resolve, reject) => {
