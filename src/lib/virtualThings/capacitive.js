@@ -26,7 +26,7 @@ export default function(name) {
     readPad: async (index) => {
       try {
         // just get 'em all
-        const data = await osap.send(name, "readPad", new Uint8Array([]));
+        const data = await osap.send(name, "readPads", new Uint8Array([]));
         const vals = []
         for(let p = 0; p < N_PADS; p ++){
           vals.push(readUint16(data, p * 2))

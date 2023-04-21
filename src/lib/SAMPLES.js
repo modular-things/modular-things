@@ -4,7 +4,7 @@ loop(async () => {
   const val = await pot.readPotentiometer(0);
   console.log(val);
 }, 50);
-`.trim(),
+`,
   synchronizer: `
 await motor0.setCurrentScale(0.7);
 await motor0.setStepsPerUnit(200);
@@ -23,7 +23,7 @@ for (let i = 0; i < 6; i++) {
   await delay(1000);
 }
 
-`.trim(),
+`,
   renderView: `
 const el = document.createElement("div");
 
@@ -43,7 +43,7 @@ el
   })
 
 render(el);
-`.trim(),
+`,
 importButton:`
 import confetti from 'https://cdn.skypack.dev/canvas-confetti';
 
@@ -67,5 +67,18 @@ el
   })
 
 render(el);
-`.trim()
+`,
+capacitive:`
+loop(async () => {
+  const val = await cap.readPad(0);
+
+  console.log(val);
+
+  await cap.setRGB(val, val, val);
+}, 50)
+`
+}
+
+for (const k in SAMPLES) {
+  SAMPLES[k] = SAMPLES[k].trim();
 }

@@ -13,9 +13,9 @@ Adafruit_FreeTouch qt_array[N_PAD];
 
 OSAP_Runtime osap;
 OSAP_Gateway_USBSerial serLink(&Serial);
-OSAP_Port_DeviceNames namePort("accelerometer");
+OSAP_Port_DeviceNames namePort("capacitive");
 
-void setRGB(uint8_t* data, uint16_t len) {
+void setRGB(uint8_t* data, size_t len) {
   analogWrite(PIN_LED_R, data[0]);
   analogWrite(PIN_LED_G, data[1]);
   analogWrite(PIN_LED_B, data[2]);
