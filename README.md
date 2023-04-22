@@ -50,16 +50,17 @@ The result is that the "virtual thing" (javascript) acts as a proxy for the ardu
 <table>
 <tr>
 <td>
-<h2><a href="arduino/rgbb-thing/rgbb-thing.ino" target="new">Arduino "RGBB Thing"</a></h2>
+  <h2><a href="arduino/rgbb-thing/rgbb-thing.ino" target="new">Arduino "RGBB Thing"</a></h2>
 </td>
 <td>
-<h2><a href="src/lib/virtualThings/rgbb.ts" target="new">JavaScript "RGBB Thing"</a><h2>
+  <h2><a href="src/lib/virtualThings/rgbb.ts" target="new">JavaScript "RGBB Thing"</a><h2>
 </td>
 </tr>
 <tr>
 <td valign="top">
 
-```cpp #include <osap.h>
+```cpp 
+#include <osap.h>
 
 // -------------------------- Define Pins for R,G and B LEDs, and one Button
 
