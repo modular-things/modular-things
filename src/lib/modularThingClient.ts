@@ -67,7 +67,9 @@ export async function initSerial(){
 }
 
 export async function rescan(){
-  return await webSerialHelper.rescan();
+  await webSerialHelper.rescan();
+  triggerMapUpdate();
+  return 
 }
 
 export async function authorizePort(){
