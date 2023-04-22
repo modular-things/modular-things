@@ -1,60 +1,43 @@
 #include <osap.h>
-#include <vt_endpoint.h>
-#include <vp_arduinoSerial.h>
-#include <core/ts.h>
-#include <Wire.h>
 #include <LSM6.h> // by Pololu 
+// #include <Wire.h>
 
 LSM6 imu;
 
-// message-passing memory allocation 
-#define OSAP_STACK_SIZE 10
-VPacket messageStack[OSAP_STACK_SIZE];
-// type of board (firmware name)
-OSAP osap("accelerometer", messageStack, OSAP_STACK_SIZE);
+OSAP_Runtime osap;
+OSAP_Gateway_USBSerial serLink(&Serial);
+OSAP_Port_DeviceNames namePort("accelerometer");
 
-// ---------------------------------------------- 0th Vertex: OSAP USB Serial
-VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
-
-// ---------------------------------------------- 1 Vertex
-boolean preQuery(void);
-
-Endpoint accelerometerEndpoint(&osap, "accelerometerQuery", preQuery);
-
-boolean preQuery(void) {
+size_t readAccGyro(uint8_t* data, size_t len, uint8_t* reply) {
   imu.read();
 
-  uint8_t* ptr;
+  reply[0] = imu.a.x & 0xFF;
+  reply[1] = imu.a.x >> 8 & 0xFF;
 
-  uint8_t buf[2 * 6];
+  reply[2] = imu.a.y & 0xFF;
+  reply[3] = imu.a.y >> 8 & 0xFF;
 
-  buf[0] = imu.a.x & 0xFF;
-  buf[1] = imu.a.x >> 8 & 0xFF;
+  reply[4] = imu.a.z & 0xFF;
+  reply[5] = imu.a.z >> 8 & 0xFF;
 
-  buf[2] = imu.a.y & 0xFF;
-  buf[3] = imu.a.y >> 8 & 0xFF;
+  reply[6] = imu.g.x & 0xFF;
+  reply[7] = imu.g.x >> 8 & 0xFF;
 
-  buf[4] = imu.a.z & 0xFF;
-  buf[5] = imu.a.z >> 8 & 0xFF;
+  reply[8] = imu.g.y & 0xFF;
+  reply[9] = imu.g.y >> 8 & 0xFF;
 
-  buf[6] = imu.g.x & 0xFF;
-  buf[7] = imu.g.x >> 8 & 0xFF;
+  reply[10] = imu.g.z & 0xFF;
+  reply[11] = imu.g.z >> 8 & 0xFF;
 
-  buf[8] = imu.g.y & 0xFF;
-  buf[9] = imu.g.y >> 8 & 0xFF;
-
-  buf[10] = imu.g.z & 0xFF;
-  buf[11] = imu.g.z >> 8 & 0xFF;
-
-  accelerometerEndpoint.write(buf, 2 * 6);
-  return true;
+  return 2 * 6;
 }
 
-void setup() {
-  osap.init();
-  vp_arduinoSerial.begin();
+OSAP_Port_Named readAccGyro_port("readAccGyro", readAccGyro);
 
-  Wire.begin();
+void setup() {
+  osap.begin();
+
+  // Wire.begin();
   imu.init();
   imu.enableDefault();
 }

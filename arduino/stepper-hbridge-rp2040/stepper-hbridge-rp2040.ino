@@ -1,21 +1,34 @@
 #include "motionStateMachine.h"
 #include "stepperDriver.h"
 #include <osap.h>
-#include <vt_endpoint.h>
-#include <vp_arduinoSerial.h>
-#include <core/ts.h>
 
-// ---------------------------------------------- OSAP central-nugget
-// message-passing memory allocation
-#define OSAP_STACK_SIZE 12
-VPacket messageStack[OSAP_STACK_SIZE];
-OSAP osap("stepper", messageStack, OSAP_STACK_SIZE);
+OSAP_Runtime osap;
+OSAP_Gateway_USBSerial serLink(&Serial);
+OSAP_Port_DeviceNames namePort("stepper");
 
-// ---------------------------------------------- 0th Vertex: OSAP USB Serial
-VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
+// ---------------------------------------------- baby needs to serialize fluts 
 
-// ---------------------------------------------- 1th Vertex: Target Requests (pos, or velocity)
-EP_ONDATA_RESPONSES onTargetData(uint8_t* data, uint16_t len){
+union chunk_float32 {
+  uint8_t bytes[4];
+  float f;
+};
+
+float ts_readFloat32(unsigned char* buf, uint16_t* ptr){
+  chunk_float32 chunk = { .bytes = { buf[(*ptr)], buf[(*ptr) + 1], buf[(*ptr) + 2], buf[(*ptr) + 3] } };
+  (*ptr) += 4;
+  return chunk.f;
+}
+
+void ts_writeFloat32(float val, volatile unsigned char* buf, uint16_t* ptr){
+  chunk_float32 chunk;
+  chunk.f = val;
+  buf[(*ptr)] = chunk.bytes[0]; buf[(*ptr) + 1] = chunk.bytes[1]; buf[(*ptr) + 2] = chunk.bytes[2]; buf[(*ptr) + 3] = chunk.bytes[3];
+  (*ptr) += 4;
+}
+
+// ---------------------------------------------- set a new target 
+
+void setTarget(uint8_t* data, size_t len){
   uint16_t wptr = 0;
   // there's no value in getting clever here: we have two possible requests...
   if(data[wptr ++] == MOTION_MODE_POS){
@@ -28,65 +41,62 @@ EP_ONDATA_RESPONSES onTargetData(uint8_t* data, uint16_t len){
     float maxAccel = ts_readFloat32(data, &wptr);
     motion_setVelocityTarget(targ, maxAccel);
   }
-  return EP_ONDATA_ACCEPT;
 }
 
-Endpoint targetEndpoint(&osap, "targetState", onTargetData);
+OSAP_Port_Named setTarget_port("setTarget", setTarget);
 
-// ---------------------------------------------- 2nd Vertex: Motion State Read
-// queries only, more or less, so
-EP_ONDATA_RESPONSES onMotionStateData(uint8_t* data, uint16_t len){ return EP_ONDATA_REJECT; }
+// ---------------------------------------------- get the current states 
 
-boolean beforeMotionStateQuery(void);
-
-Endpoint stateEndpoint(&osap, "motionState", onMotionStateData, beforeMotionStateQuery);
-
-uint8_t stateData[12];
-
-boolean beforeMotionStateQuery(void){
+size_t getMotionStates(uint8_t* data, size_t len, uint8_t* reply){
   motionState_t state;
   motion_getCurrentStates(&state);
-  uint16_t rptr = 0;
-  ts_writeFloat32(state.pos, stateData, &rptr);
-  ts_writeFloat32(state.vel, stateData, &rptr);
-  ts_writeFloat32(state.accel, stateData, &rptr);
-  stateEndpoint.write(stateData, 12);
+  uint16_t wptr = 0;
   // in-fill current posn, velocity, and acceleration
-  return true;
+  ts_writeFloat32(state.pos, reply, &wptr);
+  ts_writeFloat32(state.vel, reply, &wptr);
+  ts_writeFloat32(state.accel, reply, &wptr);
+  // return the data length 
+  return wptr;
 }
 
-// ---------------------------------------------- 3rd Vertex: Set Current Position
-EP_ONDATA_RESPONSES onPositionSetData(uint8_t* data, uint16_t len){
+OSAP_Port_Named getMotionStates_port("getMotionStates", getMotionStates);
+
+// ---------------------------------------------- set a new position 
+
+void setPosition(uint8_t* data, size_t len){
   // should do maxAccel, maxVel, and (optionally) setPosition
   // upstream should've though of this, so,
   uint16_t rptr = 0;
   float pos = ts_readFloat32(data, &rptr);
   motion_setPosition(pos);
-  return EP_ONDATA_ACCEPT;
 }
 
-Endpoint positionSetEndpoint(&osap, "setPosition", onPositionSetData);
+OSAP_Port_Named setPosition_port("setPosition", setPosition);
 
-// ---------------------------------------------- 4th Vertex: Settings catch-all,
+// ---------------------------------------------- set..tings 
 
-EP_ONDATA_RESPONSES onSettingsData(uint8_t* data, uint16_t len){
+void writeSettings(uint8_t* data, size_t len){
   // it's just <cscale> for the time being,
   uint16_t rptr = 0;
   float cscale = ts_readFloat32(data, &rptr);
   stepper_setCScale(cscale);
-  return EP_ONDATA_ACCEPT;
 }
 
-Endpoint settingsEndpoint(&osap, "settings", onSettingsData);
+OSAP_Port_Named writeSettings_port("writeSettings", writeSettings);
 
-// ---------------------------------------------- 5th Vertex: Limit / Switch Output... non-op at the moment,
+// ---------------------------------------------- get the state of the limit switch
 
-// fair warning, this is unused at the moment... and not set-up,
-// also the limit pin is config'd to look at the interrupt on a scope at the moment, see motionStateMachine.cpp
-Endpoint buttonEndpoint(&osap, "buttonState");
+// this is lifted here, we set it periodically in the loop (to debounce) 
+boolean lastButtonState = false;
+
+size_t getLimitState(uint8_t* data, size_t len, uint8_t* reply){
+  lastButtonState ? reply[0] = 1 : reply[0] = 0;
+  return 1;
+}
+
+OSAP_Port_Named getLimitState_port("getLimitState", getLimitState);
 
 void setup() {
-  Serial.begin(0);
   // ~ important: the stepper code initializes GCLK4, which we use as timer-interrupt
   // in the motion system, so it aught to be initialized first !
   stepper_init();
@@ -100,15 +110,13 @@ void setup() {
   // to users of the motor - so we should outfit a sort of settings-grab function, or something ?
   motion_init(250);
   // uuuh...
-  osap.init();
-  // run the commos
-  vp_arduinoSerial.begin();
-  pinMode(PIN_BUT, INPUT_PULLUP);
+  osap.begin();
+  // and our limit pin 
+  pinMode(PIN_LIMIT, INPUT_PULLUP);
 }
 
 uint32_t debounceDelay = 1;
 uint32_t lastButtonCheck = 0;
-boolean lastButtonState = false;
 
 void loop() {
   // do graph stuff
@@ -121,11 +129,9 @@ void loop() {
   // debounce and set button states,
   if(lastButtonCheck + debounceDelay < millis()){
     lastButtonCheck = millis();
-    boolean newState = digitalRead(PIN_BUT);
+    boolean newState = digitalRead(PIN_LIMIT);
     if(newState != lastButtonState){
       lastButtonState = newState;
-      // invert on write: vcc-low is button-down, but we should be "true" when down and "false" when up
-      buttonEndpoint.write(!lastButtonState);
     }
   }
 }

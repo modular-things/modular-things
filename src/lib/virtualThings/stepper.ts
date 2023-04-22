@@ -9,61 +9,12 @@ Copyright is retained and must be preserved. The work is provided as is;
 no warranty is provided, and users accept all liability.
 */
 
-import PK from "../osapjs/core/packets.js"
-import { TS } from "../osapjs/core/ts.js"
+// ---------------------------------------------- serialize, deserialize floats 
 
-export default function stepper(osap, vt, name) {
-  // local state
-  let onButtonStateChangeHandler = (state) => {
-    console.warn(`default button state change in ${name}, to ${state}`);
-  }
+import { osap } from "../osapjs/osap"
+import Serializers from "../osapjs/utils/serializers"
 
-  // the "vt.route" goes to our partner's "root vertex" - but we
-  // want to address relative siblings, so I use this utility:
-  let routeToFirmware = PK.VC2VMRoute(vt.route)
-  // here we basically write a "mirror" endpoint for each downstream thing,
-  // -------------------------------------------- 1: target data
-  // now I can index to the 1st endpoint (I know it's this one because
-  // I wrote the firmware!) just by adding a .sib() to that route;
-  let targetDataEndpoint = osap.endpoint(`targetDataMirror_${name}`)
-  targetDataEndpoint.addRoute(PK.route(routeToFirmware).sib(1).end())
-  // -------------------------------------------- 2: motion state is a query object:
-  let motionStateQuery = osap.query(PK.route(routeToFirmware).sib(2).end())
-  // -------------------------------------------- 3: set current position
-  let positionSetEndpoint = osap.endpoint(`setPositionMirror_${name}`)
-  positionSetEndpoint.addRoute(PK.route(routeToFirmware).sib(3).end())
-  // -------------------------------------------- 4: settings,
-  let settingsEndpoint = osap.endpoint(`settingsMirror_${name}`)
-  settingsEndpoint.addRoute(PK.route(routeToFirmware).sib(4).end())
-  // -------------------------------------------- 5: a button, not yet programmed
-  let buttonRxEndpoint = osap.endpoint(`buttonCatcher_${name}`)
-  buttonRxEndpoint.onData = (data) => {
-    onButtonStateChangeHandler(data[0] > 0 ? true : false);
-  }
-  // -------------------------------------------- we need a setup,
-  const setup = async () => {
-    // erp, but this firmware actually is all direct-write, nothing streams back
-    try {
-      // we want to hook i.e. our button (in embedded, at index 2) to our button rx endpoint,
-      // whose index we can know...
-      // given that we know ~ what the topology looks like in these cases (browser...node...usb-embedded)
-      // we should be able to dead-reckon the route up:
-      let routeUp = PK.route().sib(0).pfwd().sib(0).pfwd().sib(buttonRxEndpoint.indice).end()
-      // the source of our button presses is here... the 2nd endpoint at our remote thing
-      let source = vt.children[5]
-      // rm any previous,
-      try {
-        await osap.mvc.removeEndpointRoute(source.route, 0)
-      } catch (err) {
-        // this is chill, we get an error if we try to delete and nothing is there, can ignore...
-        // console.error(err)
-      }
-      // so we build a route from that thing (the source) to us, using this mvc-api:
-      await osap.mvc.setEndpointRoute(source.route, routeUp)
-    } catch (err) {
-      throw err
-    }
-  }
+export default function stepper(name: string) {
 
   // -------------------------------------------- Setters
   // how many steps-per-unit,
@@ -80,12 +31,12 @@ export default function stepper(osap, vt, name) {
     try {
       // halt... this also mode-swaps to VEL, so when we set a new posn'
       // the motor won't slew to it
-      await stop()
+      await stop();
       // write up a new-position-paquet,
-      let datagram = new Uint8Array(4)
-      let wptr = 0
-      wptr += TS.write("float32", pos, datagram, wptr)
-      await positionSetEndpoint.write(datagram, "acked")
+      let datagram = new Uint8Array(4);
+      let wptr = 0;
+      wptr += Serializers.writeFloat32(datagram, wptr, pos);
+      await osap.send(name, "setPosition", datagram);
     } catch (err) {
       console.error(err)
     }
@@ -115,9 +66,9 @@ export default function stepper(osap, vt, name) {
     try {
       let datagram = new Uint8Array(4)
       let wptr = 0
-      wptr += TS.write("float32", cscale, datagram, wptr)  // it's 0-1, firmware checks
+      wptr += Serializers.writeFloat32(datagram, wptr, cscale)  // it's 0-1, firmware checks
       // and we can shippity ship it,
-      await settingsEndpoint.write(datagram, "acked")
+      await osap.send(name, "writeSettings", datagram)
     } catch (err) {
       console.error(err)
     }
@@ -137,12 +88,11 @@ export default function stepper(osap, vt, name) {
   // get states
   let getState = async () => {
     try {
-      let data = await motionStateQuery.pull()
-      // deserialize...
+      let data = await osap.send(name, "getMotionStates", new Uint8Array([]))
       return {
-        pos: TS.read("float32", data, 0) / spu,
-        vel: TS.read("float32", data, 4) / spu,
-        accel: TS.read("float32", data, 8) / spu,
+        pos: Serializers.readFloat32(data, 0) / spu,
+        vel: Serializers.readFloat32(data, 4) / spu,
+        accel: Serializers.readFloat32(data, 8) / spu,
       }
     } catch (err) {
       console.error(err)
@@ -176,7 +126,7 @@ export default function stepper(osap, vt, name) {
   // await no motion,
   let awaitMotionEnd = async () => {
     try {
-      return new Promise(async (resolve, reject) => {
+      return new Promise<void>(async (resolve, reject) => {
         let check = () => {
           getState().then((states) => {
             // console.log(`${name}\t acc ${states.accel.toFixed(4)},\t vel ${states.vel.toFixed(4)},\t pos ${states.pos.toFixed(4)}`)
@@ -209,11 +159,11 @@ export default function stepper(osap, vt, name) {
       let wptr = 0
       datagram[wptr++] = 0 // MOTION_MODE_POS
       // write pos, vel, accel *every time* and convert-w-spu on the way out,
-      wptr += TS.write("float32", pos * spu, datagram, wptr)  // write posn
-      wptr += TS.write("float32", vel * spu, datagram, wptr)  // write max-vel-during
-      wptr += TS.write("float32", accel * spu, datagram, wptr)  // write max-accel-during
+      wptr += Serializers.writeFloat32(datagram, wptr, pos * spu)  // write posn
+      wptr += Serializers.writeFloat32(datagram, wptr, vel * spu)  // write max-vel-during
+      wptr += Serializers.writeFloat32(datagram, wptr, accel * spu)  // write max-accel-during
       // and we can shippity ship it,
-      await targetDataEndpoint.write(datagram, "acked")
+      await osap.send(name, "setTarget", datagram);
     } catch (err) {
       console.error(err)
     }
@@ -226,7 +176,7 @@ export default function stepper(osap, vt, name) {
       await target(pos, vel, accel)
       // then we could do... await-move-done ?
       await awaitMotionEnd()
-      console.log(`abs move to ${pos} done`)
+      // console.log(`abs move to ${pos} done`)
     } catch (err) {
       console.error(err)
     }
@@ -245,7 +195,7 @@ export default function stepper(osap, vt, name) {
   }
 
   // goto-this-speed, using optional accel,
-  let velocity = async (vel, accel) => {
+  let velocity = async (vel, accel ?) => {
     try {
       // modal accel, and guards...
       accel ? lastAccel = accel : accel = lastAccel;
@@ -257,10 +207,10 @@ export default function stepper(osap, vt, name) {
       let datagram = new Uint8Array(9)
       let wptr = 0
       datagram[wptr++] = 1 // MOTION_MODE_VEL
-      wptr += TS.write("float32", vel * spu, datagram, wptr)  // write max-vel-during
-      wptr += TS.write("float32", accel * spu, datagram, wptr)  // write max-accel-during
+      wptr += Serializers.writeFloat32(datagram, wptr, vel * spu)  // write max-vel-during
+      wptr += Serializers.writeFloat32(datagram, wptr, accel * spu)  // write max-accel-during
       // mkheeeey
-      await targetDataEndpoint.write(datagram, "acked")
+      await osap.send(name, "setTarget", datagram);
     } catch (err) {
       console.error(err)
     }
@@ -279,7 +229,7 @@ export default function stepper(osap, vt, name) {
   // we return fns that user can call,
   return {
     // operate w/
-    target,
+    target,           // this is hidden (not in 'api' return), but used by sync 
     absolute,
     relative,
     velocity,
@@ -298,10 +248,9 @@ export default function stepper(osap, vt, name) {
     getVelocity,
     getAbsMaxVelocity,
     getAbsMaxAccel,
-    onButtonStateChange: (fn) => { onButtonStateChangeHandler = fn; },
-    // these are hidden
-    setup,
-    vt,
+    updateName: (newName: string) => {
+      name = newName;
+    },
     api: [
       {
         name: "absolute",

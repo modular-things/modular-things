@@ -1,39 +1,39 @@
 #include <osap.h>
-#include <vt_endpoint.h>
-#include <vp_arduinoSerial.h>
-#include <core/ts.h>
-#include <Wire.h>
 #include <VL53L1X.h> // https://www.arduino.cc/reference/en/libraries/vl53l1x/ (pololu version)
+#include <Wire.h>
 
 VL53L1X sensor;
 
-// message-passing memory allocation 
-#define OSAP_STACK_SIZE 10
-VPacket messageStack[OSAP_STACK_SIZE];
-// type of board (firmware name)
-OSAP osap("timeOfFlight", messageStack, OSAP_STACK_SIZE);
+OSAP_Runtime osap;
+OSAP_Gateway_USBSerial serLink(&Serial);
+OSAP_Port_DeviceNames namePort("timeOfFlight");
 
-// ---------------------------------------------- 0th Vertex: OSAP USB Serial
-VPort_ArduinoSerial vp_arduinoSerial(&osap, "usbSerial", &Serial);
-
-// ---------------------------------------------- 1 Vertex
-boolean preTOFQuery(void);
-
-Endpoint tofEndpoint(&osap, "tofQuery", preTOFQuery);
-
-boolean preTOFQuery(void) {
-  uint8_t buf[2];
-  sensor.read();
-  uint16_t value = sensor.ranging_data.range_mm;
-  buf[0] = value & 0xFF;
-  buf[1] = value >> 8 & 0xFF;
-  tofEndpoint.write(buf, 2);
-  return true;
+size_t readDistance(uint8_t* data, size_t len, uint8_t* reply) {
+  if(sensor.timeoutOccurred()){
+    reply[0] = 0;
+  } else {
+    sensor.read();
+    uint16_t value = sensor.ranging_data.range_mm;
+    reply[0] = 1;
+    reply[1] = value & 0xFF;
+    reply[2] = value >> 8 & 0xFF;
+  }
+  return 3;
 }
 
+OSAP_Port_Named readDistance_port("readDistance", readDistance);
+
+// TODO: bugfix
+/*
+* some trouble with the board / I2C
+* behaviour is... first time we program the board, it works as expects
+* all subsequent times (unplug, plug back in...) the I2C times out...
+* so... go looking for flash bugs, IDK ? 
+* bug appears whether / not we write a new name to flash... 
+*/
+
 void setup() {
-  osap.init();
-  vp_arduinoSerial.begin();
+  osap.begin();
 
   Wire.begin();
   Wire.setClock(400000); // 400 KHz I2C

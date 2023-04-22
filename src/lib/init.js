@@ -4,8 +4,7 @@ import { createListener } from "./events/listen.js";
 import { addDividerDrag } from "./events/addDividerDrag";
 import { download } from "./download";
 import { runCode } from "./runCode";
-import { authorizePort, initSerial } from "./modularThingClient";
-
+import { authorizePort, initSerial, disconnectAll } from "./modularThingClient";
 
 export function init(state) {
   if(!navigator.serial){
@@ -30,22 +29,25 @@ export function init(state) {
   // bodyListener("click", ".scan-button-trigger", () => { });
 
   bodyListener("click", ".pair-button-trigger", async () => {
-    const things = global_state.things.value;
-    const [name, thing] = await authorizePort();
-    things[name] = thing;
+    // const things = global_state.things.value;
+    // was like... 
+    // const [name, thing] = await authorizePort();
+    // things[name] = thing;
 
-    setThingsState(things);
+    // setThingsState(things);
+    // shold just do 
+    await authorizePort();
+    // and let handlers... handle new ports 
   });
 
   bodyListener("click", ".disconnect-button-trigger", async () => {
-    const things = global_state.things.value;
-    
-    for (const name in things) {
-      const thing = things[name];
-      thing.close();
-    }
-
-    setThingsState({});
+    await disconnectAll();
+    // const things = global_state.things.value;
+    // for (const name in things) {
+    //   const thing = things[name];
+    //   thing.close();
+    // }
+    // setThingsState({});
   });
 
   window.addEventListener("keydown", (e) => {
@@ -58,4 +60,35 @@ export function init(state) {
       e.preventDefault();
     }
   })
+
+  const cache = window.localStorage.getItem("cache");
+  const cm = global_state.codemirror;
+  cm.dispatch({
+    changes: { from: 0, insert: cache ?? "" }
+  });
+
+  const search = window.location.search;
+  const file = new URLSearchParams(search).get("file");
+  if (file) {
+    let file_url = file;
+    if (!file.startsWith("http")) file_url = `examples/${file}`;
+    fetch(file_url).then(async (res) => {
+      const text = await res.text();
+
+      const currentProg = cm.state.doc.toString();
+
+      cm.dispatch({
+        changes: { from: 0, to: currentProg.length, insert: text }
+      });
+
+      global_state.panelType.value = "view";
+      document.documentElement.style.setProperty("--cm-width", `1%`);
+      document.querySelector(".run-button").click();
+
+      // TODO: weird bug with this
+      setTimeout(() => {
+        document.querySelector(".run-button").click();
+      }, 500);
+    });
+  }
 }
