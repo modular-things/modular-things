@@ -1,4 +1,4 @@
-import { global_state } from "./global_state"; 
+import { global_state } from "./global_state";
 import createSynchronizer from "./virtualThings/synchronizer";
 import { rollup } from '@rollup/browser';
 
@@ -7,15 +7,15 @@ let timeouts = [];
 let loops = [];
 
 const resolvePath = (path) => (
-    path.split("/")
-        .reduce((a, v) => {
-            if(v === ".") {} // do nothing
-            else if(v === "..") {
-                if(a.pop() === undefined) throw new Error(`Unable to resolve path: ${path}`)
-            } else a.push(v);
-            return a;
-        }, [])
-        .join("/")
+  path.split("/")
+    .reduce((a, v) => {
+      if (v === ".") { } // do nothing
+      else if (v === "..") {
+        if (a.pop() === undefined) throw new Error(`Unable to resolve path: ${path}`)
+      } else a.push(v);
+      return a;
+    }, [])
+    .join("/")
 );
 
 const isURL = (id) => ["http://", "https://"].find(s => id.startsWith(s));
@@ -26,49 +26,49 @@ async function bundle(code) {
   };
 
   const result = await rollup({
-      input: 'main.js',
-      plugins: [
-        {
-          name: 'resolve',
-          resolveId(source, importer) {
-            if (modules.hasOwnProperty(source)) return source;
-            
-            if(["./", "../"].find(s => source.startsWith(s))) {
-              if (importer) {
-                  const s = importer.split("/");
-                  s.pop();
-                  importer = s.join("/");
-                  return resolvePath(importer + "/" + source);
-              }
-              
-              return resolvePath(source);
-            } else if (source.startsWith("/")) {
-                if (importer && isURL(importer)) {
-                  const url = new URL(importer);
-                  return resolvePath(url.origin + source);
-                }
+    input: 'main.js',
+    plugins: [
+      {
+        name: 'resolve',
+        resolveId(source, importer) {
+          if (modules.hasOwnProperty(source)) return source;
 
-                return resolvePath(source);
-            } else if(isURL(source)){
-                return source;
+          if (["./", "../"].find(s => source.startsWith(s))) {
+            if (importer) {
+              const s = importer.split("/");
+              s.pop();
+              importer = s.join("/");
+              return resolvePath(importer + "/" + source);
             }
 
-            return { id: source, external: true };
-          },
-          async load(id) {
-            if (modules.hasOwnProperty(id)) return modules[id];
+            return resolvePath(source);
+          } else if (source.startsWith("/")) {
+            if (importer && isURL(importer)) {
+              const url = new URL(importer);
+              return resolvePath(url.origin + source);
+            }
 
-            const response = await fetch(id);
-            return response.text();
+            return resolvePath(source);
+          } else if (isURL(source)) {
+            return source;
           }
+
+          return { id: source, external: true };
+        },
+        async load(id) {
+          if (modules.hasOwnProperty(id)) return modules[id];
+
+          const response = await fetch(id);
+          return response.text();
         }
-      ]
-    })
-      .then(bundle => bundle.generate({ 
-        format: 'es', 
-        // inlineDynamicImports: true 
-      }))
-      .then(({ output }) => output[0].code);
+      }
+    ]
+  })
+    .then(bundle => bundle.generate({
+      format: 'es',
+      // inlineDynamicImports: true 
+    }))
+    .then(({ output }) => output[0].code);
 
   return result;
 }
@@ -77,13 +77,13 @@ export async function runCode(code) {
 
   const bundledCode = await bundle(code);
 
-  const AsyncFunction = (async function () {}).constructor;
+  const AsyncFunction = (async function () { }).constructor;
 
   intervals.forEach(clearInterval);
   timeouts.forEach(clearTimeout);
   // intervals = [];
   // timeouts = [];
-  
+
   loops.forEach((x, i) => { loops[i] = false });
 
   const patchedInterval = (callback, time, ...args) => {
@@ -119,13 +119,13 @@ export async function runCode(code) {
 
   // why do this?
   const globalProxy = new Proxy(window, {
-      get: (w, prop) => w[prop].bind(w)
+    get: (w, prop) => w[prop].bind(w)
   });
 
   const things = {};
 
   for (const key in global_state.things.value) {
-    things[key] = global_state.things.value[key].vThing;
+    things[key] = global_state.things.value[key]; //.vThing;
   }
 
   let _log = console.log;

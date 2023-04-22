@@ -1,8 +1,7 @@
-import OSAP from "./osapjs/core/osap";
-import { TS } from './osapjs/core/ts.js';
+import { osap } from "../lib/osapjs/osap"
+import { COBSWebSerial, COBSWebSerialLink } from "./COBSWebSerial/COBSWebSerial";
 
 import rgbb from "./virtualThings/rgbb";
-import stepper from "./virtualThings/stepper";
 import capacitive from "./virtualThings/capacitive";
 import timeOfFlight from "./virtualThings/timeOfFlight";
 import mosfet from "./virtualThings/mosfet";
@@ -10,13 +9,11 @@ import accelerometer from "./virtualThings/accelerometer";
 import oled from "./virtualThings/oled";
 import potentiometer from "./virtualThings/potentiometer";
 import servo from "./virtualThings/servo";
-
-import VPortWebSerial from "./osapjs/vport/vPortWebSerial";
+import stepper from "./virtualThings/stepper";
 
 import { global_state } from "./global_state";
+import { LGatewayTypeKeys } from "./osapjs/utils/keys";
 import { setThingsState } from "./setThingsState";
-
-const osap = new OSAP("modular-things")
 
 const constructors = {
   rgbb,
@@ -30,189 +27,162 @@ const constructors = {
   servo
 };
 
+// TODO: cleanup, rm this... 
 export type Thing = {
   vPortName: string,
   firmwareName: string,
   vThing: any,
 };
 
-// const portThingMap = new Map<SerialPort, string>();
-
-async function setupPort(port: SerialPort): Promise<[string, Thing]> {
-  const vPort = await VPortWebSerial(osap, port, false);
-  const graph = await osap.nr.sweep();
-  let ch = graph.children.find((ch: any) => ch.name === "vp_" + vPort.portName);
-  if(!ch) throw new Error("Connected serial port but could not find OSAP vertex for it");
-  if(!ch.reciprocal) throw new Error("Connected serial port but OSAP vertex doesn't have a reciprocal");
-  if(ch.reciprocal.type == "unreachable") throw new Error("Connected serial port but OSAP vertex's partner is unreachable");
-
-  // we have some name like `rt_firmwareName` that might have `_uniqueName` trailing
-  // so first we can grab the firmwareName like:
-  let vt = ch.reciprocal.parent 
-  let [ _rt, firmwareName, uniqueName ] = (vt.name as string).split("_");
-
-  let madeNewUniqueName = false;
-  if (!uniqueName) {
-    // if we don't have a given unique name, make a new one:
-    uniqueName = makeID(5);
-    madeNewUniqueName = true
-  }
-
-  console.log(`found a... "${firmwareName}" with unique name ${uniqueName} module via usb "${ch.name}"`)
-  // TODO: unique-name write to flashmem
-  // jake things unique-names should be more human-typeable,
-  // we also aught to check if the name is unique already, then not-change-it if it is,
-  let thingName = uniqueName;
-
-  let vThing
-
-  if(!(firmwareName in constructors)){
-    // this is the unknown device...
-    console.log(vt)
-    // get each fn that is an RPC in this device, 
-    let rpcs = vt.children.filter((ch: any) => ch.name.includes("rpc_"))
-    console.log(`found rpcs`, rpcs)
-    // get their infos, 
-    rpcs = await Promise.all(rpcs.map((vvt) => { 
-      return osap.mvc.getRPCInfo(vvt) 
-    }))
-    console.log(`info'd rpcs`, rpcs)
-    // get them funcs 
-    let funcs = rpcs.map(info => osap.rpc.rollup(info))
-    console.log(`func'd rpcs`, funcs)
-    // let's build an object from it ? 
-    let obj = {
-      firmwareName,
-      setup: () => {},
-      vt: vt, 
-      api: []
+let webSerialHelper = new COBSWebSerial();
+webSerialHelper.onNewLink = async (link: COBSWebSerialLink) => {
+  try {
+    console.warn(`COBSerial hooked a new port! lettuce osap-it!`, link)
+    // so, yeah, make a new link: 
+    let osapLink = osap.linkGateway({
+      isOpen: link.isOpen,
+      clearToSend: link.clearToSend,
+      send: link.send,
+      typeKey: LGatewayTypeKeys.USBSerial,
+    })
+    // and plumb the response, 
+    link.onData = osapLink.ingestPacket;
+    // and we have this to do the dissolution,
+    // TODO: maybe some cases where we need to ~ basically debounce this... 
+    link.onClose = async () => {
+      // dissolve the link, osap-wise, 
+      osapLink.dissolve();
+      // and let's get an update in this case, 
+      triggerMapUpdate();
     }
-    // and assign functions, 
-    for(let f in rpcs){
-      obj[rpcs[f].name] = funcs[f]
-      // array args or else... 
-      let args, ret 
-      if(rpcs[f].argLen > 1){
-        args = [`${rpcs[f].argName}: Array(${rpcs[f].argLen}) [${TS.keyToString(rpcs[f].argKey)}]`]
-      } else {
-        args = [`${rpcs[f].argName}: ${TS.keyToString(rpcs[f].argKey)}`]
+    // uuuh 
+    triggerMapUpdate();
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+export async function initSerial(){
+  return await webSerialHelper.init();
+}
+
+export async function rescan(){
+  return await webSerialHelper.rescan();
+}
+
+export async function authorizePort(){
+  return await webSerialHelper.authorizeNewPort();
+}
+
+export async function disconnectAll(){
+  // wipe 'em all, 
+  await webSerialHelper.disconnectAll();
+  // and... that should fire the re-scans, eh? 
+}
+
+// central to this is that we diff states... 
+// old-maps-of-stuff, and new ones... 
+let mapIsAlreadyUpdating = false;
+let mapShouldRescan = false;
+// 
+let triggerMapUpdate = async () => {
+  // we don't want to overlap scans, 
+  // but if we missed a trigger... and since scan starts 
+  // from the root, if we've just added a link up here, 
+  // we actually should re-scan once it's finished... 
+  if(mapIsAlreadyUpdating){
+    mapShouldRescan = true;
+    return;
+  }
+  // ok, finally... 
+  try {
+    mapIsAlreadyUpdating = true;
+    // do it, then 
+    let newMap = await osap.updateMap();
+    console.log(`yu've got a new map, lad`, newMap)  
+    // uuuhh...
+    if(mapShouldRescan){
+      // this means that we've updated something locally mid-scan, 
+      // so we actually should redux before we execute on the delta, 
+      mapIsAlreadyUpdating = false;
+      mapShouldRescan = false;
+      triggerMapUpdate();
+    } else {
+      // we have a map ! 
+
+      // (1) let's catch and rename any doubled unique-names 
+      // we'll make a set of the unique-names, 
+      let nameSet = new Set<string>();
+      for(let rt of newMap.runtimes){
+        // check if we already-have, 
+        if(nameSet.has(rt.uniqueName) && rt.uniqueName != ''){
+          // trouble, give it a new random name:
+          // osap.rename() is going *also* to modify that map... 
+          // TBD if that's the sensible behaviour... 
+          console.log(`a double here: ${rt.uniqueName}`)
+          let newName = makeID(5);
+          await osap.rename(rt.route, makeID(5));
+          console.log(`renamed!`)
+        }
+        // add it then, 
+        nameSet.add(rt.uniqueName);
+      } // end rename-cycle, 
+
+      // (2) check against existing-things... if no-thing, friggen, make one 
+      for(let rt of newMap.runtimes){
+        // ignore these 
+        if(rt.uniqueName == '') continue;
+        // check if we have one... 
+        if(global_state.things.value[rt.uniqueName]){
+          // it exists 
+          console.log(`... looks as though ${rt.uniqueName} exists already...`)
+        } else {
+          if(constructors[rt.typeName]){
+            console.log(`building a new "${rt.typeName}" thing...`)
+            // constructor-it, 
+            let thing = constructors[rt.typeName](rt.uniqueName);
+            // add the typeName,
+            thing.typeName = rt.typeName;
+            console.log(`built that, it is this:`, thing)
+            // it works, huzzah ! 
+            // now we want to push that into global state, just... the thing itself, 
+            // IDK what this all is ... but it looks like we should do:
+            // pull this from globals, 
+            let things = global_state.things.value;
+            // add to it, 
+            things[rt.uniqueName] = thing;
+            // and update with this
+            setThingsState(things); 
+            console.log(`did setThingsState...`)
+            // direct-write would be this:           
+            // global_state.things.value[rt.uniqueName] = thing;
+            // that should be it, whatever else happens after ".things.value" is updated ? 
+            // console.log(thing)
+            // let res = await thing.setRGB(0.0, 0.0, 0.25);
+          } else {
+            console.warn(`couldn't find a constructor for a "${rt.typeName}" thing...`)
+          }
+        }
+      } // end add-step, 
+
+      // (3) check that every "thing" still exists (in the map)
+      for(let t in global_state.things.value){
+        let thing = global_state.things.value[t];
+        // nice to have the key, since...
+        if(newMap.runtimes.findIndex(cand => cand.uniqueName == t) == -1){
+          console.warn(`looks like you deleted ${t}...`)
+          let things = global_state.things.value;
+          delete things[t];
+          setThingsState(things);
+        }
       }
-      if(rpcs[f].retLen > 1){
-        ret = [`Array(${rpcs[f].retLen}) ${TS.keyToString(rpcs[f].retKey)}`] 
-      } else {
-         ret =  [`${TS.keyToString(rpcs[f].retKey)}`] 
-      }
-      obj.api.push({
-        name: rpcs[f].name,
-        // other args do "argName: type (opt: range)"
-        // return values are just values, 
-        // should convert these to types... and name 'em 
-        args: args,
-        return: ret 
-      })
+
     }
-    console.log(obj)
-    vThing = obj 
-    console.warn(`dropping unknown thing in...`)
-    // we don't have a match, let's try to find some RPC info... 
-    // throw new Error(`no constructor found for the ${firmwareName} thing...`);
-  } else {
-    vThing = constructors[firmwareName](
-      osap, vt, thingName
-    );
-    vThing.firmwareName = firmwareName;  
+  } catch (err) {
+    console.error(err)
+  } finally {
+    mapIsAlreadyUpdating = false;
   }
-
-  //@ts-expect-error
-  const thing = {
-    vPortName: ch.name,
-    firmwareName,
-    vThing,
-    close: () => {
-      vPort.close();
-    },
-    port
-  }
-
-  vThing["setName"] = async (name: string) => {
-    try {
-      // add back that "rt_" which designates the vertex as a root... 
-      const newName = `rt_${thing.vThing.firmwareName}_${name}`;
-      console.log(newName);
-      await osap.mvc.renameVertex(thing.vThing.vt.route, newName)
-    } catch (err) {
-      console.error(err)
-    }
-  };
-
-  console.log("add", thingName, thing);
-  await thing.vThing.setup();
-  // finally, rename it to
-  if (madeNewUniqueName) {
-    await thing.vThing.setName(thingName);
-  }
-
-  // portThingMap.set(port, thingName);
-
-  return [thingName, thing];
-}
-
-export async function rescan() {
-  const ports = await navigator.serial.getPorts();
-  const things = global_state.things.value;
-  const usedPorts = Object.values(things).map(x => x.port);
-  for(const port of ports) {
-    if (usedPorts.includes(port)) continue;
-    const [name, thing] = await setupPort(port);
-    things[name] = thing;
-  }
-
-  setThingsState(things);
-}
-
-// React StrictMode renders components twice on dev to detect problems
-// but this can only be run one time
-// so have this check to ensure that
-let serialInitted = false;
-export async function initSerial() {
-  if(serialInitted) return;
-  serialInitted = true;
-
-  rescan();
-
-  navigator.serial.addEventListener('connect', async (event) => {
-    console.log("connect!");
-    const [ name, thing ] = await setupPort(event.target as SerialPort);
-    const things = global_state.things.value;
-    things[name] = thing;
-    
-    setThingsState(things);
-  });
-
-  navigator.serial.addEventListener('disconnect', async (event) => {
-    console.log("disconnect!");
-    const things = global_state.things.value;
-
-    const port = event.target;
-
-    const portThingMap = Object.entries(things).reduce((acc, cur) => {
-      const [ key, value ] = cur;
-      acc.set(value.port, key);
-      return acc;
-    }, new Map());
-
-    const name = portThingMap.get(event.target);
-    if (name) {
-      things[name].close();
-      delete things[name];
-      
-      setThingsState(things);
-    }
-  });
-}
-
-export async function authorizePort() {
-  return await setupPort(await navigator.serial.requestPort());
 }
 
 const characters = 'abcdefghijklmnopqrstuvwxyz';
