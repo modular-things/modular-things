@@ -1,9 +1,9 @@
 /* MACHINE DEFINITION */
 
-await motor0.setCurrentScale(0.7);
+await motor0.setCurrentScale(0.6);
 await motor0.setStepsPerUnit(200);
 
-await motor1.setCurrentScale(0.7);
+await motor1.setCurrentScale(0.6);
 await motor1.setStepsPerUnit(200);
 
 const machine = createSynchronizer([motor0, motor1]);
@@ -368,7 +368,7 @@ function addPanZoom(el) {
 const machineWidth = 5;
 const machineHeight = 4;
 
-const SCALE = [-1, -1];
+const SCALE = [.6, -.6];
 
 const t = new Turtle();
 
@@ -395,5 +395,4 @@ function main() {
 
 
 main();
-
 
