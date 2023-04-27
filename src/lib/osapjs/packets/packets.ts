@@ -1,4 +1,6 @@
-// packet read/write 
+// opapjs/packets/packets.ts
+// reading and writing packets 
+// also, the packet type, which we use extensively in the runtime 
 
 // classes 
 import Route from "./routes";

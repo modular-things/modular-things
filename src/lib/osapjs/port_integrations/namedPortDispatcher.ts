@@ -1,4 +1,8 @@
-// thing that manages ambiguous .send() calls
+// opapjs/port_integrations/namedPortDispatcher.ts
+// this is pretty central to osap-as-we-use-it, 
+// but is technically beyond the transport layer. 
+// it resolves "deviceName" and "portNames" with real routes to those 
+// devices, using a `map` that has been rendered previously 
 
 import Runtime from "../runtime";
 import Port from "../structure/ports";

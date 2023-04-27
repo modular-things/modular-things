@@ -1,3 +1,6 @@
+// opapjs/utils/keys.ts
+// network enums, basically 
+
 // byte-keys and utes that belong to the transport layer 
 let TransportKeys = {
   // forwarding ops 
@@ -37,6 +40,7 @@ let TransportKeys = {
   }
 }
 
+// encodes runtime-type into RuntimeInfo packets
 let BuildTypeKeys = {
   EmbeddedCPP: 50,
   JavaScript: 51,
@@ -44,6 +48,7 @@ let BuildTypeKeys = {
   MicroPython: 53,
 }
 
+// encodes port-type into PortInfo packets
 let PortTypeKeys = {
   NULL: 0,
   Naked: 1,
@@ -54,6 +59,7 @@ let PortTypeKeys = {
   FancyNameManager: 6,
 }
 
+// encodes gateway-type into LGateInfo packets
 let LGatewayTypeKeys = {
   NULL: 0, 
   Unknown: 1,

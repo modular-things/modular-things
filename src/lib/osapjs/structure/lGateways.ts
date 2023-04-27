@@ -1,4 +1,6 @@
-// implements a point-to-point network link 
+// opapjs/structure/lGateways.ts
+// link gateway: interface between osap and port-to-port link layers 
+
 import Runtime from "../runtime";
 import Packet from "../packets/packets";
 

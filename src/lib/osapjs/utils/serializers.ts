@@ -1,4 +1,5 @@
-// core serialization routines, 
+// opapjs/utils/serializers.ts
+// write and read data types from packets 
 
 let textEncoder = new TextEncoder()
 let textDecoder = new TextDecoder()

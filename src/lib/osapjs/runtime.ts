@@ -1,4 +1,7 @@
-// TODO: header comments... ?? 
+// opapjs/runtime.ts
+// the core of osap, this is an even-kicked loop that 
+// makes a best effort to transport packets off- and on-world, 
+// calling handlers, etc, etc, 
 
 // classes 
 import Port from "./structure/ports";

@@ -1,4 +1,6 @@
-// classes 
+// opapjs/packets/routes.ts
+// reading and writing transport-layer routes 
+
 import Packet from "./packets";
 
 // utes
@@ -20,25 +22,6 @@ export default class Route {
     this.maxSegmentSize = maxSegmentSize;
     this.perHopTimeToLive = perHopTimeToLive;
   }
-
-  // for the error below, try this routine:
-  // uint16_t routeEndScan(uint8_t* data, size_t maxLen){
-  //   // 1st instruction is at pck[5] since we have | PTR | PHTTL:2 | MSS:2 | 
-  //   uint16_t end = 5;
-  //   while(true){
-  //     switch(pck->data[end]){
-  //       case TK_LINKF:
-  //         end += TK_LINKF_INC;
-  //         break;
-  //       case TK_BUSF:
-  //         end += TK_BUSF_INC;
-  //         break;
-  //       default:
-  //         return end;
-  //     }
-  //     if(end > maxLen) return maxLen;
-  //   }
-  // }
 
   private static routeEndScan = (packet: Packet): number => {
     // 1st instruction is at pck[5] since we have | PTR | PHTTL:2 | MSS:2 | 

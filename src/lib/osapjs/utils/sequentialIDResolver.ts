@@ -1,4 +1,7 @@
-// ute to demux replies
+// opapjs/utils/sequentialIDResolver.ts
+// multiple port-types use this ute to demux callbacks 
+// from incoming message-replies 
+
 
 export default class SequentialIDResolver {
   // a list of msgs to resolver... 

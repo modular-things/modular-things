@@ -1,4 +1,5 @@
-// it's a device-name-manager-port...
+// opapjs/port_integrations/deviceNameManager.ts
+// collects (and sets) type- and unique-names on remote devices 
 
 import Runtime from "../runtime";
 import Port from "../structure/ports";
