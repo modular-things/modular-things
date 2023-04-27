@@ -1,4 +1,5 @@
-// graph info-getter 
+// opapjs/discovery/netRunner.ts
+// high-level routines for graph discovery
 
 import Runtime from "../runtime"
 import NetRunnerAtomics from "./netRunnerAtomics";

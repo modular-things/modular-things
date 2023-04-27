@@ -1,4 +1,5 @@
-// makes and checks random id objects
+// opapjs/utils/randomIDGen.ts
+// builds random 4-byte ID's, and checks 'em 
 
 let RandomIDGen = {
   // to write one directly into a packet, grabbing as well, 

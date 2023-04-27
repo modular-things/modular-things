@@ -1,4 +1,6 @@
-// software thing 
+// opapjs/structure/ports.ts
+// software:network interfaces
+
 import Runtime from "../runtime";
 import Packet from "../packets/packets";
 import Route from "../packets/routes";

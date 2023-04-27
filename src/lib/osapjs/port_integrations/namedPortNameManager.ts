@@ -1,4 +1,5 @@
-// gets fancy-port names 
+// opapjs/port_integrations/namedPortNameManager.ts
+// collects port-names from remote ports 
 
 import Runtime from "../runtime";
 import Port from "../structure/ports";

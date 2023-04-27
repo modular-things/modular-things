@@ -1,4 +1,7 @@
-// lol, 
+// opapjs/osap.ts
+// central-nugget, osap.ts instantiates a runtime 
+// and exposes a few factories and core utilities 
+
 import Runtime from "./runtime"
 import Route from "./packets/routes"
 import NamedPortDispatcher from "./port_integrations/namedPortDispatcher";

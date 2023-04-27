@@ -1,4 +1,5 @@
-// time utes, 
+// opapjs/utils/time.ts
+// as described 
 
 let Time = {
   getTimeStamp: function (): number {

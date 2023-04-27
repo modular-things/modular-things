@@ -1,4 +1,5 @@
-// a utility / the serialization pain-in-the-ass backend for the netrunner,
+// opapjs/discovery/netRunnerAtomics.ts
+// low-level routines for graph discovery
 
 import Runtime from "../runtime";
 import Route from "../packets/routes"
