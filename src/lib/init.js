@@ -8,7 +8,9 @@ import { authorizePort, initSerial, disconnectAll } from "./modularThingClient";
 
 export function init(state) {
   if (!navigator.serial) {
-    alert("🚨 Your browser doesn't seem to support the Web Serial API, which is required for Modular Things to be able to connect to hardware. You can still use the site to write code, but for full functionality, use Chrome or Edge version 89 or above.") 
+    alert(
+      "🚨 Your browser doesn't seem to support the Web Serial API, which is required for Modular Things to be able to connect to hardware. You can still use the site to write code, but for full functionality, use Chrome or Edge version 89 or above."
+    );
   }
 
   initSerial();
@@ -69,9 +71,15 @@ export function init(state) {
 
   const search = window.location.search;
   const file = new URLSearchParams(search).get("file");
+
+  const isProduction = window.location.hostname === "modular-things.github.io";
   if (file) {
     let file_url = file;
-    if (!file.startsWith("http")) file_url = `https://raw.githubusercontent.com/modular-things/modular-things/main/examples/${file}`; 
+    if (!file.startsWith("http"))
+      file_url = isProduction
+        ? `https://raw.githubusercontent.com/modular-things/modular-things/main/examples/${file}`
+        : `examples/${file}`;
+
     fetch(file_url).then(async (res) => {
       const text = await res.text();
 
