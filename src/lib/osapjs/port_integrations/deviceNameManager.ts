@@ -62,7 +62,7 @@ export default class DeviceNameManager {
     })
   } // end getNames
 
-  setUniqueName = (route: Route, port: number, name: string): Promise<void> => {
+  setUniqueName = (route: Route, port: number, name: string): Promise<number> => {
     return new Promise(async (resolve, reject) => {
       try {
         // wait for clear.. 
@@ -78,7 +78,7 @@ export default class DeviceNameManager {
         let res = await this.resolver.request(dg[1], `setUniqueName req '${name}'`)
         // and demux the res, 
         if(res[2] == 1){
-          resolve()
+          resolve(res[3])
         } else {
           reject(`.setUniqueName rx'd a failure code from remote, maybe no on-chip nvm ?`)
         }

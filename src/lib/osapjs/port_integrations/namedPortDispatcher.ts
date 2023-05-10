@@ -62,7 +62,8 @@ export default class NamedPortDispatcher {
       let index = rt.ports.findIndex(cand => cand.typeName == 'DeviceNames');
       if(index < 0) throw new Error(`during a rename-request, no 'DeviceNames' port was found in the runtime`);
       // ok, we can finally 
-      await this.deviceNameManager.setUniqueName(route, index, newUniqueName);
+      let checkSum = await this.deviceNameManager.setUniqueName(route, index, newUniqueName);
+      console.warn(`wrote name ${newUniqueName}, of ${newUniqueName.length} remote reports ${checkSum} bytes...`)
       // assuming that passed, we can modify the map ! 
       rt.uniqueName = newUniqueName;
       // we're done ! 
