@@ -22,7 +22,7 @@ export default function SideMenu() {
         }}>
         View
         </div>
-      <div 
+<!--       <div 
         class={getStyle("console")}
         onClick={() => { 
           openPanel();
@@ -30,7 +30,7 @@ export default function SideMenu() {
           closePanel();
         }}>
         Console
-        </div>
+        </div> -->
       <div 
         class={getStyle("help")} 
         onClick={() => { 
