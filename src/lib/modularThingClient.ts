@@ -9,7 +9,7 @@ import accelerometer from "./virtualThings/accelerometer";
 import oled from "./virtualThings/oled";
 import potentiometer from "./virtualThings/potentiometer";
 import servo from "./virtualThings/servo";
-import stepper from "./virtualThings/stepper";
+import stepper from "./virtualThings/stepper-notSequential";
 
 import { global_state } from "./global_state";
 import { LGatewayTypeKeys } from "./osapjs/utils/keys";

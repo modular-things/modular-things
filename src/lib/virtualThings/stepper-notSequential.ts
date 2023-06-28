@@ -19,7 +19,7 @@ export default function stepper(name: string) {
   // -------------------------------------------- Setters
   // how many steps-per-unit,
   // this could be included in a machineSpaceToActuatorSpace transform as well,
-  let spu = 20
+  let spu = 20  
   // each has a max-max velocity and acceleration, which are user settings,
   // but velocity is also abs-abs-max'd at our tick rate...
   let absMaxVelocity = 4000 / spu
