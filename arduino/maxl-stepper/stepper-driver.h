@@ -19,6 +19,7 @@ is; no warranty is provided, and users accept all liability.
 #include <Arduino.h>
 
 void stepper_init(void);
+void stepper_point(uint8_t phaseAngle);
 void stepper_step(uint8_t microSteps, boolean dir);
 void stepper_setCScale(float scale);
 

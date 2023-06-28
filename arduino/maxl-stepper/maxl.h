@@ -10,39 +10,44 @@
 
 // ---------------- setup 
 
-void motion_init(void);
+void maxl_init(void);
 
 // ---------------- run, AFAP
 
 // run the loop code as often as possible, w/ log option 
-void motion_loop(boolean log);
+void maxl_loop(boolean log);
+
+// ---------------- config... motor pickins 
+
+// WARNING: does nothing 
+void maxl_pushSettings(uint8_t actuatorID, uint8_t axisPick, float spu);
 
 // ---------------- get actuator states 
 
-void motion_getCurrentStates(motionStateInterface_t* statePtr);
+void maxl_getCurrentStates(maxlStateInterface_t* statePtr);
 
 // ---------------- queue management
 
-void motion_addSegmentToQueue(motionSegment_t* seg);
+void maxl_addSegmentToQueue(maxlSegment_t* seg);
 
-size_t motion_getSegmentCompleteMsg(uint8_t* msg);
+size_t maxl_getSegmentCompleteMsg(uint8_t* msg);
 
-void motion_evalSegment(motionState_t* _state, motionSegment_t* seg, fpint32_t now, boolean log);
+void maxl_evalSegment(maxlState_t* _state, maxlSegment_t* seg, fpint32_t now, boolean log);
 
-void motion_halt(void);
+void maxl_halt(void);
 
 // ---------------- time management
 
-void motion_setSystemTime(uint32_t now);
+void maxl_setSystemTime(uint32_t now);
 
-uint32_t motion_getSystemTime(void);
+uint32_t maxl_getSystemTime(void);
 
 // ---------------- "user code"
 
-void motion_tickHardware(motionState_t* _state, motionVect_t* _deltas);
+void maxl_tickHardware(maxlState_t* _state, motionVect_t* _deltas);
 
 // ---------------- debuggen 
 
-void motion_printDebug(void);
+void maxl_printDebug(void);
 
 #endif 

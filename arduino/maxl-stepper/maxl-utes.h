@@ -14,29 +14,29 @@ typedef int32_t fpint32_t;
 
 // ---------------- fixedp struct 
 
-typedef struct motionFixedPointVect_t {
+typedef struct maxlFixedPointVect_t {
   fpint32_t axis[MAXL_MAX_DOF];
 } motionVect_t;
 
 // ---------------- state in fixedpoint and floats
 
-typedef struct motionStateInterface_t {
+typedef struct maxlStateInterface_t {
   float pos[MAXL_MAX_DOF];    // position in all axes, steps
   float unit[MAXL_MAX_DOF];   // unit vector, direction of vel & accel
   float vel;                    // vel, steps/sec
   float accel;                  // accel, steps/sec 
-} motionStateInterface_t;
+} maxlStateInterface_t;
 
-typedef struct motionState_t {
+typedef struct maxlState_t {
   fpint32_t pos[MAXL_MAX_DOF];
   fpint32_t unit[MAXL_MAX_DOF];
   fpint32_t vel = 0;
   fpint32_t accel = 0;
-} motionState_t;
+} maxlState_t;
 
 // ---------------- segments 
 
-typedef struct motionSegment_t {
+typedef struct maxlSegment_t {
   // system-reckoned start and end times, in micros, 
   uint32_t tStart_us = 0;
   uint32_t tEnd_us = 0;
@@ -64,10 +64,10 @@ typedef struct motionSegment_t {
   // ready/set, token 
   boolean isOccupied = false;
   // linking 
-  motionSegment_t* next;
-  motionSegment_t* previous;
+  maxlSegment_t* next;
+  maxlSegment_t* previous;
   uint32_t indice = 0;  // track own location, 
-} motionSegment_t;
+} maxlSegment_t;
 
 // ---------------------------------------------- fixedp maths  
 
@@ -95,13 +95,20 @@ union chunk_uint32 {
   uint32_t u;
 };
 
-float ts_readFloat32(unsigned char* buf, uint16_t* ptr);
-
-void ts_writeFloat32(float val, volatile unsigned char* buf, uint16_t* ptr);
+union chunk_int32 {
+  uint8_t bytes[4];
+  int32_t i;
+}; 
 
 void ts_writeUint8(uint8_t val, volatile unsigned char* buf, uint16_t* ptr);
-
 void ts_writeUint32(uint32_t val, volatile unsigned char* buf, uint16_t* ptr);
+void ts_writeFloat32(float val, volatile unsigned char* buf, uint16_t* ptr);
+
+boolean ts_readBoolean(unsigned char* buf, uint16_t* ptr);
+uint8_t ts_readUint8(unsigned char* buf, uint16_t* ptr);
+uint32_t ts_readUint32(unsigned char* buf, uint16_t* ptr);
+int32_t ts_readInt32(unsigned char* buf, uint16_t* ptr);
+float ts_readFloat32(unsigned char* buf, uint16_t* ptr);
 
 #endif 
 

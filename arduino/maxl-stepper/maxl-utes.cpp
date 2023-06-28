@@ -53,20 +53,9 @@ fpint32_t fp_div32x32(fpint32_t num, fpint32_t denum){
 //   return (_velSq << fp_scale) / _accelTwo;
 // }
 
-// ---------------------------------------------- Serialization 
+// ---------------------------------------------- serialization 
 
-float ts_readFloat32(unsigned char* buf, uint16_t* ptr){
-  chunk_float32 chunk = { .bytes = { buf[(*ptr)], buf[(*ptr) + 1], buf[(*ptr) + 2], buf[(*ptr) + 3] } };
-  (*ptr) += 4;
-  return chunk.f;
-}
-
-void ts_writeFloat32(float val, volatile unsigned char* buf, uint16_t* ptr){
-  chunk_float32 chunk;
-  chunk.f = val;
-  buf[(*ptr)] = chunk.bytes[0]; buf[(*ptr) + 1] = chunk.bytes[1]; buf[(*ptr) + 2] = chunk.bytes[2]; buf[(*ptr) + 3] = chunk.bytes[3];
-  (*ptr) += 4;
-}
+// ---------------- writers 
 
 void ts_writeUint8(uint8_t val, volatile unsigned char* buf, uint16_t* ptr){
   buf[(*ptr)] = val; 
@@ -78,4 +67,43 @@ void ts_writeUint32(uint32_t val, volatile unsigned char* buf, uint16_t* ptr){
   chunk.u = val;
   buf[(*ptr)] = chunk.bytes[0]; buf[(*ptr) + 1] = chunk.bytes[1]; buf[(*ptr) + 2] = chunk.bytes[2]; buf[(*ptr) + 3] = chunk.bytes[3];
   (*ptr) += 4;
+}
+
+void ts_writeFloat32(float val, volatile unsigned char* buf, uint16_t* ptr){
+  chunk_float32 chunk;
+  chunk.f = val;
+  buf[(*ptr)] = chunk.bytes[0]; buf[(*ptr) + 1] = chunk.bytes[1]; buf[(*ptr) + 2] = chunk.bytes[2]; buf[(*ptr) + 3] = chunk.bytes[3];
+  (*ptr) += 4;
+}
+
+boolean ts_readBoolean(unsigned char* buf, uint16_t* ptr){
+  boolean val = buf[(*ptr)] == 0 ? false : true;
+  (*ptr) += 1;
+  return val;
+}
+
+// ---------------- readers
+
+uint8_t ts_readUint8(unsigned char* buf, uint16_t* ptr){
+  uint8_t val = buf[(*ptr)];
+  (*ptr) += 1;
+  return val;
+}
+
+uint32_t ts_readUint32(unsigned char* buf, uint16_t* ptr){
+  chunk_uint32 chunk = { .bytes = { buf[(*ptr)], buf[(*ptr) + 1], buf[(*ptr) + 2], buf[(*ptr) + 3] } };
+  (*ptr) += 4;
+  return chunk.u;
+}
+
+int32_t ts_readInt32(unsigned char* buf, uint16_t* ptr){
+  chunk_int32 chunk = { .bytes = { buf[(*ptr)], buf[(*ptr) + 1], buf[(*ptr) + 2], buf[(*ptr) + 3] } };
+  (*ptr) += 4;
+  return chunk.i;
+}
+
+float ts_readFloat32(unsigned char* buf, uint16_t* ptr){
+  chunk_float32 chunk = { .bytes = { buf[(*ptr)], buf[(*ptr) + 1], buf[(*ptr) + 2], buf[(*ptr) + 3] } };
+  (*ptr) += 4;
+  return chunk.f;
 }

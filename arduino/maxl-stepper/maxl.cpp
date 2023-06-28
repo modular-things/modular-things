@@ -1,5 +1,7 @@
 #include "maxl.h"
 #include <osap.h>
+// TODO: decouple maxl from the stepper via callback-attach for deltas, other tracks,
+#include "stepper-driver.h"
 
 // ---------------------------------------------- stateful stuff 
 // states (units are steps, 1=1 ?) 
@@ -9,9 +11,9 @@ volatile uint8_t mode = MOTION_MODE_QUEUE;            // operative mode
 int32_t timeOffset = 0;
 
 // we have two of 'em 
-motionState_t state;
-motionState_t next;
-motionFixedPointVect_t deltas;
+maxlState_t state;
+maxlState_t next;
+maxlFixedPointVect_t deltas;
 
 // our settins, 
 uint8_t actuatorID = 0;
@@ -20,15 +22,15 @@ uint8_t actuatorID = 0;
 
 // ---------------------------------------------- we have a queue 
 
-// motionSegment_t theSegment;
-motionSegment_t queue[MAXL_QUEUE_LEN];
+// maxlSegment_t theSegment;
+maxlSegment_t queue[MAXL_QUEUE_LEN];
 // // and our own head, tail for the queue 
-motionSegment_t* head;  // write moves into here, 
-motionSegment_t* tail;  // operate from here, 
+maxlSegment_t* head;  // write moves into here, 
+maxlSegment_t* tail;  // operate from here, 
 
 // s/o to http://academy.cba.mit.edu/classes/output_devices/servo/hello.servo-registers.D11C.ino 
 // s/o also to https://gist.github.com/nonsintetic/ad13e70f164801325f5f552f84306d6f 
-void motion_init(void){
+void maxl_init(void){
   // -------------------------------------------- queue needs some setup, 
   for(uint8_t i = 0; i < MAXL_QUEUE_LEN; i ++){
     // maybe unnecessary, but feels better if units are defaulted to zero, 
@@ -51,7 +53,7 @@ void motion_init(void){
   // PORT->Group[0].DIRSET.reg = (uint32_t)(1 << PIN_TICK);
 }
 
-void motion_loop(boolean log){
+void maxl_loop(boolean log){
   // system time... 
   uint32_t time = micros();// + timeOffset;
   // OSAP_DEBUG("time is... " + String(time));
@@ -68,7 +70,7 @@ void motion_loop(boolean log){
         // time now is... 
         uint32_t time = micros() + timeOffset;
         // we'll go a-sweeping through the links, 
-        motionSegment_t* seg = tail;
+        maxlSegment_t* seg = tail;
         // looking for an in-band segment, 
         for(uint8_t s = 0; s < MAXL_QUEUE_LEN; s ++){
           // if it's prepped and we are in band... 
@@ -76,7 +78,7 @@ void motion_loop(boolean log){
             // find a segment-relative time, fp32 seconds, 
             fpint32_t segTime = fp_floatToFixed32(((float)(time - seg->tStart_us)) * 0.000001);
             // evalutate the "next" state at this point, 
-            motion_evalSegment(&next, seg, segTime, log);
+            maxl_evalSegment(&next, seg, segTime, log);
             // calc deltas, we ~ need these (?) for the hardware abstraction (?) or do we, lol 
             for(uint8_t a = 0; a < MAXL_MAX_DOF; a ++){
               deltas.axis[a] = next.pos[a] - state.pos[a];
@@ -93,7 +95,7 @@ void motion_loop(boolean log){
             // copy pasta ?
             state = next;
             // operate deltas, 
-            motion_tickHardware(&next, &deltas);
+            maxl_tickHardware(&next, &deltas);
             break; // break queue-advancing loop, 
           } else {
             // wasn't that one, look next... 
@@ -108,7 +110,7 @@ void motion_loop(boolean log){
 
 // into state goes posn, rate, vel, accel, per trajectory... 
 // "now" is fixed point *seconds*, segment starts at t = 0 
-void motion_evalSegment(motionState_t* _state, motionSegment_t* seg, fpint32_t now, boolean log){
+void maxl_evalSegment(maxlState_t* _state, maxlSegment_t* seg, fpint32_t now, boolean log){
   // we're going to calc a distance-from-segment-start-pt, that's this:
   fpint32_t dist = 0;
   // our current vels & accels will get stored / used, 
@@ -166,7 +168,7 @@ void motion_evalSegment(motionState_t* _state, motionSegment_t* seg, fpint32_t n
 
 // I mean... there aught to be a cleaner way, esp. if we're just out here 
 // returning the structs... 
-void motion_getCurrentStates(motionStateInterface_t* statePtr){
+void maxl_getCurrentStates(maxlStateInterface_t* statePtr){
   noInterrupts();
   for(uint8_t a = 0; a < MAXL_MAX_DOF; a ++){
     statePtr->pos[a] = fp_fixed32ToFloat(state.pos[a]);
@@ -181,7 +183,7 @@ void motion_getCurrentStates(motionStateInterface_t* statePtr){
 
 // -------------------------- adding segments, 
 
-void motion_addSegmentToQueue(motionSegment_t* seg){
+void maxl_addSegmentToQueue(maxlSegment_t* seg){
   // if true, bad fullness:
   if(head->next->isOccupied){
     OSAP_ERROR("tx to over-full motion buffer");
@@ -215,7 +217,7 @@ void motion_addSegmentToQueue(motionSegment_t* seg){
   mode = MOTION_MODE_QUEUE;
 }
 
-void motion_halt(void){
+void maxl_halt(void){
   // it's a crash stop! 
   // lettuce swap modes, 
   mode = MOTION_MODE_NONE;
@@ -234,7 +236,7 @@ void motion_halt(void){
 
 // -------------------------- time management ? 
 
-void motion_setSystemTime(uint32_t setTime){
+void maxl_setSystemTime(uint32_t setTime){
   // this is our system time, 
   uint32_t us = micros();
   // we do now = micros() + timeOffset;
@@ -243,15 +245,15 @@ void motion_setSystemTime(uint32_t setTime){
   OSAP_DEBUG("time offset is " + String(timeOffset));
 }
 
-uint32_t motion_getSystemTime(void){
+uint32_t maxl_getSystemTime(void){
   return micros() + timeOffset;
 }
 
 // -------------------------- queue-complete-checks, 
 
-size_t motion_getSegmentCompleteMsg(uint8_t* msg){
+size_t maxl_getSegmentCompleteMsg(uint8_t* msg){
   // we can only rm one-per-call here anyways, and oldest-existing boy is here:
-  if(tail->isOccupied && tail->tEnd_us < motion_getSystemTime()){
+  if(tail->isOccupied && tail->tEnd_us < maxl_getSystemTime()){
     OSAP_DEBUG("up-piping seg " + String(tail->tStart_us));
     uint16_t wptr = 0;
     // id self & start time, which should be sufficient to ID the segment, 
@@ -283,9 +285,11 @@ fpint32_t stepModulo = fp_int32ToFixed32(0);
 // so we have (for one unit), 100 of these steps, beautifully (and serindipitously)
 // time being, I'm just going to bake that in here... 
 
-void motion_tickHardware(motionState_t* _state, motionVect_t* _deltas){
-  /*
-  // increment... 
+void maxl_tickHardware(maxlState_t* _state, motionVect_t* _deltas){
+  // this does this... step-increment independent, i.e. so-long as we are 
+  // not more than 180' out of phase (from last step) it should be gucci
+  // ... means we can crikety crank the microsteps but not worry about tick rates 
+  // increment... second val is SPU, IIRC 
   stepModulo += fp_mult32x32(_deltas->axis[0], fp_int32ToFixed32(100));
   // OSAP_DEBUG(String(fp_fixed32ToFloat(_deltas->axis[0]), 5) + " " + String(fp_fixed32ToInt32(stepModulo)));
   // wrap around...
@@ -304,9 +308,13 @@ void motion_tickHardware(motionState_t* _state, motionVect_t* _deltas){
   //   stepper_step(4, false);
   //   stepModulo += fp_int32ToFixed32(1);    
   // }
-  */
 }
 
-void motion_printDebug(void){
+// stub-end 
+void maxl_pushSettings(uint8_t actuatorID, uint8_t axisPick, float spu){
+
+}
+
+void maxl_printDebug(void){
   // we should check if these worked, 
 }
