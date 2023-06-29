@@ -70,7 +70,18 @@ export function init(state) {
   });
 
   const search = window.location.search;
+  // we can set the file via url args 
   const file = new URLSearchParams(search).get("file");
+  // also panel selection 
+  let panelChoice = new URLSearchParams(search).get("panel");
+  if(!panelChoice){
+    panelChoice = "view"
+  }
+  // and panel width 
+  let panelWidth = new URLSearchParams(search).get("panelWidth");
+  if(!panelWidth){
+    panelWidth = "2"
+  }
 
   const isProduction = window.location.hostname === "modular-things.github.io";
   if (file) {
@@ -89,8 +100,8 @@ export function init(state) {
         changes: { from: 0, to: currentProg.length, insert: text }
       });
 
-      global_state.panelType.value = "view";
-      document.documentElement.style.setProperty("--cm-width", `1%`);
+      global_state.panelType.value = panelChoice;
+      document.documentElement.style.setProperty("--cm-width", `${panelWidth}%`);
       document.querySelector(".run-button").click();
 
       // TODO: weird bug with this
