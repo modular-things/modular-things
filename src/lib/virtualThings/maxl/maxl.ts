@@ -35,7 +35,7 @@ let MOTION_MAX_DOF = 7
 // altho perhaps we should just encode lines on the v-t plot, also ? simpler ? 
 // that would be... 
 
-export default async function createMAXL(actuators: Array<any>) {
+export default function createMAXL(actuators: Array<any>) {
   console.log(`MAXL w/ actuators as `, actuators);
 
   // -------------------------------------------- core communication utes 
@@ -108,7 +108,7 @@ export default async function createMAXL(actuators: Array<any>) {
 
   let addSegmentToQueue = (end: Array<number>, vmax: number, vlink: number) => {
     return new Promise<void>((resolve, reject) => {
-      console.warn(`addMove`, JSON.parse(JSON.stringify(end)), vmax)
+      console.warn(`addMove w/ end pos`, JSON.parse(JSON.stringify(end)), `vmax: `, vmax, `vlink: `, vlink)
       // first, we are tacking this move on the end of a previous segments' end-point, 
       // so let's in-fill any missing DOF, also re-writing `end` arg as `p2` seg property 
       let p2 = queueHeadPosition.map((val, a) => {
@@ -133,7 +133,7 @@ export default async function createMAXL(actuators: Array<any>) {
         p1: JSON.parse(JSON.stringify(queueHeadPosition)),
         p2: p2, 
         vmax: vmax, 
-        accel: 1000,
+        accel: 100,
         vi: vlink, 
         vf: vlink, 
         transmitTime: 0,

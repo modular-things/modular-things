@@ -4,7 +4,7 @@
 
 OSAP_Runtime osap;
 OSAP_Gateway_USBSerial serLink(&Serial);
-OSAP_Port_DeviceNames namePort("maxl-stepper");
+OSAP_Port_DeviceNames namePort("maxlStepper");
 
 // ---------------------------------------------- ACTU config the actual actuator 
 

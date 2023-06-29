@@ -10,6 +10,7 @@ import oled from "./virtualThings/oled";
 import potentiometer from "./virtualThings/potentiometer";
 import servo from "./virtualThings/servo";
 import stepper from "./virtualThings/stepper-notSequential";
+import maxlStepper from "./virtualThings/maxl/maxl-stepper";
 
 import { global_state } from "./global_state";
 import { LGatewayTypeKeys } from "./osapjs/utils/keys";
@@ -24,7 +25,8 @@ const constructors = {
   oled,
   accelerometer,
   potentiometer,
-  servo
+  servo,
+  maxlStepper
 };
 
 // TODO: cleanup, rm this... 
