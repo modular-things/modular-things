@@ -2,6 +2,7 @@
 // as described 
 
 let Time = {
+  // returns a time in ms 
   getTimeStamp: function (): number {
     return performance.now()
   },

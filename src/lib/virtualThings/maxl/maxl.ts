@@ -36,6 +36,7 @@ let MOTION_MAX_DOF = 7
 // that would be... 
 
 export default function createMAXL(actuators: Array<any>) {
+  if(!Array.isArray(actuators)) throw new Error(`MAXL needs [actuators], not ac1, ac2 e.g...`);
   console.log(`MAXL w/ actuators as `, actuators);
 
   // -------------------------------------------- core communication utes 
@@ -43,6 +44,26 @@ export default function createMAXL(actuators: Array<any>) {
     // on queue startup... we want to reset the remote clocks to zero... 
     await Promise.all(actuators.map((actu => actu.writeMaxlTime(time))))
   }
+
+  // -------------------------------------------- sync ours & their, 
+
+  let maxlLocalClockOffset = 0;
+
+  // set the clock in... units (?) 
+  let setDistributedClock = async (time: number) => {
+    // basically always sets to 'zero' so beware bugs elsewise 
+    maxlLocalClockOffset = Time.getTimeStamp();
+    // and set remotes - doesn't do anything about delay atm, that's to come... 
+    // we would set clocks, per each, w/ a time in the future when we expect 
+    // the msg to arrive... 
+    await setAllRemoteClocks(0);
+  }
+
+  // return a local timestamp in seconds 
+  let getLocalTime = () => {
+    return (Time.getTimeStamp() - maxlLocalClockOffset) / 1000;
+  }
+
 
   // -------------------------------------------- queue management 
   // of... segments, not the explicit type 
@@ -66,7 +87,8 @@ export default function createMAXL(actuators: Array<any>) {
           if (queue.length > 0) {
             queueState = QUEUE_STATE_AWAITING_START
             setTimeout(async () => {
-              await setAllRemoteClocks(0);
+              await setDistributedClock(0);
+              // await setAllRemoteClocks(0);
               console.log(`queue begin...`, JSON.parse(JSON.stringify(queue)));
               // calculate the first starter ? 
               queue[0].explicit = calculateExplicitSegment(queue[0], 0.050)
@@ -85,18 +107,24 @@ export default function createMAXL(actuators: Array<any>) {
             if (!queue[s]) break;
             // if we haven't tx'd it, do so, 
             if (queue[s].transmitTime == 0) {
-              queue[s].transmitTime = Time.getTimeStamp()
+              queue[s].transmitTime = getLocalTime()
               // we need to calculate the explicit seg here, 
               // and that relies on the last-thing, 
               // and ... we should have guarantee that the 1st is already calc'd 
               if(s != 0){
                 queue[s].explicit = calculateExplicitSegment(queue[s], queue[s-1].explicit.timeEnd);
               }
+              // we need to figure out when to post this as complete, 
+              // and we're just doing it time-based at the moment, so:
+              let timeUntilComplete = Math.ceil((queue[s].explicit.timeEnd - queue[s].transmitTime) * 1000)
               // tracking... 
-              console.log(`QM: sending from ${queue[s].explicit.timeStart.toFixed(3)} -> (${(queue[s].explicit.timeTotal).toFixed(3)}s) -> ${queue[s].explicit.timeEnd.toFixed(3)}`)
+              console.log(`QM: time: ${queue[s].transmitTime.toFixed(3)}, w/ end ${queue[s].explicit.timeEnd.toFixed(3)}, complete in ${timeUntilComplete}ms`);
+              console.log(`QM: sending from ${queue[s].explicit.timeStart.toFixed(3)} -> (${(queue[s].explicit.timeTotal).toFixed(3)}s) -> ${queue[s].explicit.timeEnd.toFixed(3)}`);
               // and transmitting each, 
-              let datagram = writeExplicitSegment(queue[s].explicit)
-              await Promise.all(actuators.map((actu => actu.appendMaxlSegment(datagram))))
+              let datagram = writeExplicitSegment(queue[s].explicit);
+              await Promise.all(actuators.map((actu => actu.appendMaxlSegment(datagram))));
+              // now... let's set that timeout, 
+              setTimeout(checkQueueState, timeUntilComplete);
             }
           }
           break;

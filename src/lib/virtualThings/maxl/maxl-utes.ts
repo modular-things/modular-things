@@ -88,7 +88,7 @@ let writeExplicitSegment = (exSeg: ExplicitSegment): Uint8Array => {
 
 // this takes a planned segment and pre-calclates all of 
 // the info that low-level systems will need to execute it 
-let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number): ExplicitSegment => {
+let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number, log: boolean = false): ExplicitSegment => {
   // we're buildingout this object, from that... 
   let exSeg = {
     // sequencing info
@@ -119,8 +119,8 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number): 
   // and we can do some trapezoid binning... 
   if (maxVf <= seg.vf) {
     // seg is `//`
-    console.log(`seg: // ${exSeg.unit[0].toFixed(2)}`)
-    console.error(JSON.parse(JSON.stringify(seg)))
+    if(log) console.log(`ESX: seg: // ${exSeg.unit[0].toFixed(2)}`);
+    // console.error(JSON.parse(JSON.stringify(seg)))
     exSeg.distAccelPhase = exSeg.distTotal
     exSeg.distCruisePhase = 0
     // d = v * t 
@@ -133,7 +133,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number): 
     exSeg.timeTotal = exSeg.timeAccelEnd
   } else if (maxVi <= seg.vi) {
     // seg is `\\` 
-    console.log(`seg: \\\\ ${exSeg.unit[0].toFixed(2)}`)
+    if(log) console.log(`ESX: seg: \\\\ ${exSeg.unit[0].toFixed(2)}`);
     exSeg.distAccelPhase = 0
     exSeg.distCruisePhase = 0
     exSeg.timeAccelEnd = 0
@@ -142,7 +142,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number): 
     exSeg.timeTotal = exSeg.distTotal / (0.5 * (exSeg.vi + exSeg.vf))
   } else if (seg.vi == seg.vmax && seg.vmax == seg.vf) {
     // seg is `---`
-    console.log(`seg: --- ${exSeg.unit[0].toFixed(2)}`)
+    if(log) console.log(`ESX: seg: --- ${exSeg.unit[0].toFixed(2)}`);
     exSeg.distAccelPhase = 0
     exSeg.distCruisePhase = exSeg.distTotal
     exSeg.timeAccelEnd = 0
@@ -151,7 +151,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number): 
     exSeg.timeCruiseEnd = exSeg.timeTotal
   } else if (seg.vi == seg.vmax) {
     // seg is `---\\`
-    console.log(`seg: ---\\\\ ${exSeg.unit[0].toFixed(2)}`)
+    if(log) console.log(`ESX: seg: ---\\\\ ${exSeg.unit[0].toFixed(2)}`);
     // vf^2 = vi^2 + 2ad 
     // d = (vf^2 - vi^2) / (2a)
     let decelDist = (seg.vmax * seg.vmax - seg.vf * seg.vf) / (2 * seg.accel)
@@ -163,7 +163,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number): 
     exSeg.timeTotal = exSeg.timeCruiseEnd + decelTime
   } else if (seg.vf == seg.vmax) {
     // seg is `//---`
-    console.log(`seg: //--\\\\ ${exSeg.unit[0].toFixed(2)}`)
+    if(log) console.log(`ESX: seg: //--\\\\ ${exSeg.unit[0].toFixed(2)}`);
     exSeg.distAccelPhase = (seg.vmax * seg.vmax - seg.vi * seg.vi) / (2 * seg.accel)
     exSeg.distCruisePhase = exSeg.distTotal - exSeg.distAccelPhase
     exSeg.timeAccelEnd = exSeg.distAccelPhase / (0.5 * (exSeg.vmax + exSeg.vi))
@@ -175,7 +175,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number): 
     let decelDist = (seg.vmax * seg.vmax - seg.vf * seg.vf) / (2 * seg.accel)
     if (accelDist + decelDist >= exSeg.distTotal) {
       // seg is `//\\`
-      console.log(`seg: //\\\\ ${exSeg.unit[0].toFixed(2)}`)
+      if(log) console.log(`ESX: seg: //\\\\ ${exSeg.unit[0].toFixed(2)}`);
       // we need to figure when in time / or dist / the crossover happens, 
       // we know velocities at the peak are equal, 
       // vpeak^2 = vi^2 + 2ad_accel
@@ -212,7 +212,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number): 
       // that's it, innit ? 
     } else {
       // seg is `//---\\`
-      console.log(`seg: //--\\\\ ${exSeg.unit[0].toFixed(2)}`)
+      if(log) console.log(`ESX: seg: //--\\\\ ${exSeg.unit[0].toFixed(2)}`);
       exSeg.distAccelPhase = accelDist
       exSeg.distCruisePhase = exSeg.distTotal - accelDist - decelDist
       exSeg.timeAccelEnd = accelDist / (0.5 * (exSeg.vmax + exSeg.vi))

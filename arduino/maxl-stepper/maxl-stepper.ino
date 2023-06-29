@@ -115,11 +115,15 @@ void setup() {
 uint32_t lastBlink = 0;
 uint32_t intervalBlink = 50;
 
+uint8_t msgOut[256];
+
 void loop() {
   // do graph stuff
   osap.loop();
   // do maxl stuff 
   maxl_loop(false);
+  // and clear out-messages (TODO... rm, or ?)
+  size_t msgLen = maxl_getSegmentCompleteMsg(msgOut);
   // we should blink a light or sth 
   if(lastBlink + intervalBlink < millis()){
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
