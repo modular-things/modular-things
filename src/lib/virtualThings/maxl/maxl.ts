@@ -37,12 +37,6 @@ export default function createMAXL(actuators: Array<any>) {
   if (!Array.isArray(actuators)) throw new Error(`MAXL needs [actuators], not ac1, ac2 e.g...`);
   console.log(`MAXL w/ actuators as `, actuators);
 
-  // -------------------------------------------- core communication utes 
-  let setAllRemoteClocks = async (time: number) => {
-    // on queue startup... we want to reset the remote clocks to zero... 
-    await Promise.all(actuators.map((actu => actu.writeMaxlTime(time))))
-  }
-
   // -------------------------------------------- we'll get a time-base going on each startup, 
 
   let maxlLocalClockOffset = 0;
@@ -54,9 +48,7 @@ export default function createMAXL(actuators: Array<any>) {
 
   let begin = async () => {
     // TODO: should reset all remotes here ... 
-    for(let actu of actuators){
-      // await actu.reset() or actu.halt 
-    }
+    await Promise.all(actuators.map(actu => actu.halt()))
     // get some readings, 
     let count = 10
     let samples = []
@@ -96,6 +88,19 @@ export default function createMAXL(actuators: Array<any>) {
   let QUEUE_START_DELAY = 0.050   // in seconds 
   let QUEUE_REMOTE_MAX_LEN = 16
   let QUEUE_LOCAL_MAX_LEN = 48
+
+  // -------------------------------------------- first up we have the halting code, 
+  // this is like a reset... 
+
+  let halt = async () => {
+    // shut 'em down, this is the hard stop: 
+    await Promise.all(actuators.map(actu => actu.halt()))
+    // now we want to fk up / reset our own state:
+    queue.length = 0;
+    head = null;
+    tail = null;
+    // we're done now then... AFAIK 
+  }
 
   // get length from head -> end, 
   let getLocalLookaheadLength = () => {
@@ -201,8 +206,8 @@ export default function createMAXL(actuators: Array<any>) {
       // and check...
       if (!head) {
         head = seg;
-        head.explicit = calculateExplicitSegment(seg, QUEUE_START_DELAY);
-        await setDistributedClock(0);
+        head.explicit = calculateExplicitSegment(seg, getLocalTime() + QUEUE_START_DELAY);
+        // await setDistributedClock(0);
       }
       // then check our queue states, only ingesting so many... 
       let ingestCheck = () => {
@@ -231,6 +236,7 @@ export default function createMAXL(actuators: Array<any>) {
     testPath: tp,
     actuators,
     begin,
+    halt, 
     addSegmentToQueue,
   }
 

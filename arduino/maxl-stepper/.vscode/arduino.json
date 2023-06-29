@@ -2,5 +2,5 @@
     "configuration": "flash=2097152_0,freq=133,opt=Small,rtti=Disabled,stackprotect=Disabled,exceptions=Disabled,dbgport=Disabled,dbglvl=None,usbstack=picosdk,ipbtstack=ipv4only,uploadmethod=default",
     "board": "rp2040:rp2040:seeed_xiao_rp2040",
     "sketch": "maxl-stepper.ino",
-    "port": "COM10"
+    "port": "COM9"
 }

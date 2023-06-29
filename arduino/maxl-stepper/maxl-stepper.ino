@@ -6,6 +6,13 @@ OSAP_Runtime osap;
 OSAP_Gateway_USBSerial serLink(&Serial);
 OSAP_Port_DeviceNames namePort("maxlStepper");
 
+// ---------------------------------------------- the limit pin ?
+
+// the limit is on PIN1 (top left-most) on the XIAO
+// which is D0 on the D21 (allegedly) 
+// and GPIO26 (?) on the RP2040 
+#define LIMIT_PIN 26 
+
 // ---------------------------------------------- ACTU config the actual actuator 
 
 void writeMotorSettings(uint8_t* data, size_t len){
@@ -98,6 +105,23 @@ void appendMaxlSegment(uint8_t* data, size_t len){
 
 OSAP_Port_Named appendMaxlSegment_port("appendMaxlSegment", appendMaxlSegment);
 
+// ---------------------------------------------- MAXL halt 
+
+void maxlHalt(uint8_t* data, size_t len){
+  maxl_halt();
+}
+
+OSAP_Port_Named maxlHalt_port("maxlHalt", maxlHalt);
+
+// ---------------------------------------------- read switch info 
+
+size_t getLimitState(uint8_t* data, size_t len, uint8_t* reply){
+  reply[0] = digitalRead(LIMIT_PIN) ? 1 : 0;
+  return 1;
+}
+
+OSAP_Port_Named getLimitState_port("getLimitState", getLimitState);
+
 // ---------------------------------------------- arduino setup 
 
 void setup() {
@@ -107,7 +131,7 @@ void setup() {
   // we'll blink the user-led 
   pinMode(LED_BUILTIN, OUTPUT);
   // and our limit pin 
-  // pinMode(PIN_LIMIT, INPUT_PULLUP);
+  pinMode(LIMIT_PIN, INPUT_PULLDOWN);
 }
 
 // ---------------------------------------------- arduino loop 
@@ -124,9 +148,18 @@ void loop() {
   maxl_loop(false);
   // and clear out-messages (TODO... rm, or ?)
   size_t msgLen = maxl_getSegmentCompleteMsg(msgOut);
+  // check check
   // we should blink a light or sth 
   if(lastBlink + intervalBlink < millis()){
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     lastBlink = millis();
   }
+  // for the LED, LOGIC HIGH is OFF (!) 
+  // if(digitalRead(LIMIT_PIN)){
+  //   // light ON 
+  //   digitalWrite(LED_BUILTIN, LOW);
+  // } else {
+  //   // light OFF
+  //   digitalWrite(LED_BUILTIN, HIGH);
+  // }
 }

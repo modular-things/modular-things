@@ -47,6 +47,16 @@ export default function maxlStepper(name: string) {
     await osap.send(name, "appendMaxlSegment", datagram);
   }
 
+  let getLimitState = async () => {
+    let res = await osap.send(name, "getLimitState", new Uint8Array([0]));
+    return res[0] ? true : false;
+  }
+
+  let halt = async () => {
+    let datagram = new Uint8Array([0]);
+    await osap.send(name, "maxlHalt", datagram);
+  }
+
   return {
     updateName: (newName: string) => {
       name = newName;
@@ -65,6 +75,8 @@ export default function maxlStepper(name: string) {
     },
     writeMaxlTime,
     appendMaxlSegment,
+    getLimitState,
+    halt,
     api: [], // TBD 
   }
 }
