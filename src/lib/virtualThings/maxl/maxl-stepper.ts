@@ -11,6 +11,7 @@ Jake Read at the Center for Bits and Atoms
 
 import { osap } from "../../osapjs/osap"
 import Serializers from "../../osapjs/utils/serializers"
+import Time from "../../osapjs/utils/time"
 
 export default function maxlStepper(name: string) {
   // motor specific settings... 
@@ -32,9 +33,14 @@ export default function maxlStepper(name: string) {
   }
 
   let writeMaxlTime = async (time) => {
+    // time is handed over here in *seconds* - we write microseconds as unsigned int, 
+    let micros = Math.ceil(time * 1000000)
     let datagram = new Uint8Array(4);
-    Serializers.writeUint32(datagram, 0, time);
+    Serializers.writeUint32(datagram, 0, micros);
+    let outTime = Time.getTimeStamp()
     await osap.send(name, "writeMaxlTime", datagram);
+    let pingTime = Time.getTimeStamp() - outTime;
+    return pingTime;
   }
 
   let appendMaxlSegment = async (datagram: Uint8Array) => {

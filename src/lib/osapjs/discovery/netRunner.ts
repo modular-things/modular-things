@@ -143,7 +143,7 @@ export default class NetRunner {
         ])
       }
       // now check... and we should rebuild w/ indices (not routes) 
-      console.warn(`sweep comletes after ${(Time.getTimeStamp() - sweepStartTime).toFixed(0)}ms`)
+      console.warn(`sweep completes after ${(Time.getTimeStamp() - sweepStartTime).toFixed(0)}ms`)
       // ok 
       return {
         runtimes,

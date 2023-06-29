@@ -25,9 +25,7 @@ import {
 } from "./maxl-utes"
 
 import {
-  UnplannedSegment,
   PlannedSegment,
-  ExplicitSegment
 } from "./maxl-types"
 
 let MOTION_MAX_DOF = 7
@@ -45,23 +43,42 @@ export default function createMAXL(actuators: Array<any>) {
     await Promise.all(actuators.map((actu => actu.writeMaxlTime(time))))
   }
 
-  // -------------------------------------------- sync ours & their, 
+  // -------------------------------------------- we'll get a time-base going on each startup, 
 
   let maxlLocalClockOffset = 0;
-
-  // set the clock in... units (?) 
-  let setDistributedClock = async (time: number) => {
-    // basically always sets to 'zero' so beware bugs elsewise 
-    maxlLocalClockOffset = Time.getTimeStamp();
-    // and set remotes - doesn't do anything about delay atm, that's to come... 
-    // we would set clocks, per each, w/ a time in the future when we expect 
-    // the msg to arrive... 
-    await setAllRemoteClocks(0);
-  }
 
   // return a local timestamp in seconds 
   let getLocalTime = () => {
     return (Time.getTimeStamp() - maxlLocalClockOffset) / 1000;
+  } 
+
+  let begin = async () => {
+    // TODO: should reset all remotes here ... 
+    for(let actu of actuators){
+      // await actu.reset() or actu.halt 
+    }
+    // get some readings, 
+    let count = 10
+    let samples = []
+    for (let i = 0; i < count; i++) {
+      samples.push(await Promise.all(actuators.map((actu => actu.writeMaxlTime(0)))))
+    }
+    // urm, 
+    let res = new Array(actuators.length).fill(0)
+    for (let a = 0; a < res.length; a++) {
+      for (let i = 0; i < count; i++) {
+        res[a] += samples[i][a];
+      }
+      // avg, and ms -> seconds 
+      res[a] = res[a] / count / 1000;
+    }
+    // let's reset our clock to zero, 
+    maxlLocalClockOffset = Time.getTimeStamp();
+    // now let's set their clocks... to whence-we-suspect-the-set-packet-will-land, 
+    await Promise.all(actuators.map(async (actu, i) => {
+      return await actu.writeMaxlTime(getLocalTime() + res[i])
+    }))
+    console.warn(`MAXL setup OK`)
   }
 
   // erm, 
@@ -82,11 +99,11 @@ export default function createMAXL(actuators: Array<any>) {
 
   // get length from head -> end, 
   let getLocalLookaheadLength = () => {
-    if(!head) return 0;
+    if (!head) return 0;
     let count = 1;
     let current = head;
-    while(current){
-      count ++;
+    while (current) {
+      count++;
       current = current.next;
     }
     // console.warn(`LL: ${count}`)
@@ -95,13 +112,13 @@ export default function createMAXL(actuators: Array<any>) {
 
   let checkQueueState = async () => {
     try {
-      if(!head){
+      if (!head) {
         console.warn(`queue state bails on headlessness`)
         return;
       }
       let now = getLocalTime();
       // 1st let's check that head is in the correct place, 
-      if(head.explicit.timeEnd < now){
+      if (head.explicit.timeEnd < now) {
         head = head.next;
         checkQueueState();
         return;
@@ -134,7 +151,7 @@ export default function createMAXL(actuators: Array<any>) {
         // ... then do the next, 
       }
     } catch (err) {
-      head = null; 
+      head = null;
       console.error(err);
     }
   }
@@ -213,6 +230,7 @@ export default function createMAXL(actuators: Array<any>) {
   return {
     testPath: tp,
     actuators,
+    begin,
     addSegmentToQueue,
   }
 
