@@ -13,6 +13,8 @@ export type PlannedSegment = UnplannedSegment & {
   vf: number, 
   explicit?: ExplicitSegment,
   transmitTime: number,
+  next?: PlannedSegment,
+  prev?: PlannedSegment,
 }
 
 // it does seem as though... there could be some simpler representation ? 

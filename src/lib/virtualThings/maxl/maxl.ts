@@ -36,7 +36,7 @@ let MOTION_MAX_DOF = 7
 // that would be... 
 
 export default function createMAXL(actuators: Array<any>) {
-  if(!Array.isArray(actuators)) throw new Error(`MAXL needs [actuators], not ac1, ac2 e.g...`);
+  if (!Array.isArray(actuators)) throw new Error(`MAXL needs [actuators], not ac1, ac2 e.g...`);
   console.log(`MAXL w/ actuators as `, actuators);
 
   // -------------------------------------------- core communication utes 
@@ -64,82 +64,92 @@ export default function createMAXL(actuators: Array<any>) {
     return (Time.getTimeStamp() - maxlLocalClockOffset) / 1000;
   }
 
+  // erm, 
+  let defaultDOF = 7
 
   // -------------------------------------------- queue management 
-  // of... segments, not the explicit type 
+  // we have a big line of segments, 
   let queue: Array<PlannedSegment> = []
-  let QUEUE_START_DELAY = 250
-  let QUEUE_STATE_EMPTY = 0
-  let QUEUE_STATE_AWAITING_START = 1
-  let QUEUE_STATE_RUNNING = 2
-  let QUEUE_REMOTE_MAX_LEN = 16
-  let QUEUE_LOCAL_MAX_LEN = 32
-  let queueState = QUEUE_STATE_EMPTY
-  // we track our most-recently-tacked-on-position, 
-  let queueHeadPosition = new Array(MOTION_MAX_DOF).fill(0)
+  // it's a linked list; the head is the segment *currently happening*
+  // i.e. head->previous is in the past, historical, 
+  let head: PlannedSegment;
+  // the tail is the most-recently appended segment, 
+  let tail: PlannedSegment;
 
-  // TODO is... make this a-la the paper ? 
-  // i.e. think about time more carefully... 
+  let QUEUE_START_DELAY = 0.050   // in seconds 
+  let QUEUE_REMOTE_MAX_LEN = 16
+  let QUEUE_LOCAL_MAX_LEN = 48
+
+  // get length from head -> end, 
+  let getLocalLookaheadLength = () => {
+    if(!head) return 0;
+    let count = 1;
+    let current = head;
+    while(current){
+      count ++;
+      current = current.next;
+    }
+    // console.warn(`LL: ${count}`)
+    return count;
+  }
+
   let checkQueueState = async () => {
     try {
-      switch (queueState) {
-        case QUEUE_STATE_EMPTY:
-          if (queue.length > 0) {
-            queueState = QUEUE_STATE_AWAITING_START
-            setTimeout(async () => {
-              await setDistributedClock(0);
-              // await setAllRemoteClocks(0);
-              console.log(`queue begin...`, JSON.parse(JSON.stringify(queue)));
-              // calculate the first starter ? 
-              queue[0].explicit = calculateExplicitSegment(queue[0], 0.050)
-              queueState = QUEUE_STATE_RUNNING;
-              checkQueueState();
-            }, QUEUE_START_DELAY)
-          }
-          break;
-        case QUEUE_STATE_AWAITING_START:
-          // noop, awaiting... 
-          break;
-        case QUEUE_STATE_RUNNING:
-          // tx them-which-we-can, 
-          for (let s = 0; s < QUEUE_REMOTE_MAX_LEN; s++) {
-            // don't eval non-existent queue items 
-            if (!queue[s]) break;
-            // if we haven't tx'd it, do so, 
-            if (queue[s].transmitTime == 0) {
-              queue[s].transmitTime = getLocalTime()
-              // we need to calculate the explicit seg here, 
-              // and that relies on the last-thing, 
-              // and ... we should have guarantee that the 1st is already calc'd 
-              if(s != 0){
-                queue[s].explicit = calculateExplicitSegment(queue[s], queue[s-1].explicit.timeEnd);
-              }
-              // we need to figure out when to post this as complete, 
-              // and we're just doing it time-based at the moment, so:
-              let timeUntilComplete = Math.ceil((queue[s].explicit.timeEnd - queue[s].transmitTime) * 1000)
-              // tracking... 
-              console.log(`QM: time: ${queue[s].transmitTime.toFixed(3)}, w/ end ${queue[s].explicit.timeEnd.toFixed(3)}, complete in ${timeUntilComplete}ms`);
-              console.log(`QM: sending from ${queue[s].explicit.timeStart.toFixed(3)} -> (${(queue[s].explicit.timeTotal).toFixed(3)}s) -> ${queue[s].explicit.timeEnd.toFixed(3)}`);
-              // and transmitting each, 
-              let datagram = writeExplicitSegment(queue[s].explicit);
-              await Promise.all(actuators.map((actu => actu.appendMaxlSegment(datagram))));
-              // now... let's set that timeout, 
-              setTimeout(checkQueueState, timeUntilComplete);
-            }
-          }
-          break;
+      if(!head){
+        console.warn(`queue state bails on headlessness`)
+        return;
+      }
+      let now = getLocalTime();
+      // 1st let's check that head is in the correct place, 
+      if(head.explicit.timeEnd < now){
+        head = head.next;
+        checkQueueState();
+        return;
+      }
+      // ok, supposing we have a well formed (and tx'd) head, 
+      // which is the current segment, then we want to do:
+      let current = head;
+      for (let s = 0; s < QUEUE_REMOTE_MAX_LEN; s++) {
+        // console.log(`HEAD ${head.transmitTime}`)
+        // get next ahead, 
+        current = current.next;
+        // if it's empty, bail, 
+        if (!current) {
+          console.warn(`eof, bail`)
+          return;
+        }
+        // if it's been tx'd, carry on:
+        if (current.transmitTime != 0) continue;
+        // otherwise calculate explicit,
+        current.explicit = calculateExplicitSegment(current, current.prev.explicit.timeEnd);
+        let datagram = writeExplicitSegment(current.explicit);
+        // and ship that, 
+        current.transmitTime = now;
+        let timeUntilComplete = Math.ceil((current.explicit.timeEnd - now) * 1000);
+        console.log(`QM: time: ${current.transmitTime.toFixed(3)}, w/ end ${current.explicit.timeEnd.toFixed(3)}, complete in ${timeUntilComplete}ms`);
+        console.log(`QM: sending from ${current.explicit.timeStart.toFixed(3)} -> (${(current.explicit.timeTotal).toFixed(3)}s) -> ${current.explicit.timeEnd.toFixed(3)}`);
+        await Promise.all(actuators.map((actu => actu.appendMaxlSegment(datagram))));
+        // and set a timeout to check on queue states when it's done, 
+        setTimeout(checkQueueState, timeUntilComplete);
+        // ... then do the next, 
       }
     } catch (err) {
-      throw err
+      head = null; 
+      console.error(err);
     }
   }
 
   let addSegmentToQueue = (end: Array<number>, vmax: number, vlink: number) => {
-    return new Promise<void>((resolve, reject) => {
-      console.warn(`addMove w/ end pos`, JSON.parse(JSON.stringify(end)), `vmax: `, vmax, `vlink: `, vlink)
+    return new Promise<void>(async (resolve, reject) => {
+      // console.warn(`addMove w/ end pos`, JSON.parse(JSON.stringify(end)), `vmax: `, vmax, `vlink: `, vlink)
       // first, we are tacking this move on the end of a previous segments' end-point, 
       // so let's in-fill any missing DOF, also re-writing `end` arg as `p2` seg property 
-      let p2 = queueHeadPosition.map((val, a) => {
+      let p1 = new Array(defaultDOF).fill(0);
+      if (tail) {
+        p1 = tail.p2;
+      }
+      // infill w/ spare DOF 
+      let p2 = p1.map((val, a) => {
         if (end[a] == undefined || isNaN(end[a])) {
           return val
         } else {
@@ -147,32 +157,42 @@ export default function createMAXL(actuators: Array<any>) {
         }
       })
       // evidently this was worth double checking 
-      console.warn(`QueueHeadPosition ${queueHeadPosition[0].toFixed(2)}, ${queueHeadPosition[1].toFixed(2)}`)
-      console.warn(`P2 ${p2[0].toFixed(2)}, ${p2[1].toFixed(2)}`)
-      console.warn(`DIST`, distance(p2, queueHeadPosition))
+      console.warn(`P1: ${p1[0].toFixed(2)}, ${p1[1].toFixed(2)}; P2: ${p2[0].toFixed(2)}, ${p2[1].toFixed(2)}, DIST ${distance(p2, p1).toFixed(2)}`)
       // if distance is very small, rm it, 
-      if (distance(p2, queueHeadPosition) < 0.1) {
-        console.warn(`REJECTING very tiny move, ${distance(p2, queueHeadPosition).toFixed(3)}...`)
+      if (distance(p2, p1) < 0.1) {
+        console.warn(`REJECTING very tiny move, ${distance(p2, p1).toFixed(3)}...`)
         resolve()
         return
       }
       // so we maybe don't have use for the unplanned type, 
       let seg: PlannedSegment = {
-        p1: JSON.parse(JSON.stringify(queueHeadPosition)),
-        p2: p2, 
-        vmax: vmax, 
+        p1: p1,
+        p2: p2,
+        vmax: vmax,
         accel: 100,
-        vi: vlink, 
-        vf: vlink, 
+        vi: vlink,
+        vf: vlink,
         transmitTime: 0,
       }
-      // upd8 this ... 
-      queueHeadPosition = JSON.parse(JSON.stringify(seg.p2))
+      // do the list linking, 
+      if (tail) {
+        tail.next = seg;
+        seg.prev = tail;
+      }
+      // always 
+      tail = seg;
+      // and check...
+      if (!head) {
+        head = seg;
+        head.explicit = calculateExplicitSegment(seg, QUEUE_START_DELAY);
+        await setDistributedClock(0);
+      }
       // then check our queue states, only ingesting so many... 
       let ingestCheck = () => {
         // and we can dump the segment into our queue, 
-        if (queue.length < QUEUE_LOCAL_MAX_LEN) {
+        if (getLocalLookaheadLength() < QUEUE_LOCAL_MAX_LEN) {
           queue.push(seg)
+          // console.warn(`QUEUE total ${queue.length}`)
           checkQueueState()
           resolve()
         } else {
@@ -183,7 +203,7 @@ export default function createMAXL(actuators: Array<any>) {
       ingestCheck()
     })
   }
-  
+
   // erp, expose this also ? 
   let tp = []
   for (let reps = 0; reps < 6; reps++) {
@@ -191,7 +211,7 @@ export default function createMAXL(actuators: Array<any>) {
   }
 
   return {
-    testPath: tp, 
+    testPath: tp,
     actuators,
     addSegmentToQueue,
   }
