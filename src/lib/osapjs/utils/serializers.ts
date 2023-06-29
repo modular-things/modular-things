@@ -5,14 +5,41 @@ let textEncoder = new TextEncoder()
 let textDecoder = new TextDecoder()
 
 let Serializers = {
-  // write a uint16_t to a bufer 
+  // write boolean into a buffer, 
+  writeBoolean: function (dest: Uint8Array, offset: number, value: boolean): number {
+    dest[offset] = value ? 1 : 0;
+    return 1;
+  },
+  // write a uint8_t into a buffer, 
+  writeUint8: function (dest: Uint8Array, offset: number, value: number): number {
+    if (value > (2 ** 8 - 1) || value < 0) throw new Error(`val of ${value} written to Uint8 width`);
+    dest[offset] = value;
+    return 1;
+  },
+  // write a uint16_t to a buffer 
   writeUint16: function (dest: Uint8Array, offset: number, value: number): number {
     // no bigboys 
-    if (value > (2 ** 16 - 1) || value < 0) throw new Error(`val of ${value} written to Uint16`);
+    if (value > (2 ** 16 - 1) || value < 0) throw new Error(`val of ${value} written to Uint16 width`);
     // stuff it, 
     dest[offset] = value & 255;
     dest[offset + 1] = (value >> 8) & 255;
     return 2;
+  },
+  // write a uint32_t to a buffer
+  writeUint32: function (dest: Uint8Array, offset: number, value: number): number {
+    if (value > (2 ** 32 - 1) || value < 0) throw new Error(`val of ${value} written to Uint32 width`);
+    let tempArr = Uint32Array.from([value]);
+    let tempBytes = new Uint8Array(tempArr.buffer);
+    dest.set(tempBytes, offset);
+    return 4;
+  },
+  // write an int32_t into a buffer 
+  writeInt32: function (dest: Uint8Array, offset: number, value: number): number {
+    if (value > (2 ** 31 - 1) || value < (- 1 * 2 ** 31 + 1)) throw new Error(`val of ${value} written to Int32 width`);
+    let tempArr = Int32Array.from([value]);
+    let tempBytes = new Uint8Array(tempArr.buffer);
+    dest.set(tempBytes, offset);
+    return 4;
   },
   // read a uint16_t from a buffer 
   readUint16: function (source: Uint8Array, offset: number): number {
