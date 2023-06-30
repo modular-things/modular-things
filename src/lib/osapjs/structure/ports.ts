@@ -41,7 +41,7 @@ export default class Port {
   // send msgs,
   send = (data: Uint8Array, route: Route, destinationPort: number): void => {
     // we'll probably want a pretty good error message here: 
-    if (!this.clearToSend()) throw new Error(`port.send() called on over-full port`)
+    if (!this.clearToSend()) throw new Error(`port.send() called on over-full port w/ max ${this.stackMaxLength}`)
     // let's write a port-to-port packet, 
     this.stack.push(Packet.portToPort(this, route, destinationPort, data))
     // request loops, 

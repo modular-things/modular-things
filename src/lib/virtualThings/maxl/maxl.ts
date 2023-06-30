@@ -70,7 +70,7 @@ export default function createMAXL(actuators: Array<any>) {
     await Promise.all(actuators.map(async (actu, i) => {
       return await actu.writeMaxlTime(getLocalTime() + res[i])
     }))
-    console.warn(`MAXL setup OK`)
+    console.warn(`MAXL setup OK w/ avg RTTs of: `, res)
   }
 
   // erm, 
@@ -150,14 +150,15 @@ export default function createMAXL(actuators: Array<any>) {
         let timeUntilComplete = Math.ceil((current.explicit.timeEnd - now) * 1000);
         console.log(`QM: time: ${current.transmitTime.toFixed(3)}, w/ end ${current.explicit.timeEnd.toFixed(3)}, complete in ${timeUntilComplete}ms`);
         console.log(`QM: sending from ${current.explicit.timeStart.toFixed(3)} -> (${(current.explicit.timeTotal).toFixed(3)}s) -> ${current.explicit.timeEnd.toFixed(3)}`);
-        await Promise.all(actuators.map((actu => actu.appendMaxlSegment(datagram))));
+        // IDK if this takes any time at all - 
+        await Promise.all(actuators.map(((actu) => actu.appendMaxlSegment(datagram))));
         // and set a timeout to check on queue states when it's done, 
         setTimeout(checkQueueState, timeUntilComplete);
         // ... then do the next, 
       }
     } catch (err) {
       head = null;
-      console.error(err);
+      throw err; 
     }
   }
 

@@ -20,7 +20,7 @@ void maxl_loop(boolean log);
 // ---------------- config... motor pickins 
 
 // WARNING: does nothing 
-void maxl_pushSettings(uint8_t actuatorID, uint8_t axisPick, float spu);
+void maxl_pushSettings(uint8_t _actuatorID, uint8_t _axisPick, float _spu);
 
 // ---------------- get actuator states 
 

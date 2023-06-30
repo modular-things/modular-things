@@ -285,12 +285,14 @@ fpint32_t stepModulo = fp_int32ToFixed32(0);
 // so we have (for one unit), 100 of these steps, beautifully (and serindipitously)
 // time being, I'm just going to bake that in here... 
 
+uint8_t axisPick;
+
 void maxl_tickHardware(maxlState_t* _state, motionVect_t* _deltas){
   // this does this... step-increment independent, i.e. so-long as we are 
   // not more than 180' out of phase (from last step) it should be gucci
   // ... means we can crikety crank the microsteps but not worry about tick rates 
   // increment... second val is SPU, IIRC 
-  stepModulo += fp_mult32x32(_deltas->axis[0], fp_int32ToFixed32(100));
+  stepModulo += fp_mult32x32(_deltas->axis[axisPick], fp_int32ToFixed32(100));
   // OSAP_DEBUG(String(fp_fixed32ToFloat(_deltas->axis[0]), 5) + " " + String(fp_fixed32ToInt32(stepModulo)));
   // wrap around...
   if(stepModulo > fp_int32ToFixed32(63)){
@@ -311,8 +313,8 @@ void maxl_tickHardware(maxlState_t* _state, motionVect_t* _deltas){
 }
 
 // stub-end 
-void maxl_pushSettings(uint8_t actuatorID, uint8_t axisPick, float spu){
-
+void maxl_pushSettings(uint8_t _actuatorID, uint8_t _axisPick, float _spu){
+  axisPick = _axisPick;
 }
 
 void maxl_printDebug(void){

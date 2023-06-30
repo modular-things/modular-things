@@ -34,7 +34,7 @@ export default class NamedPortDispatcher {
     // 
     this.port = runtime.port();
     // a deeper buffer 
-    this.port.setMaxStackLength(16);
+    this.port.setMaxStackLength(128);
     this.port.typeKey = PortTypeKeys.Dispatcher;
     // and instrument the onData here to catch replies 
     this.port.onData((data) => { // func additionally provides sourceRoute and sourcePort, we ignore 
@@ -48,19 +48,19 @@ export default class NamedPortDispatcher {
     try {
       // if "device" is a string, we need to resolve a route:
       let route: Route;
-      if(typeof device == 'string'){
+      if (typeof device == 'string') {
         let runtime = this.map.runtimes.find(cand => cand.uniqueName == device);
-        if(!runtime) throw new Error(`on .rename(device: string, ...), couldn't find the device`);
+        if (!runtime) throw new Error(`on .rename(device: string, ...), couldn't find the device`);
         route = runtime.route;
-      }  else {
+      } else {
         route = device;
       }
       // we aught to check (against the map) that thing has a name-port, 
       let rt = this.map.runtimes.find(cand => Route.equality(cand.route, route));
-      if(!rt) throw new Error(`during a rename-request, no runtime is found at the provided route`);
+      if (!rt) throw new Error(`during a rename-request, no runtime is found at the provided route`);
       // likewise, find the deviceNames port there,
       let index = rt.ports.findIndex(cand => cand.typeName == 'DeviceNames');
-      if(index < 0) throw new Error(`during a rename-request, no 'DeviceNames' port was found in the runtime`);
+      if (index < 0) throw new Error(`during a rename-request, no 'DeviceNames' port was found in the runtime`);
       // ok, we can finally 
       let checkSum = await this.deviceNameManager.setUniqueName(route, index, newUniqueName);
       console.warn(`wrote name ${newUniqueName}, of ${newUniqueName.length} remote reports ${checkSum} bytes...`)
@@ -68,7 +68,7 @@ export default class NamedPortDispatcher {
       rt.uniqueName = newUniqueName;
       // we're done ! 
     } catch (err) {
-      throw err 
+      throw err
     }
   }
 
@@ -121,7 +121,7 @@ export default class NamedPortDispatcher {
 
   send = (device: string, port: string, data: Uint8Array): Promise<Uint8Array> => {
     if (!data) data = new Uint8Array([]);
-    
+
     return new Promise(async (resolve, reject) => {
       try {
         // 1st op is to check that the device is in the map... 
@@ -145,9 +145,28 @@ export default class NamedPortDispatcher {
         dg[1] = this.resolver.writeNew();
         // and stuff the actual-data, trailing the key and randy-id, 
         dg.set(data, 2);
+
+        // uuuh... I'm using this doubled-up structure 
+        // because with group-calls to .send, we can 
+        // (it seems) end up in some lock condition with other awaitCTS() ? 
+        let transmit = async () => {
+          await this.port.awaitCTS()
+          if(this.port.clearToSend()){
+            this.port.send(dg, deviceMatch.route, portMatch); 
+            return;
+          } else {
+            await transmit()
+          }
+        }
+        transmit();
+        
+        // this was the old, simpler code... 
         // now we can do the shipment,
-        await this.port.awaitCTS()
-        this.port.send(dg, deviceMatch.route, portMatch);
+        // await this.port.awaitCTS()
+        // we have to double-guard this for some reason ? 
+        // this.port.send(dg, deviceMatch.route, portMatch);
+
+
         // and setup to get a response:
         let res = await this.resolver.request(dg[1], `.send to dev: '${device}', port: '${port}'`)
         // res comes back w/ first-five (key, id) intact, so we should shed 'em 
