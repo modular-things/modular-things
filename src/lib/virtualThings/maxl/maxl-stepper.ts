@@ -22,6 +22,12 @@ export default function maxlStepper(name: string) {
     currentScale: 0.0
   }
 
+  let messageTest = async () => {
+    let datagram = new Uint8Array([12]);
+    let res = await osap.send(name, "maxlMessages", datagram);
+    console.log("returned...", res)
+  }
+
   let publishSettings = async () => {
     let datagram = new Uint8Array(10);
     let wptr = 0;
@@ -61,6 +67,8 @@ export default function maxlStepper(name: string) {
     updateName: (newName: string) => {
       name = newName;
     },
+    // sneaky debug
+    messageTest,
     setCurrentScale: async (currentScale: number) => {
       settings.currentScale = currentScale;
       await publishSettings();

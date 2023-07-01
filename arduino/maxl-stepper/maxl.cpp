@@ -1,8 +1,25 @@
 #include "maxl.h"
-#include <osap.h>
-// TODO: decouple maxl from the stepper via callback-attach for deltas, other tracks,
-#include "stepper-driver.h"
 
+void MAXL::begin(void){
+
+}
+
+void MAXL::loop(void){
+
+}
+
+size_t MAXL::messageHandler(uint8_t* data, size_t len, uint8_t* reply){
+  reply[0] = 77;
+  return 1;
+}
+
+// so, first will be getting the MAXL class to act like an OSAP core and singleton itself, 
+// so that we can append traxx to it automagically 
+
+// then there's.... 
+
+
+/*
 // ---------------------------------------------- stateful stuff 
 // states (units are steps, 1=1 ?) 
 volatile uint8_t mode = MOTION_MODE_QUEUE;            // operative mode 
@@ -144,39 +161,72 @@ void maxl_evalSegment(fpint32_t* _pos, fpint32_t* _vel, maxlSegmentLinearMotion_
 
 // -------------------------- adding segments, 
 
-void maxl_addSegmentToQueue(maxlSegmentLinearMotion_t* seg){
-  // if true, bad fullness:
-  if(head->next->isOccupied){
-    OSAP_ERROR("tx to over-full motion buffer");
-    return;
+void maxl_addSegment(uint8_t* data, size_t len){
+  // we'll need to id 'em, right ?
+  uint16_t rptr = 0;
+  uint8_t trackIndex = data[rptr ++];
+  // then we could do 
+  if(trackIndex < numTracks){
+    tracks[trackIndex].addSegment(data, len);
+  } else {
+    OSAP_ERROR("maxl rx segment for oob track index: " + String(trackIndex));
   }
-  // we're copying trajectory segments in at the head, 
-  OSAP_DEBUG("seg for us: " + String(seg->tStart_us));
-  // basically copy-pasta, 
-  head->tStart_us = seg->tStart_us;
-  head->tEnd_us = seg->tEnd_us;
-  head->isLastSegment = seg->isLastSegment; 
-  //
-  head->start = seg->start;
-  //
-  head->vi = seg->vi;
-  head->accel = seg->accel;
-  head->vmax = seg->vmax;
-  head->vf = seg->vf;
-  //
-  head->distTotal = seg->distTotal;
-  head->distAccelPhase = seg->distAccelPhase;
-  head->distCruisePhase = seg->distCruisePhase;
-  //
-  head->tAccelEnd = seg->tAccelEnd;
-  head->tCruiseEnd = seg->tCruiseEnd;
-  // and setup to run;
-  head->isOccupied = true;
-  // now advance the head ptr, 
-  head = head->next;
-  // now we r queue'en, 
-  mode = MOTION_MODE_QUEUE;
+  // that would be it here, the track-object would do:
+  // if true, bad fullness:
+  // if(head->next->isOccupied){
+  //   OSAP_ERROR("tx to over-full motion buffer");
+  //   return;
+  // }
+  // // we're copying trajectory segments in at the head, 
+  // OSAP_DEBUG("seg for us: " + String(seg->tStart_us));
+  // // basically copy-pasta, 
+  // head->tStart_us = seg->tStart_us;
+  // head->tEnd_us = seg->tEnd_us;
+  // head->isLastSegment = seg->isLastSegment; 
+  // //
+  // head->start = seg->start;
+  // //
+  // head->vi = seg->vi;
+  // head->accel = seg->accel;
+  // head->vmax = seg->vmax;
+  // head->vf = seg->vf;
+  // //
+  // head->distTotal = seg->distTotal;
+  // head->distAccelPhase = seg->distAccelPhase;
+  // head->distCruisePhase = seg->distCruisePhase;
+  // //
+  // head->tAccelEnd = seg->tAccelEnd;
+  // head->tCruiseEnd = seg->tCruiseEnd;
+  // // and setup to run;
+  // head->isOccupied = true;
+  // // now advance the head ptr, 
+  // head = head->next;
+  // // now we r queue'en, 
+  // mode = MOTION_MODE_QUEUE;
 }
+
+// uint16_t rptr = 0;
+// // check type ? 
+// uint8_t maxlSegmentType = data[rptr ++];
+// // TODO: if type != x ... chunk, 
+// // sequences
+// handoffSeg.tStart_us = ts_readUint32(data, &rptr);
+// handoffSeg.tEnd_us = ts_readUint32(data, &rptr);
+// handoffSeg.isLastSegment = ts_readBoolean(data, &rptr);
+// // start and distance 
+// handoffSeg.start = ts_readInt32(data, &rptr);
+// // vi, vmax, accel, 
+// handoffSeg.vi = ts_readInt32(data, &rptr);
+// handoffSeg.accel = ts_readInt32(data, &rptr);
+// handoffSeg.vmax = ts_readInt32(data, &rptr);
+// handoffSeg.vf = ts_readInt32(data, &rptr);
+// // pre-computed integrals, 
+// handoffSeg.distTotal = ts_readInt32(data, &rptr); 
+// handoffSeg.distAccelPhase = ts_readInt32(data, &rptr);
+// handoffSeg.distCruisePhase = ts_readInt32(data, &rptr);
+// // and trapezoid times
+// handoffSeg.tAccelEnd = ts_readInt32(data, &rptr);
+// handoffSeg.tCruiseEnd = ts_readInt32(data, &rptr);
 
 void maxl_halt(void){
   // it's a crash stop! 
@@ -275,3 +325,5 @@ void maxl_tickHardware(fpint32_t _state, fpint32_t _delta){
 void maxl_printDebug(void){
   // we should check if these worked, 
 }
+
+*/

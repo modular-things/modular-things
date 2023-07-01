@@ -2,16 +2,86 @@
 #include "stepper-driver.h"
 #include <osap.h>
 
-OSAP_Runtime osap;
-OSAP_Gateway_USBSerial serLink(&Serial);
-OSAP_Port_DeviceNames namePort("maxlStepper");
-
-// ---------------------------------------------- the limit pin ?
+// ---------------------------------------------- the limit pin, lol 
 
 // the limit is on PIN1 (top left-most) on the XIAO
 // which is D0 on the D21 (allegedly) 
 // and GPIO26 (?) on the RP2040 
 #define LIMIT_PIN 26 
+
+// ---------------------------------------------- PROTOTYPE MAXL API THINGS 
+
+// we'll use a MAXL object, 
+
+MAXL maxl; 
+
+// and we can write this func, to step our motor based on trajectory inputs... 
+
+float stepsPerUnit = 100.0F;
+float unitsPerStep = 1.0F / stepsPerUnit;
+float stepModulo = 0.0F;
+
+void onPositionUpdate(float position, float delta){
+  stepModulo += delta;
+  if(stepModulo > unitsPerStep){
+    stepper_step(8, true);
+    stepModulo -= unitsPerStep;
+  } 
+  if (stepModulo < -unitsPerStep){
+    stepper_step(8, false);
+    stepModulo += unitsPerStep;
+  }
+}
+
+// and we can hand that over as an on-delta callback, 
+
+MAXL_TrackPositionLinear stepperTrack("stepper", onPositionUpdate);
+
+// ---------------------------------------------- OSAP SETUP 
+
+OSAP_Runtime osap;
+OSAP_Gateway_USBSerial serLink(&Serial);
+OSAP_Port_DeviceNames namePort("maxlStepper");
+
+// ---------------------------------------------- MAXL over MUTTS 
+
+size_t maxlMessageInterface(uint8_t* data, size_t len, uint8_t* reply){
+  return maxl.messageHandler(data, len, reply);
+}
+
+OSAP_Port_Named maxlMessage_port("maxlMessages", maxlMessageInterface);
+
+/*
+
+// ---------------------------------------------- MAXL write time 
+
+void writeMaxlTime(uint8_t* data, size_t len){
+  uint16_t rptr = 0;
+  uint32_t newTime = ts_readUint32(data, &rptr);
+  // maxl_setSystemTime(newTime);
+}
+
+OSAP_Port_Named writeMaxlTime_port("writeMaxlTime", writeMaxlTime);
+
+// ---------------------------------------------- MAXL ingest a segment 
+
+maxlSegmentLinearMotion_t handoffSeg;
+
+void appendMaxlSegment(uint8_t* data, size_t len){
+  // maxl_addSegment(data, len);
+}
+
+OSAP_Port_Named appendMaxlSegment_port("appendMaxlSegment", appendMaxlSegment);
+
+// ---------------------------------------------- MAXL halt 
+
+void maxlHalt(uint8_t* data, size_t len){
+  // maxl_halt();
+}
+
+OSAP_Port_Named maxlHalt_port("maxlHalt", maxlHalt);
+
+*/
 
 // ---------------------------------------------- ACTU config the actual actuator 
 
@@ -35,57 +105,6 @@ void writeMotorSettings(uint8_t* data, size_t len){
 
 OSAP_Port_Named writeMotorSettings_port("writeMotorSettings", writeMotorSettings);
 
-// ---------------------------------------------- MAXL write time 
-
-void writeMaxlTime(uint8_t* data, size_t len){
-  uint16_t rptr = 0;
-  uint32_t newTime = ts_readUint32(data, &rptr);
-  maxl_setSystemTime(newTime);
-}
-
-OSAP_Port_Named writeMaxlTime_port("writeMaxlTime", writeMaxlTime);
-
-// ---------------------------------------------- MAXL ingest a segment 
-
-maxlSegmentLinearMotion_t handoffSeg;
-
-void appendMaxlSegment(uint8_t* data, size_t len){
-  uint16_t rptr = 0;
-  // check type ? 
-  uint8_t maxlSegmentType = data[rptr ++];
-  // TODO: if type != x ... chunk, 
-  // sequences
-  handoffSeg.tStart_us = ts_readUint32(data, &rptr);
-  handoffSeg.tEnd_us = ts_readUint32(data, &rptr);
-  handoffSeg.isLastSegment = ts_readBoolean(data, &rptr);
-  // start and distance 
-  handoffSeg.start = ts_readInt32(data, &rptr);
-  // vi, vmax, accel, 
-  handoffSeg.vi = ts_readInt32(data, &rptr);
-  handoffSeg.accel = ts_readInt32(data, &rptr);
-  handoffSeg.vmax = ts_readInt32(data, &rptr);
-  handoffSeg.vf = ts_readInt32(data, &rptr);
-  // pre-computed integrals, 
-  handoffSeg.distTotal = ts_readInt32(data, &rptr); 
-  handoffSeg.distAccelPhase = ts_readInt32(data, &rptr);
-  handoffSeg.distCruisePhase = ts_readInt32(data, &rptr);
-  // and trapezoid times
-  handoffSeg.tAccelEnd = ts_readInt32(data, &rptr);
-  handoffSeg.tCruiseEnd = ts_readInt32(data, &rptr);
-  // now we can add it in: 
-  maxl_addSegmentToQueue(&handoffSeg);
-}
-
-OSAP_Port_Named appendMaxlSegment_port("appendMaxlSegment", appendMaxlSegment);
-
-// ---------------------------------------------- MAXL halt 
-
-void maxlHalt(uint8_t* data, size_t len){
-  maxl_halt();
-}
-
-OSAP_Port_Named maxlHalt_port("maxlHalt", maxlHalt);
-
 // ---------------------------------------------- read switch info 
 
 size_t getLimitState(uint8_t* data, size_t len, uint8_t* reply){
@@ -99,7 +118,7 @@ OSAP_Port_Named getLimitState_port("getLimitState", getLimitState);
 
 void setup() {
   stepper_init();
-  maxl_init();
+  // maxl_init();
   osap.begin();
   // we'll blink the user-led 
   pinMode(LED_BUILTIN, OUTPUT);
@@ -118,9 +137,9 @@ void loop() {
   // do graph stuff
   osap.loop();
   // do maxl stuff 
-  maxl_loop(false);
+  // maxl_loop(false);
   // and clear out-messages (TODO... rm, or ?)
-  size_t msgLen = maxl_getSegmentCompleteMsg(msgOut);
+  // size_t msgLen = maxl_getSegmentCompleteMsg(msgOut);
   // check check
   // we should blink a light or sth 
   if(lastBlink + intervalBlink < millis()){
