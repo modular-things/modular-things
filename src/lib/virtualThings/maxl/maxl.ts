@@ -144,14 +144,22 @@ export default function createMAXL(actuators: Array<any>) {
         if (current.transmitTime != 0) continue;
         // otherwise calculate explicit,
         current.explicit = calculateExplicitSegment(current, current.prev.explicit.timeEnd);
-        let datagram = writeExplicitSegment(current.explicit);
         // and ship that, 
         current.transmitTime = now;
         let timeUntilComplete = Math.ceil((current.explicit.timeEnd - now) * 1000);
         console.log(`QM: time: ${current.transmitTime.toFixed(3)}, w/ end ${current.explicit.timeEnd.toFixed(3)}, complete in ${timeUntilComplete}ms`);
         console.log(`QM: sending from ${current.explicit.timeStart.toFixed(3)} -> (${(current.explicit.timeTotal).toFixed(3)}s) -> ${current.explicit.timeEnd.toFixed(3)}`);
         // IDK if this takes any time at all - 
-        await Promise.all(actuators.map(((actu) => actu.appendMaxlSegment(datagram))));
+        // let's do... per-actuator, whip out axes, 
+        // just using implicit axis-order (i.e. 0: x, 1: y, ...)
+        let datagrams = [] 
+        for(let a = 0; a < actuators.length; a ++){
+          datagrams.push(writeExplicitSegment(current.explicit, a));
+        }
+        // then try to do a synchronous transmit, 
+        await Promise.all(actuators.map(((actu, index) => {
+          return actu.appendMaxlSegment(datagrams[index])
+        })));
         // and set a timeout to check on queue states when it's done, 
         setTimeout(checkQueueState, timeUntilComplete);
         // ... then do the next, 

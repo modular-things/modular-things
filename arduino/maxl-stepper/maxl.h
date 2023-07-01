@@ -19,20 +19,15 @@ void maxl_loop(boolean log);
 
 // ---------------- config... motor pickins 
 
-// WARNING: does nothing 
 void maxl_pushSettings(uint8_t _actuatorID, uint8_t _axisPick, float _spu);
-
-// ---------------- get actuator states 
-
-void maxl_getCurrentStates(maxlStateInterface_t* statePtr);
 
 // ---------------- queue management
 
-void maxl_addSegmentToQueue(maxlSegment_t* seg);
+void maxl_addSegmentToQueue(maxlSegmentLinearMotion_t* seg);
 
 size_t maxl_getSegmentCompleteMsg(uint8_t* msg);
 
-void maxl_evalSegment(maxlState_t* _state, maxlSegment_t* seg, fpint32_t now, boolean log);
+void maxl_evalSegment(fpint32_t* _pos, fpint32_t* _vel, maxlSegmentLinearMotion_t* seg, fpint32_t now, boolean log);
 
 void maxl_halt(void);
 
@@ -44,7 +39,7 @@ uint32_t maxl_getSystemTime(void);
 
 // ---------------- "user code"
 
-void maxl_tickHardware(maxlState_t* _state, motionVect_t* _deltas);
+void maxl_tickHardware(fpint32_t _state, fpint32_t _delta);
 
 // ---------------- debuggen 
 

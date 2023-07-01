@@ -4,13 +4,13 @@
 export type UnplannedSegment = {
   p1: Array<number>,
   p2: Array<number>,
-  vmax: number, 
-  accel: number, 
+  vmax: number,
+  accel: number,
 }
 
 export type PlannedSegment = UnplannedSegment & {
-  vi: number, 
-  vf: number, 
+  vi: number,
+  vf: number,
   explicit?: ExplicitSegment,
   transmitTime: number,
   next?: PlannedSegment,
@@ -22,23 +22,53 @@ export type PlannedSegment = UnplannedSegment & {
 
 export type ExplicitSegment = {
   // time-wise, 
-  timeStart: number, 
-  timeEnd: number, 
-  isLastSegment: boolean, 
+  timeStart: number,
+  timeEnd: number,
+  isLastSegment: boolean,
   // positional 
   p1: Array<number>,
   unit: Array<number>,
   // rates, 
-  vi: number, 
-  accel: number, 
+  vi: number,
+  accel: number,
   vmax: number,
-  vf: number, 
+  vf: number,
   // pre-calc'd times (seconds):
-  timeTotal: number, 
-  timeAccelEnd: number, 
-  timeCruiseEnd: number, 
+  timeTotal: number,
+  timeAccelEnd: number,
+  timeCruiseEnd: number,
   // pre-calc'd integrals:
-  distTotal: number, 
-  distAccelPhase: number, 
-  distCruisePhase: number, 
+  distTotal: number,
+  distAccelPhase: number,
+  distCruisePhase: number,
+}
+
+export type SingleDOFExplicitSegment = {
+  // time-wise, 
+  timeStart: number,
+  timeEnd: number,
+  isLastSegment: boolean,
+  // positional 
+  start: number,
+  // rates, 
+  vi: number,
+  accel: number,
+  vmax: number,
+  vf: number,
+  // pre-calc'd times (seconds):
+  timeTotal: number,
+  timeAccelEnd: number,
+  timeCruiseEnd: number,
+  // pre-calc'd integrals:
+  distTotal: number,
+  distAccelPhase: number,
+  distCruisePhase: number,
+}
+
+let MAXL_KEYS_SEGTYPE = {
+  LINEAR: 16,
+}
+
+export {
+  MAXL_KEYS_SEGTYPE
 }

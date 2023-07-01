@@ -12,62 +12,38 @@
 // we get explicit about fixed point 
 typedef int32_t fpint32_t;
 
-// ---------------- fixedp struct 
+// ---------------- position-al segments 
 
-typedef struct maxlFixedPointVect_t {
-  fpint32_t axis[MAXL_MAX_DOF];
-} motionVect_t;
-
-// ---------------- state in fixedpoint and floats
-
-typedef struct maxlStateInterface_t {
-  float pos[MAXL_MAX_DOF];    // position in all axes, steps
-  float unit[MAXL_MAX_DOF];   // unit vector, direction of vel & accel
-  float vel;                    // vel, steps/sec
-  float accel;                  // accel, steps/sec 
-} maxlStateInterface_t;
-
-typedef struct maxlState_t {
-  fpint32_t pos[MAXL_MAX_DOF];
-  fpint32_t unit[MAXL_MAX_DOF];
-  fpint32_t vel = 0;
-  fpint32_t accel = 0;
-} maxlState_t;
-
-// ---------------- segments 
-
-typedef struct maxlSegment_t {
+typedef struct maxlSegmentLinearMotion_t {
   // system-reckoned start and end times, in micros, 
   uint32_t tStart_us = 0;
   uint32_t tEnd_us = 0;
   // sequencing aid,
   boolean isLastSegment = false;
   // valuuuues:
-  // a start position, 
-  fpint32_t start[MAXL_MAX_DOF];
-  // a unit vector, to travel in, and length of travel, 
-  fpint32_t unit[MAXL_MAX_DOF];
-  fpint32_t distance = 0;
+  // a start position and total distance, 
+  fpint32_t start = 0;
   // start rate, accel slope(s), cruise rate, end rate 
   fpint32_t vi = 0;
   fpint32_t accel = 0;
   fpint32_t vmax = 0;
   fpint32_t vf = 0;
   // pre-calculated phase integrals, 
+  fpint32_t distTotal = 0;
   fpint32_t distAccelPhase = 0;
   fpint32_t distCruisePhase = 0;
   // phase times, 
   // i.e. when to stop accelerating, when to start decelerating 
-  fpint32_t tAccelEnd;
-  fpint32_t tCruiseEnd;
+  fpint32_t tAccelEnd = 0;
+  fpint32_t tCruiseEnd = 0;
   // now some queue management flags / links; 
   // ready/set, token 
   boolean isOccupied = false;
   // linking 
-  maxlSegment_t* next;
-  maxlSegment_t* previous;
+  maxlSegmentLinearMotion_t* next;
+  maxlSegmentLinearMotion_t* previous;
   uint32_t indice = 0;  // track own location, 
-} maxlSegment_t;
+} maxlSegmentLinearMotion_t;
 
 // ---------------------------------------------- fixedp maths  
 

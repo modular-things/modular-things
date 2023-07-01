@@ -1,7 +1,13 @@
 // utes ! 
 
 import Serializers from "../../osapjs/utils/serializers"
-import { UnplannedSegment, PlannedSegment, ExplicitSegment } from "./maxl-types"
+import { 
+  UnplannedSegment, 
+  PlannedSegment, 
+  ExplicitSegment, 
+  SingleDOFExplicitSegment,
+  MAXL_KEYS_SEGTYPE,
+ } from "./maxl-types"
 
 // addition...
 let vectorAddition = (A: Array<number>, B: Array<number>) => {
@@ -51,34 +57,55 @@ let floatToUint32Micros = (flt: number): number => {
 }
 
 // this takes the explicit segment and packs it into a buffer 
-let writeExplicitSegment = (exSeg: ExplicitSegment): Uint8Array => {
-  let numDOF = exSeg.p1.length;
-  let datagram = new Uint8Array(numDOF * 4 * 2 + 11 * 4 + 1);
+let writeExplicitSegment = (exSeg: ExplicitSegment, axis: number): Uint8Array => {
+  // ok ok, first we should cut the rug, you know ? 
+  let sdofSeg: SingleDOFExplicitSegment = {
+    timeStart: exSeg.timeStart,
+    timeEnd: exSeg.timeEnd,
+    isLastSegment: exSeg.isLastSegment,
+    // now pick 
+    start: exSeg.p1[axis],
+    // rates (are signed (!))
+    vi: exSeg.vi * exSeg.unit[axis],
+    // accel: Math.abs(exSeg.accel * exSeg.unit[axis]),
+    accel: exSeg.accel * exSeg.unit[axis],
+    vmax: exSeg.vmax * exSeg.unit[axis],
+    vf: exSeg.vf * exSeg.unit[axis],
+    // times are all identical, 
+    timeTotal: exSeg.timeTotal,
+    timeAccelEnd: exSeg.timeAccelEnd, 
+    timeCruiseEnd: exSeg.timeCruiseEnd,
+    // and integrals are by-unit, 
+    distTotal: exSeg.distTotal * exSeg.unit[axis], 
+    distAccelPhase: exSeg.distAccelPhase * exSeg.unit[axis], 
+    distCruisePhase: exSeg.distCruisePhase * exSeg.unit[axis],   
+  }
+  // console.log(`single DOF`, sdofSeg)
+  // now we can write the output *of that* 
+  // TODO is the proper transforms-like later... 
+  // the thing is... 13 numbers (yikes?) and one boolean "isLast" and the key 
+  let datagram = new Uint8Array(4 * 12 + 2);
   let wptr = 0;
+  // THE KEY
+  wptr += Serializers.writeUint8(datagram, wptr, MAXL_KEYS_SEGTYPE.LINEAR);
   // sequencing data 
-  wptr += Serializers.writeInt32(datagram, wptr, floatToUint32Micros(exSeg.timeStart));
-  wptr += Serializers.writeInt32(datagram, wptr, floatToUint32Micros(exSeg.timeEnd));
-  wptr += Serializers.writeBoolean(datagram, wptr, exSeg.isLastSegment);
-  // start, dir, 
-  for (let a = 0; a < numDOF; a++) {
-    wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.p1[a]));
-  }
-  for (let a = 0; a < numDOF; a++) {
-    wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.unit[a]));
-  }
-  // total distance, 
-  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.distTotal));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToUint32Micros(sdofSeg.timeStart));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToUint32Micros(sdofSeg.timeEnd));
+  wptr += Serializers.writeBoolean(datagram, wptr, sdofSeg.isLastSegment);
+  // start
+  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(sdofSeg.start));
   // rates, 
-  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.vi));
-  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.accel));
-  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.vmax));
-  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.vf));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(sdofSeg.vi));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(sdofSeg.accel));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(sdofSeg.vmax));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(sdofSeg.vf));
   // integrals, 
-  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.distAccelPhase));
-  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.distCruisePhase));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(sdofSeg.distTotal));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(sdofSeg.distAccelPhase));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(sdofSeg.distCruisePhase));
   // trapezoid times 
-  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.timeAccelEnd));
-  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(exSeg.timeCruiseEnd));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(sdofSeg.timeAccelEnd));
+  wptr += Serializers.writeInt32(datagram, wptr, floatToFixed(sdofSeg.timeCruiseEnd));
   // that's it, 
   return datagram
 }
