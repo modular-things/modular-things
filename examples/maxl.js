@@ -1,13 +1,13 @@
 // http://localhost:3000/modular-things/?file=maxl.js&panel=devices&panelWidth=40 
 
-// let maxl = createMAXL([maxlOne, maxlTwo]);
-let maxl = createMAXL([maxlOne])
+let maxl = createMAXL([maxlOne, maxlTwo]);
+// let maxl = createMAXL([maxlOne])
+
+await maxlOne.setCurrentScale(0.25);
+await maxlTwo.setCurrentScale(0.25);
 
 // we need to get the things all sync'd etc, 
 await maxl.begin();
-
-await maxlOne.setCurrentScale(0.25);
-// await maxlTwo.setCurrentScale(0.25);
 
 // await maxlOne.setAxis(0); // set to x 
 // await maxlTwo.setAxis(1); // set to y, 
@@ -34,7 +34,6 @@ for(let p = 0; p < maxl.testPath.length; p ++){
     break; 
   }
 }
-
 
 // the coolest would be like
 // maxl.config({

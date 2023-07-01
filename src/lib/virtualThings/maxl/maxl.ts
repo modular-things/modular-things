@@ -87,7 +87,7 @@ export default function createMAXL(actuators: Array<any>) {
 
   let QUEUE_START_DELAY = 0.050   // in seconds 
   let QUEUE_REMOTE_MAX_LEN = 16
-  let QUEUE_LOCAL_MAX_LEN = 48
+  let QUEUE_LOCAL_MAX_LEN = 64
 
   // -------------------------------------------- first up we have the halting code, 
   // this is like a reset... 
@@ -237,7 +237,7 @@ export default function createMAXL(actuators: Array<any>) {
 
   // erp, expose this also ? 
   let tp = []
-  for (let reps = 0; reps < 6; reps++) {
+  for (let reps = 0; reps < 3; reps++) {
     tp = tp.concat(testPath)
   }
 

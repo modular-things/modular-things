@@ -129,13 +129,6 @@ void maxl_evalSegment(fpint32_t* _pos, fpint32_t* _vel, maxlSegmentLinearMotion_
     // ... we could do some scale analysis, if we can limit segment time-sizes, 
     // we could limit rates as well, and this could all be lickedy-split 32-bit 
     vel = seg->vmax - fp_mult32x32(seg->accel, (now - seg->tCruiseEnd));
-
-    // a potential and not-unlikely fuckup;
-    // if(vel < fp_int32ToFixed32(0)){
-    //   if(log) OSAP_ERROR("-ve velocity during deccel phase; " + String(fp_fixed32ToFloat(vel)));
-    //   vel = fp_int32ToFixed32(1);
-    // }
-
     // d = both-previously-calculated-integrals + ((vi + vf) / 2) * t
     dist = seg->distAccelPhase + seg->distCruisePhase;
     dist += fp_mult32x32(((seg->vmax + vel) >> 1), (now - seg->tCruiseEnd));
