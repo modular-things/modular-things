@@ -51,56 +51,15 @@ size_t maxlMessageInterface(uint8_t* data, size_t len, uint8_t* reply){
 
 OSAP_Port_Named maxlMessage_port("maxlMessages", maxlMessageInterface);
 
-/*
-
-// ---------------------------------------------- MAXL write time 
-
-void writeMaxlTime(uint8_t* data, size_t len){
-  uint16_t rptr = 0;
-  uint32_t newTime = ts_readUint32(data, &rptr);
-  // maxl_setSystemTime(newTime);
-}
-
-OSAP_Port_Named writeMaxlTime_port("writeMaxlTime", writeMaxlTime);
-
-// ---------------------------------------------- MAXL ingest a segment 
-
-maxlSegmentPositionLinear_t handoffSeg;
-
-void appendMaxlSegment(uint8_t* data, size_t len){
-  // maxl_addSegment(data, len);
-}
-
-OSAP_Port_Named appendMaxlSegment_port("appendMaxlSegment", appendMaxlSegment);
-
-// ---------------------------------------------- MAXL halt 
-
-void maxlHalt(uint8_t* data, size_t len){
-  // maxl_halt();
-}
-
-OSAP_Port_Named maxlHalt_port("maxlHalt", maxlHalt);
-
-*/
-
 // ---------------------------------------------- ACTU config the actual actuator 
 
 void writeMotorSettings(uint8_t* data, size_t len){
-  // should bundle... cscale, position (?) idk 
   // it's just <cscale> for the time being, 
   uint16_t rptr = 0;
-  uint8_t id = ts_readUint8(data, &rptr);
-  uint8_t axis = ts_readUint8(data, &rptr);
-  float spu = ts_readFloat32(data, &rptr);
   float cscale = ts_readFloat32(data, &rptr);
   // yarp, yarp, yarp, 
   stepper_setCScale(cscale);
-  // the below... should get-decoupled from maxl 
-  // maxl_pushSettings(id, axis, spu);
-  OSAP_DEBUG(  "writing cscale: " + String(cscale) +
-                " axis: " + String(axis) +
-                " spu: " + String(spu)
-              );
+  OSAP_DEBUG("writing cscale: " + String(cscale));
 }
 
 OSAP_Port_Named writeMotorSettings_port("writeMotorSettings", writeMotorSettings);
@@ -118,8 +77,12 @@ OSAP_Port_Named getLimitState_port("getLimitState", getLimitState);
 
 void setup() {
   stepper_init();
-  // maxl_init();
   osap.begin();
+  maxl.begin();
+  // there's an op here to do 
+  // stepper.begin(); 
+  // as well... and abstract that on arduino-pwm-controlled pins... 
+  // then it's like "stepper-foc-output-side-library" 
   // we'll blink the user-led 
   pinMode(LED_BUILTIN, OUTPUT);
   // and our limit pin 
@@ -137,6 +100,7 @@ void loop() {
   // do graph stuff
   osap.loop();
   // do maxl stuff 
+  maxl.loop();
   // maxl_loop(false);
   // and clear out-messages (TODO... rm, or ?)
   // size_t msgLen = maxl_getSegmentCompleteMsg(msgOut);

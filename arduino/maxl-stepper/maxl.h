@@ -4,13 +4,20 @@
 #include <Arduino.h>
 #include "maxl-utes.h"
 
-// #define MOTION_MODE_NONE 0
-// #define MOTION_MODE_VEL 1 
-// #define MOTION_MODE_QUEUE 2 
-
+// settings 
 #define MAXL_TRACKNAME_MAX_LEN 16
 #define MAXL_MAX_TRACKS 16 
 #define MAXL_QUEUE_LEN 32 
+
+// messages 
+#define MAXL_KEY_MSG_TIME_REQ 55
+#define MAXL_KEY_MSG_TIME_SET 57
+#define MAXL_KEY_MSG_HALT 59
+#define MAXL_KEY_MSG_TRACK_ADDSEGMENT 61 
+#define MAXL_KEY_MSG_GETINFO_REQ 63 
+
+// track-types 
+#define MAXL_KEY_TRACKTYPE_POSLIN 101 
 
 // and a queue-thing interface, 
 // a purely virtual class 
@@ -22,7 +29,7 @@ class MAXL_Track {
     virtual void evaluate(uint32_t time) = 0;
     // track-segments ingester (with a reply) and w/ an optional on-completion (?) 
     virtual size_t addSegment(uint8_t* data, size_t len, uint8_t* reply) = 0;
-    virtual size_t getSegmentCompleteMessage(uint8_t* msg) = 0;
+    virtual size_t getSegmentCompleteMessage(uint32_t time, uint8_t* msg) = 0;
     // track-resetter, 
     virtual void halt(void) = 0;
     // and... 
@@ -35,6 +42,8 @@ class MAXL {
     // init / runtime, 
     void begin(void);
     void loop(void);
+    // and shutdown 
+    void halt(void);
     // ingest... all messages ? 
     size_t messageHandler(uint8_t* data, size_t len, uint8_t* reply);
     // register a track... 
@@ -52,6 +61,8 @@ class MAXL {
     static MAXL* instance;
     MAXL_Track* tracks[MAXL_MAX_TRACKS];
     uint8_t numTracks = 0;
+    // pls ignore 
+    uint8_t msgBuffer[256];
 };
 
 // let's try a basic... one of these:
@@ -63,7 +74,7 @@ class MAXL_TrackPositionLinear : public MAXL_Track {
     void begin(void) override; 
     void evaluate(uint32_t time) override;
     size_t addSegment(uint8_t* data, size_t len, uint8_t* reply) override;
-    size_t getSegmentCompleteMessage(uint8_t* msg) override;
+    size_t getSegmentCompleteMessage(uint32_t time, uint8_t* msg) override;
     // track-resetter, 
     void halt(void) override;
   private:

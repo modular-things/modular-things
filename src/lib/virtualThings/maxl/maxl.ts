@@ -46,9 +46,20 @@ export default function createMAXL(actuators: Array<any>) {
     return (Time.getTimeStamp() - maxlLocalClockOffset) / 1000;
   } 
 
+  let halt = async () => {
+    // shut each of our actuators down, this is the hard stop: 
+    await Promise.all(actuators.map(actu => {
+      return osap.send(actu.getName(), "maxlMessages", new Uint8Array([MAXL_MSGKEYS.HALT]))
+    }))
+    // and reset / wipe our own state, 
+    queue.length = 0;
+    head = null;
+    tail = null;
+  }
+
   let begin = async () => {
-    // TODO: should reset all remotes here ... 
-    await Promise.all(actuators.map(actu => actu.halt()))
+    // halt all of the actuators, 
+    await halt();
     // get some readings, 
     let count = 10
     let samples = []
@@ -88,19 +99,6 @@ export default function createMAXL(actuators: Array<any>) {
   let QUEUE_START_DELAY = 0.050   // in seconds 
   let QUEUE_REMOTE_MAX_LEN = 16
   let QUEUE_LOCAL_MAX_LEN = 64
-
-  // -------------------------------------------- first up we have the halting code, 
-  // this is like a reset... 
-
-  let halt = async () => {
-    // shut 'em down, this is the hard stop: 
-    await Promise.all(actuators.map(actu => actu.halt()))
-    // now we want to fk up / reset our own state:
-    queue.length = 0;
-    head = null;
-    tail = null;
-    // we're done now then... AFAIK 
-  }
 
   // get length from head -> end, 
   let getLocalLookaheadLength = () => {
@@ -236,6 +234,7 @@ export default function createMAXL(actuators: Array<any>) {
   }
 
   // erp, expose this also ? 
+  // also... a library of difficult paths would be rad 
   let tp = []
   for (let reps = 0; reps < 3; reps++) {
     tp = tp.concat(testPath)
@@ -249,4 +248,24 @@ export default function createMAXL(actuators: Array<any>) {
     addSegmentToQueue,
   }
 
+}
+
+let writeMaxlTime = async (time) => {
+  // time is handed over here in *seconds* - we write microseconds as unsigned int, 
+  let micros = Math.ceil(time * 1000000)
+  let datagram = new Uint8Array(4);
+  Serializers.writeUint32(datagram, 0, micros);
+  let outTime = Time.getTimeStamp()
+  await osap.send(name, "writeMaxlTime", datagram);
+  let pingTime = Time.getTimeStamp() - outTime;
+  return pingTime;
+}
+
+let appendMaxlSegment = async (datagram: Uint8Array) => {
+  await osap.send(name, "appendMaxlSegment", datagram);
+}
+
+let halt = async () => {
+  let datagram = new Uint8Array([0]);
+  await osap.send(name, "maxlHalt", datagram);
 }

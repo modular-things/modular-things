@@ -6,7 +6,7 @@ import {
   PlannedSegment, 
   ExplicitSegment, 
   SingleDOFExplicitSegment,
-  MAXL_KEYS_SEGTYPE,
+  MAXL_KEYS,
  } from "./maxl-types"
 
 // addition...
@@ -87,7 +87,7 @@ let writeExplicitSegment = (exSeg: ExplicitSegment, axis: number): Uint8Array =>
   let datagram = new Uint8Array(4 * 12 + 2);
   let wptr = 0;
   // THE KEY
-  wptr += Serializers.writeUint8(datagram, wptr, MAXL_KEYS_SEGTYPE.LINEAR);
+  wptr += Serializers.writeUint8(datagram, wptr, MAXL_KEYS.TRACKTYPE_POSLIN);
   // sequencing data 
   wptr += Serializers.writeInt32(datagram, wptr, floatToUint32Micros(sdofSeg.timeStart));
   wptr += Serializers.writeInt32(datagram, wptr, floatToUint32Micros(sdofSeg.timeEnd));

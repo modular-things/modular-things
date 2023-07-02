@@ -1,12 +1,17 @@
 #include "maxl.h"
 #include "maxl-utes.h"
 
+// OSAP is just here for debugs, we should be able to decouple ? 
+#include "osap.h"
+
 MAXL_TrackPositionLinear::MAXL_TrackPositionLinear(const char* _name, void (*_followerFunction)(float position, float delta)){
   // register ourselves as a track... 
   MAXL::getInstance()->registerTrack(this);
   // and store our name & follower func
   strncpy(trackName, _name, MAXL_TRACKNAME_MAX_LEN);
   followerFunction = _followerFunction;
+  // and assign our track type, 
+  trackTypeKey = MAXL_KEY_TRACKTYPE_POSLIN;
 }
 
 // so, here's our linear piecewise position chunk 
@@ -158,11 +163,67 @@ void MAXL_TrackPositionLinear::evaluate(uint32_t time){
 }
 
 size_t MAXL_TrackPositionLinear::addSegment(uint8_t* data, size_t len, uint8_t* reply){
+  // str8 from the datagram, 
+  if(head->next->isOccupied){
+    OSAP_ERROR("tx to over-full motion buffer");
+    return 0;
+  }
+  // it seems like it'd be possible to do something silly fast like 
+  // memcpy(void* head, data, ... serializedLen);
+  // it's probably even worth trying, but for now the laborious but more-honest:
+  // setup the read and check the type, 
+  uint16_t rptr = 0;
+  uint8_t segmentType = data[rptr ++];
+  if(segmentType != trackTypeKey){
+    OSAP_ERROR("bad track type : " + String(segmentType) + " to: " + String(trackTypeKey));
+    return 0;
+  }
+  // copy it out, 
+  head->tStart_us = ts_readUint32(data, &rptr);
+  head->tEnd_us = ts_readUint32(data, &rptr);
+  head->isLastSegment = ts_readBoolean(data, &rptr);
+  // start and distance 
+  head->start = ts_readInt32(data, &rptr);
+  // vi, vmax, accel, 
+  head->vi = ts_readInt32(data, &rptr);
+  head->accel = ts_readInt32(data, &rptr);
+  head->vmax = ts_readInt32(data, &rptr);
+  head->vf = ts_readInt32(data, &rptr);
+  // pre-computed integrals, 
+  head->distTotal = ts_readInt32(data, &rptr); 
+  head->distAccelPhase = ts_readInt32(data, &rptr);
+  head->distCruisePhase = ts_readInt32(data, &rptr);
+  // and trapezoid times
+  head->tAccelEnd = ts_readInt32(data, &rptr);
+  head->tCruiseEnd = ts_readInt32(data, &rptr);
+  // and setup to run;
+  head->isOccupied = true;
+  // now advance the head ptr, 
+  head = head->next;
+  // now we r queue'en, 
+  mode = MAXL_TPL_MODE_QUEUE;
+  // we don't have a return message at this moment... 
   return 0;
 }
 
-size_t MAXL_TrackPositionLinear::getSegmentCompleteMessage(uint8_t* msg){
-  return 0;
+size_t MAXL_TrackPositionLinear::getSegmentCompleteMessage(uint32_t time, uint8_t* msg){
+  // we can only rm one-per-call here anyways, and oldest-existing boy is here:
+  if(tail->isOccupied && tail->tEnd_us < time){
+    // OSAP_DEBUG("up-piping seg " + String(tail->tStart_us));
+    uint16_t wptr = 0;
+    // we could write return msgs out here, ... 
+    // id self & start time, which should be sufficient to ID the segment, 
+    // ts_writeUint8(actuatorID, msg, &wptr);
+    // ts_writeUint32(tail->tStart_us, msg, &wptr);
+    // no longer occupied, 
+    tail->isOccupied = false;
+    // and advance our tail, 
+    tail = tail->next;
+    // and ship that pckt, 
+    return wptr;
+  } else {
+    return 0;
+  }
 }
 
 void MAXL_TrackPositionLinear::halt(void){

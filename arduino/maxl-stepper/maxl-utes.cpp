@@ -76,13 +76,23 @@ void ts_writeFloat32(float val, volatile unsigned char* buf, uint16_t* ptr){
   (*ptr) += 4;
 }
 
+void ts_writeString(char* val, unsigned char* buf, uint16_t* ptr){
+  // add one to the len so that we include the trailing zero and 
+  // can copy the str out directly:
+  size_t len = strlen(val) + 1;
+  // use memcpy instead of strcpy to avoid uint8_t vs. char pain:
+  memcpy(&(buf[*ptr]), val, len);
+  // resolve the length 
+  *ptr += len;
+}
+
+// ---------------- readers
+
 boolean ts_readBoolean(unsigned char* buf, uint16_t* ptr){
   boolean val = buf[(*ptr)] == 0 ? false : true;
   (*ptr) += 1;
   return val;
 }
-
-// ---------------- readers
 
 uint8_t ts_readUint8(unsigned char* buf, uint16_t* ptr){
   uint8_t val = buf[(*ptr)];
