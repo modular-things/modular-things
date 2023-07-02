@@ -1,16 +1,68 @@
 #include "maxl.h"
 
-void MAXL::begin(void){
+// ---------------------------------------------- singleton stuff 
 
+MAXL* MAXL::instance = nullptr;
+
+MAXL::MAXL(void){
+  if(instance == nullptr){
+    instance = this;
+  }
 }
+
+MAXL* MAXL::getInstance(void){
+  return instance;
+}
+
+// ---------------------------------------------- track registration 
+
+void MAXL::registerTrack(MAXL_Track* track){
+  if(numTracks >= MAXL_MAX_TRACKS){
+    // she borked, should throw some error 
+    // point me at the project that deploys 16 tracks in one module 
+    // and I will come up with a way to escape this error 
+  } else {
+    tracks[numTracks] = track;
+    numTracks ++;
+  }
+}
+
+// ---------------------------------------------- startup 
+
+void MAXL::begin(void){
+  for(uint8_t t = 0; t < numTracks; t ++){
+    tracks[t]->begin();
+  }
+}
+
+// ---------------------------------------------- runtime 
 
 void MAXL::loop(void){
-
+  static uint32_t now = getSystemTime();
+  for(uint8_t t = 0; t < numTracks; t ++){
+    tracks[t]->evaluate(now);
+  }
 }
+
+// ---------------------------------------------- message ingest 
 
 size_t MAXL::messageHandler(uint8_t* data, size_t len, uint8_t* reply){
   reply[0] = 77;
   return 1;
+}
+
+// ---------------------------------------------- time utes 
+
+void MAXL::setSystemTime(uint32_t time){
+  // current underlying time, 
+  uint32_t us = micros();
+  // we do now = micros() + timeOffset;
+  // so setTime = micros() + timeOffset; at this instant, 
+  timeOffset = time - micros();
+}
+
+uint32_t MAXL::getSystemTime(void){
+  return micros() + timeOffset;
 }
 
 // so, first will be getting the MAXL class to act like an OSAP core and singleton itself, 
@@ -18,6 +70,8 @@ size_t MAXL::messageHandler(uint8_t* data, size_t len, uint8_t* reply){
 
 // then there's.... 
 
+
+// ---------------------------------------------- OLD BELOW 
 
 /*
 // ---------------------------------------------- stateful stuff 
@@ -30,11 +84,11 @@ int32_t timeOffset = 0;
 // ---------------------------------------------- we have a queue 
 // TODO: queue should be able to hold... various segment types... 
 
-// maxlSegmentLinearMotion_t theSegment;
-maxlSegmentLinearMotion_t queue[MAXL_QUEUE_LEN];
+// maxlSegmentPositionLinear_t theSegment;
+maxlSegmentPositionLinear_t queue[MAXL_QUEUE_LEN];
 // // and our own head, tail for the queue 
-maxlSegmentLinearMotion_t* head;  // write moves into here, 
-maxlSegmentLinearMotion_t* tail;  // operate from here, 
+maxlSegmentPositionLinear_t* head;  // write moves into here, 
+maxlSegmentPositionLinear_t* tail;  // operate from here, 
 
 void maxl_init(void){
   // -------------------------------------------- queue needs some setup, 
@@ -75,7 +129,7 @@ void maxl_loop(boolean log){
         // time now is... 
         uint32_t time = micros() + timeOffset;
         // we'll go a-sweeping through the links, 
-        maxlSegmentLinearMotion_t* seg = tail;
+        maxlSegmentPositionLinear_t* seg = tail;
         // looking for an in-band segment, 
         for(uint8_t s = 0; s < MAXL_QUEUE_LEN; s ++){
           // if it's prepped and we are in band... 
@@ -114,7 +168,7 @@ void maxl_loop(boolean log){
 
 // into state goes posn, rate, vel, accel, per trajectory... 
 // "now" is fixed point *seconds*, segment starts at t = 0 
-void maxl_evalSegment(fpint32_t* _pos, fpint32_t* _vel, maxlSegmentLinearMotion_t* seg, fpint32_t now, boolean log){
+void maxl_evalSegment(fpint32_t* _pos, fpint32_t* _vel, maxlSegmentPositionLinear_t* seg, fpint32_t now, boolean log){
   // we're going to calc a distance-from-segment-start-pt, that's this:
   fpint32_t dist = 0;
   // our current vels & accels will get stored / used, 

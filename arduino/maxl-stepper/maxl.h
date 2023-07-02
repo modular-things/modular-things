@@ -9,24 +9,13 @@
 // #define MOTION_MODE_QUEUE 2 
 
 #define MAXL_TRACKNAME_MAX_LEN 16
-
-class MAXL {
-  public:
-    // init / runtime, 
-    void begin(void);
-    void loop(void);
-    // ingest... all messages ? 
-    size_t messageHandler(uint8_t* data, size_t len, uint8_t* reply);
-    // hmmm 
-  private:
-    void setSystemTime(uint32_t time);
-    uint32_t getSystemTime(void);
-};
+#define MAXL_MAX_TRACKS 16 
+#define MAXL_QUEUE_LEN 32 
 
 // and a queue-thing interface, 
 // a purely virtual class 
 class MAXL_Track {
-  public:
+  public: 
     // every1 has 2 begin 
     virtual void begin(void) = 0;
     // the main runtime for this track, 
@@ -41,6 +30,30 @@ class MAXL_Track {
     char trackName[MAXL_TRACKNAME_MAX_LEN];
 };
 
+class MAXL {
+  public:
+    // init / runtime, 
+    void begin(void);
+    void loop(void);
+    // ingest... all messages ? 
+    size_t messageHandler(uint8_t* data, size_t len, uint8_t* reply);
+    // register a track... 
+    void registerTrack(MAXL_Track* track);
+    // and we need to singleton this thing, 
+    MAXL(void);
+    static MAXL* getInstance(void);
+    // this aught to be useful to others besides ourselves 
+    uint32_t getSystemTime(void);
+  private:
+    // time trackers 
+    void setSystemTime(uint32_t time);
+    int32_t timeOffset;
+    // self and self's track collection 
+    static MAXL* instance;
+    MAXL_Track* tracks[MAXL_MAX_TRACKS];
+    uint8_t numTracks = 0;
+};
+
 // let's try a basic... one of these:
 class MAXL_TrackPositionLinear : public MAXL_Track {
   public:
@@ -53,6 +66,9 @@ class MAXL_TrackPositionLinear : public MAXL_Track {
     size_t getSegmentCompleteMessage(uint8_t* msg) override;
     // track-resetter, 
     void halt(void) override;
+  private:
+    // the funko to call, 
+    void (*followerFunction)(float position, float delta) = nullptr;
 };
 
 /*
@@ -71,13 +87,13 @@ void maxl_pushSettings(uint8_t _actuatorID, uint8_t _axisPick, float _spu);
 
 // ---------------- queue management
 
-// void maxl_addSegmentToQueue(maxlSegmentLinearMotion_t* seg);
+// void maxl_addSegmentToQueue(maxlSegmentPositionLinear_t* seg);
 
 void maxl_addSegment(uint8_t* data, size_t len);
 
 size_t maxl_getSegmentCompleteMsg(uint8_t* msg);
 
-void maxl_evalSegment(fpint32_t* _pos, fpint32_t* _vel, maxlSegmentLinearMotion_t* seg, fpint32_t now, boolean log);
+void maxl_evalSegment(fpint32_t* _pos, fpint32_t* _vel, maxlSegmentPositionLinear_t* seg, fpint32_t now, boolean log);
 
 void maxl_halt(void);
 

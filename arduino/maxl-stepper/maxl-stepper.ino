@@ -65,7 +65,7 @@ OSAP_Port_Named writeMaxlTime_port("writeMaxlTime", writeMaxlTime);
 
 // ---------------------------------------------- MAXL ingest a segment 
 
-maxlSegmentLinearMotion_t handoffSeg;
+maxlSegmentPositionLinear_t handoffSeg;
 
 void appendMaxlSegment(uint8_t* data, size_t len){
   // maxl_addSegment(data, len);
