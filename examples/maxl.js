@@ -20,8 +20,8 @@
 //   reader: "position",   // basically the rx-er 
 // })
 
-// let maxl = createMAXL([maxlOne, maxlTwo]);
-let maxl = createMAXL([maxlOne])
+let maxl = createMAXL([maxlOne, maxlTwo]);
+// let maxl = createMAXL([maxlOne])
 
 // so we should set the thing up such that we *cannot* have 
 // "actuator" and "cartesian" names that are the same, 
@@ -29,7 +29,7 @@ let maxl = createMAXL([maxlOne])
 // along with the default track "velocity", 
 
 await maxlOne.setCurrentScale(0.25);
-// await maxlTwo.setCurrentScale(0.25);
+await maxlTwo.setCurrentScale(0.25);
 
 // we need to get the things all sync'd etc, 
 await maxl.begin();
