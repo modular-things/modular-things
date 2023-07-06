@@ -15,6 +15,7 @@ import maxlStepper from "./virtualThings/maxl/maxl-stepper";
 import { global_state } from "./global_state";
 import { LGatewayTypeKeys } from "./osapjs/utils/keys";
 import { setThingsState } from "./setThingsState";
+import MessageEscapeListener from "./osapjs/port_integrations/messageEscapeListener";
 
 const constructors = {
   rgbb,
@@ -104,6 +105,18 @@ let triggerMapUpdate = async () => {
     // do it, then 
     let newMap = await osap.updateMap();
     console.log(`yu've got a new map, lad`, newMap)  
+    // let's see if we can calculate routes-up for each... debugger
+    for(let runtime of newMap.runtimes){
+      for(let p in runtime.ports){
+        let port = runtime.ports[p]
+        if(port.typeName == "MessageEscape"){
+          // make a new listener and subscribe via... 
+          let listener = osap.messageEscapeListener()
+          await listener.begin(runtime.route, parseInt(p), runtime.uniqueName);
+          console.warn(`built escape for`, port, p)
+        }
+      }
+    }
     // uuuhh...
     if(mapShouldRescan){
       // this means that we've updated something locally mid-scan, 

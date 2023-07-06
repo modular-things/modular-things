@@ -209,7 +209,7 @@ size_t MAXL_TrackPositionLinear::addSegment(uint8_t* data, size_t len, uint8_t* 
 size_t MAXL_TrackPositionLinear::getSegmentCompleteMessage(uint32_t time, uint8_t* msg){
   // we can only rm one-per-call here anyways, and oldest-existing boy is here:
   if(tail->isOccupied && tail->tEnd_us < time){
-    // OSAP_DEBUG("up-piping seg " + String(tail->tStart_us));
+    OSAP_DEBUG("up-piping seg " + String(tail->tStart_us));
     uint16_t wptr = 0;
     // we could write return msgs out here, ... 
     // id self & start time, which should be sufficient to ID the segment, 

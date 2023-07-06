@@ -84,9 +84,13 @@ let writeExplicitSegment = (exSeg: ExplicitSegment, axis: number): Uint8Array =>
   // now we can write the output *of that* 
   // TODO is the proper transforms-like later... 
   // the thing is... 13 numbers (yikes?) and one boolean "isLast" and the key 
-  let datagram = new Uint8Array(4 * 12 + 2);
+  let datagram = new Uint8Array(4 * 12 + 4);
   let wptr = 0;
-  // THE KEY
+  // THE KEYS
+  wptr += Serializers.writeUint8(datagram, wptr, MAXL_KEYS.MSG_TRACK_ADDSEGMENT);
+  // TODO: this needs to look at better-abstracted track info: the actuator's
+  // ... trackIndex, ... 
+  wptr += Serializers.writeUint8(datagram, wptr, 0);
   wptr += Serializers.writeUint8(datagram, wptr, MAXL_KEYS.TRACKTYPE_POSLIN);
   // sequencing data 
   wptr += Serializers.writeInt32(datagram, wptr, floatToUint32Micros(sdofSeg.timeStart));

@@ -73,12 +73,19 @@ size_t getLimitState(uint8_t* data, size_t len, uint8_t* reply){
 
 OSAP_Port_Named getLimitState_port("getLimitState", getLimitState);
 
+// ---------------------------------------------- attach error / debug msgs to the link pipe 
+
+OSAP_Port_MessageEscape debugPort;
+
 // ---------------------------------------------- arduino setup 
 
 void setup() {
+  // startup... 
   stepper_init();
   osap.begin();
   maxl.begin();
+  // get debug 
+  osap.attachDebugFunction(debugPort.escape);
   // there's an op here to do 
   // stepper.begin(); 
   // as well... and abstract that on arduino-pwm-controlled pins... 

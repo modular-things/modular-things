@@ -1,26 +1,27 @@
 // http://localhost:3000/modular-things/?file=maxl.js&panel=devices&panelWidth=40 
 
+// fantasy API 
+// let maxl = createMAXL({
+//   actuators: [maxlOne, maxlTwo],
+//   motionAxes: ["x", "y"],
+//   // optional ?
+//   transformedAxes: ["a", "b"],
+//   transformForwards: (cartesian) => {
+//     let actuators = new Array(cartesian.length);
+//     actuators[0] = cartesian[0] + cartesian[1];
+//     actuators[1] = cartesian[0] - cartesian[1];
+//   },
+//   transormReverse: (actuators) => {}, // etc... 
+// })
+
+// maxl.subscribe({
+//   actuator: maxlOne,
+//   track: "a",           // basically a tx-er 
+//   reader: "position",   // basically the rx-er 
+// })
+
 // let maxl = createMAXL([maxlOne, maxlTwo]);
-// let maxl = createMAXL([maxlOne])
-
-let maxl = createMAXL({
-  actuators: [maxlOne, maxlTwo],
-  motionAxes: ["x", "y"],
-  // optional ?
-  transformedAxes: ["a", "b"],
-  transformForwards: (cartesian) => {
-    let actuators = new Array(cartesian.length);
-    actuators[0] = cartesian[0] + cartesian[1];
-    actuators[1] = cartesian[0] - cartesian[1];
-  },
-  transormReverse: (actuators) => {}, // etc... 
-})
-
-maxl.subscribe({
-  actuator: maxlOne,
-  track: "a",           // basically a tx-er 
-  reader: "position",   // basically the rx-er 
-})
+let maxl = createMAXL([maxlOne])
 
 // so we should set the thing up such that we *cannot* have 
 // "actuator" and "cartesian" names that are the same, 
@@ -28,7 +29,7 @@ maxl.subscribe({
 // along with the default track "velocity", 
 
 await maxlOne.setCurrentScale(0.25);
-await maxlTwo.setCurrentScale(0.25);
+// await maxlTwo.setCurrentScale(0.25);
 
 // we need to get the things all sync'd etc, 
 await maxl.begin();

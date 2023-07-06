@@ -26,6 +26,7 @@ import {
 
 import {
   PlannedSegment,
+  MAXL_KEYS,
 } from "./maxl-types"
 
 let MOTION_MAX_DOF = 7
@@ -44,12 +45,25 @@ export default function createMAXL(actuators: Array<any>) {
   // return a local timestamp in seconds 
   let getLocalTime = () => {
     return (Time.getTimeStamp() - maxlLocalClockOffset) / 1000;
-  } 
+  }
 
+  // writes a new time out to a string-id'd actuator 
+  let writeTime = async (time: number, actu: string) => {
+    // time is handed over here in *seconds* - we write microseconds as unsigned int, 
+    let micros = Math.ceil(time * 1000000);
+    let datagram = new Uint8Array([MAXL_KEYS.MSG_TIME_SET, 0, 0, 0, 0]);
+    Serializers.writeUint32(datagram, 1, micros);
+    let outTime = Time.getTimeStamp()
+    await osap.send(actu, "maxlMessages", datagram);
+    let pingTime = Time.getTimeStamp() - outTime;
+    return pingTime;
+  }
+
+  // halts all acutators *and* our own state 
   let halt = async () => {
     // shut each of our actuators down, this is the hard stop: 
     await Promise.all(actuators.map(actu => {
-      return osap.send(actu.getName(), "maxlMessages", new Uint8Array([MAXL_MSGKEYS.HALT]))
+      return osap.send(actu.getName(), "maxlMessages", new Uint8Array([MAXL_KEYS.MSG_HALT]))
     }))
     // and reset / wipe our own state, 
     queue.length = 0;
@@ -63,8 +77,11 @@ export default function createMAXL(actuators: Array<any>) {
     // get some readings, 
     let count = 10
     let samples = []
+    // for <count>, get a ping time per actuator 
     for (let i = 0; i < count; i++) {
-      samples.push(await Promise.all(actuators.map((actu => actu.writeMaxlTime(0)))))
+      samples.push(await Promise.all(actuators.map((actu) => {
+        return writeTime(0, actu.getName());
+      })))
     }
     // urm, 
     let res = new Array(actuators.length).fill(0)
@@ -78,13 +95,16 @@ export default function createMAXL(actuators: Array<any>) {
     // let's reset our clock to zero, 
     maxlLocalClockOffset = Time.getTimeStamp();
     // now let's set their clocks... to whence-we-suspect-the-set-packet-will-land, 
-    await Promise.all(actuators.map(async (actu, i) => {
-      return await actu.writeMaxlTime(getLocalTime() + res[i])
+    // WARNING: not 100% sure about this promise.all(), if we should return the 
+    // result of the async call, or should do i.e. "return await" 
+    await Promise.all(actuators.map((actu, i) => {
+      let name = actu.getName();
+      return writeTime(getLocalTime() + res[i], name);
     }))
     console.warn(`MAXL setup OK w/ avg RTTs of: `, res)
   }
 
-  // erm, 
+  // erm, dummy dof 
   let defaultDOF = 7
 
   // -------------------------------------------- queue management 
@@ -96,11 +116,11 @@ export default function createMAXL(actuators: Array<any>) {
   // the tail is the most-recently appended segment, 
   let tail: PlannedSegment;
 
-  let QUEUE_START_DELAY = 0.050   // in seconds 
+  let QUEUE_START_DELAY = 0.150   // in seconds 
   let QUEUE_REMOTE_MAX_LEN = 16
   let QUEUE_LOCAL_MAX_LEN = 64
 
-  // get length from head -> end, 
+  // get length from head -> end by traversing linked list 
   let getLocalLookaheadLength = () => {
     if (!head) return 0;
     let count = 1;
@@ -113,6 +133,7 @@ export default function createMAXL(actuators: Array<any>) {
     return count;
   }
 
+  // checks whether / not to transmit a segment, and does so 
   let checkQueueState = async () => {
     try {
       if (!head) {
@@ -145,18 +166,19 @@ export default function createMAXL(actuators: Array<any>) {
         // and ship that, 
         current.transmitTime = now;
         let timeUntilComplete = Math.ceil((current.explicit.timeEnd - now) * 1000);
-        console.log(`QM: time: ${current.transmitTime.toFixed(3)}, w/ end ${current.explicit.timeEnd.toFixed(3)}, complete in ${timeUntilComplete}ms`);
+        // console.log(`QM: time: ${current.transmitTime.toFixed(3)}, w/ end ${current.explicit.timeEnd.toFixed(3)}, complete in ${timeUntilComplete}ms`);
         console.log(`QM: sending from ${current.explicit.timeStart.toFixed(3)} -> (${(current.explicit.timeTotal).toFixed(3)}s) -> ${current.explicit.timeEnd.toFixed(3)}`);
         // IDK if this takes any time at all - 
         // let's do... per-actuator, whip out axes, 
         // just using implicit axis-order (i.e. 0: x, 1: y, ...)
-        let datagrams = [] 
-        for(let a = 0; a < actuators.length; a ++){
+        let datagrams = []
+        for (let a = 0; a < actuators.length; a++) {
           datagrams.push(writeExplicitSegment(current.explicit, a));
         }
-        // then try to do a synchronous transmit, 
-        await Promise.all(actuators.map(((actu, index) => {
-          return actu.appendMaxlSegment(datagrams[index])
+        // then make a synchronous-ish transmit of each segment... 
+        await Promise.all(actuators.map(((actu, i) => {
+          let name = actu.getName();
+          return osap.send(name, "maxlMessages", datagrams[i])
         })));
         // and set a timeout to check on queue states when it's done, 
         setTimeout(checkQueueState, timeUntilComplete);
@@ -164,10 +186,11 @@ export default function createMAXL(actuators: Array<any>) {
       }
     } catch (err) {
       head = null;
-      throw err; 
+      throw err;
     }
   }
 
+  // user-facing segment ingestion 
   let addSegmentToQueue = (end: Array<number>, vmax: number, vlink: number) => {
     return new Promise<void>(async (resolve, reject) => {
       // console.warn(`addMove w/ end pos`, JSON.parse(JSON.stringify(end)), `vmax: `, vmax, `vlink: `, vlink)
@@ -233,6 +256,7 @@ export default function createMAXL(actuators: Array<any>) {
     })
   }
 
+  // test path returnal 
   // erp, expose this also ? 
   // also... a library of difficult paths would be rad 
   let tp = []
@@ -244,28 +268,8 @@ export default function createMAXL(actuators: Array<any>) {
     testPath: tp,
     actuators,
     begin,
-    halt, 
+    halt,
     addSegmentToQueue,
   }
 
-}
-
-let writeMaxlTime = async (time) => {
-  // time is handed over here in *seconds* - we write microseconds as unsigned int, 
-  let micros = Math.ceil(time * 1000000)
-  let datagram = new Uint8Array(4);
-  Serializers.writeUint32(datagram, 0, micros);
-  let outTime = Time.getTimeStamp()
-  await osap.send(name, "writeMaxlTime", datagram);
-  let pingTime = Time.getTimeStamp() - outTime;
-  return pingTime;
-}
-
-let appendMaxlSegment = async (datagram: Uint8Array) => {
-  await osap.send(name, "appendMaxlSegment", datagram);
-}
-
-let halt = async () => {
-  let datagram = new Uint8Array([0]);
-  await osap.send(name, "maxlHalt", datagram);
 }

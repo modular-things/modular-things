@@ -5,6 +5,7 @@
 import Runtime from "./runtime"
 import Route from "./packets/routes"
 import NamedPortDispatcher from "./port_integrations/namedPortDispatcher";
+import MessageEscapeListener from "./port_integrations/messageEscapeListener";
 
 // largely a bundling class, 
 class OSAP {
@@ -16,6 +17,9 @@ class OSAP {
   // now we can intelligently expose things... 
   port = this.rt.port;
   linkGateway = this.rt.linkGateway;
+  messageEscapeListener = () => {
+    return new MessageEscapeListener(this.rt);
+  }
 
   // and search algos... 
   // these three... we might not really need to expose 
