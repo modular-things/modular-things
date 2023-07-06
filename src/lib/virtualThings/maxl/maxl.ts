@@ -47,8 +47,13 @@ export default function createMAXL(actuators: Array<any>) {
     return (Time.getTimeStamp() - maxlLocalClockOffset) / 1000;
   }
 
+  // sets our local clock, 
+  let writeLocalTime = (time: number) => {
+    maxlLocalClockOffset = time - Time.getTimeStamp();
+  }
+
   // writes a new time out to a string-id'd actuator 
-  let writeTime = async (time: number, actu: string) => {
+  let writeRemoteTime = async (time: number, actu: string) => {
     // time is handed over here in *seconds* - we write microseconds as unsigned int, 
     let micros = Math.ceil(time * 1000000);
     let datagram = new Uint8Array([MAXL_KEYS.MSG_TIME_SET, 0, 0, 0, 0]);
@@ -80,7 +85,7 @@ export default function createMAXL(actuators: Array<any>) {
     // for <count>, get a ping time per actuator 
     for (let i = 0; i < count; i++) {
       samples.push(await Promise.all(actuators.map((actu) => {
-        return writeTime(0, actu.getName());
+        return writeRemoteTime(0, actu.getName());
       })))
     }
     // urm, 
@@ -93,13 +98,13 @@ export default function createMAXL(actuators: Array<any>) {
       res[a] = res[a] / count / 1000;
     }
     // let's reset our clock to zero, 
-    maxlLocalClockOffset = Time.getTimeStamp();
+    writeLocalTime(0);
     // now let's set their clocks... to whence-we-suspect-the-set-packet-will-land, 
     // WARNING: not 100% sure about this promise.all(), if we should return the 
     // result of the async call, or should do i.e. "return await" 
     await Promise.all(actuators.map((actu, i) => {
       let name = actu.getName();
-      return writeTime(getLocalTime() + res[i], name);
+      return writeRemoteTime(getLocalTime() + res[i], name);
     }))
     console.warn(`MAXL setup OK w/ avg RTTs of: `, res)
   }
@@ -116,7 +121,7 @@ export default function createMAXL(actuators: Array<any>) {
   // the tail is the most-recently appended segment, 
   let tail: PlannedSegment;
 
-  let QUEUE_START_DELAY = 0.150   // in seconds 
+  let QUEUE_START_DELAY = 0.050   // in seconds 
   let QUEUE_REMOTE_MAX_LEN = 16
   let QUEUE_LOCAL_MAX_LEN = 64
 
@@ -237,7 +242,7 @@ export default function createMAXL(actuators: Array<any>) {
       if (!head) {
         head = seg;
         head.explicit = calculateExplicitSegment(seg, getLocalTime() + QUEUE_START_DELAY);
-        // await setDistributedClock(0);
+        writeLocalTime(0);
       }
       // then check our queue states, only ingesting so many... 
       let ingestCheck = () => {

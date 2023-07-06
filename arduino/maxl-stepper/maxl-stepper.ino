@@ -24,11 +24,11 @@ float stepModulo = 0.0F;
 void onPositionUpdate(float position, float delta){
   stepModulo += delta;
   if(stepModulo > unitsPerStep){
-    stepper_step(8, true);
+    stepper_step(1, true);
     stepModulo -= unitsPerStep;
   } 
   if (stepModulo < -unitsPerStep){
-    stepper_step(8, false);
+    stepper_step(1, false);
     stepModulo += unitsPerStep;
   }
 }

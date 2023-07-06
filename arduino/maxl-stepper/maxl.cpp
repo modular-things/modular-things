@@ -39,7 +39,7 @@ void MAXL::begin(void){
 // ---------------------------------------------- runtime 
 
 void MAXL::loop(void){
-  static uint32_t now = getSystemTime();
+  uint32_t now = getSystemTime();
   for(uint8_t t = 0; t < numTracks; t ++){
     tracks[t]->evaluate(now);
     // we have interfaces to get messages on segment completion, 
@@ -60,10 +60,13 @@ void MAXL::halt(void){
 
 void MAXL::setSystemTime(uint32_t time){
   // current underlying time, 
-  uint32_t us = micros();
+  // uint32_t us = micros();
   // we do now = micros() + timeOffset;
   // so setTime = micros() + timeOffset; at this instant, 
   timeOffset = time - micros();
+  // just for the debug ? 
+  uint32_t nowTime = getSystemTime();
+  OSAP_DEBUG("set time... " + String(time) + " -> " + String(nowTime));
 }
 
 uint32_t MAXL::getSystemTime(void){

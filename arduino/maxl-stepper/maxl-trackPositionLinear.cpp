@@ -142,6 +142,7 @@ void MAXL_TrackPositionLinear::evaluate(uint32_t time){
         // look for an in-band seggy 
         for(uint8_t s = 0; s < MAXL_QUEUE_LEN; s ++){
           if(seg->isOccupied && seg->tStart_us <= time && time < seg->tEnd_us){
+            // OSAP_DEBUG("inseg");
             // calculate segment-relative time in fp32 seconds:
             fpint32_t segTime = fp_floatToFixed32(((float)(time - seg->tStart_us)) * 0.000001);
             // do the actual werk, 
@@ -182,6 +183,8 @@ size_t MAXL_TrackPositionLinear::addSegment(uint8_t* data, size_t len, uint8_t* 
   head->tStart_us = ts_readUint32(data, &rptr);
   head->tEnd_us = ts_readUint32(data, &rptr);
   head->isLastSegment = ts_readBoolean(data, &rptr);
+  // print... 
+  // OSAP_DEBUG("start, end: " + String(head->tStart_us) + ", " + String(head->tEnd_us));
   // start and distance 
   head->start = ts_readInt32(data, &rptr);
   // vi, vmax, accel, 
@@ -209,7 +212,7 @@ size_t MAXL_TrackPositionLinear::addSegment(uint8_t* data, size_t len, uint8_t* 
 size_t MAXL_TrackPositionLinear::getSegmentCompleteMessage(uint32_t time, uint8_t* msg){
   // we can only rm one-per-call here anyways, and oldest-existing boy is here:
   if(tail->isOccupied && tail->tEnd_us < time){
-    OSAP_DEBUG("up-piping seg " + String(tail->tStart_us));
+    // OSAP_DEBUG("up-piping seg " + String(tail->tStart_us));
     uint16_t wptr = 0;
     // we could write return msgs out here, ... 
     // id self & start time, which should be sufficient to ID the segment, 
