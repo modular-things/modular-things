@@ -11,6 +11,7 @@ Jake Read at the Center for Bits and Atoms
 
 import { osap } from "../../osapjs/osap"
 import Serializers from "../../osapjs/utils/serializers"
+import { keyToString } from "../../osapjs/utils/keys"
 import Time from "../../osapjs/utils/time"
 
 import testPath from "./maxl-test-paths"
@@ -27,6 +28,7 @@ import {
 import {
   PlannedSegment,
   MAXL_KEYS,
+  ExplicitSegment,
 } from "./maxl-types"
 
 let MOTION_MAX_DOF = 7
@@ -34,9 +36,32 @@ let MOTION_MAX_DOF = 7
 // altho perhaps we should just encode lines on the v-t plot, also ? simpler ? 
 // that would be... 
 
-export default function createMAXL(actuators: Array<any>) {
-  if (!Array.isArray(actuators)) throw new Error(`MAXL needs [actuators], not ac1, ac2 e.g...`);
-  console.log(`MAXL w/ actuators as `, actuators);
+type MaxlSubscription = {
+  actuator: string,
+  track: string,
+  reader: string,
+}
+
+type MaxlTrackInfo = {
+  type: string,
+  reader: string
+}
+
+type MaxlActuatorInfo = {
+  name: string,
+  tracks: Array<MaxlTrackInfo>,
+}
+
+type MaxlConfig = {
+  motionAxes: Array<string>,              // set
+  subscriptions: Array<MaxlSubscription>, // set
+  actuators?: Array<MaxlActuatorInfo>,    // discovered / matched 
+  // transformedAxes?: Array<string>,
+  // transformForwards?: Function,
+  // transformBackwards?: Function, 
+}
+
+export default function createMAXL(config: MaxlConfig) {
 
   // -------------------------------------------- we'll get a time-base going on each startup, 
 
@@ -67,8 +92,8 @@ export default function createMAXL(actuators: Array<any>) {
   // halts all acutators *and* our own state 
   let halt = async () => {
     // shut each of our actuators down, this is the hard stop: 
-    await Promise.all(actuators.map(actu => {
-      return osap.send(actu.getName(), "maxlMessages", new Uint8Array([MAXL_KEYS.MSG_HALT]))
+    await Promise.all(config.actuators.map(actu => {
+      return osap.send(actu.name, "maxlMessages", new Uint8Array([MAXL_KEYS.MSG_HALT]))
     }))
     // and reset / wipe our own state, 
     queue.length = 0;
@@ -77,19 +102,57 @@ export default function createMAXL(actuators: Array<any>) {
   }
 
   let begin = async () => {
-    // halt all of the actuators, 
+    // (1) gather info about our remotes so that we can build subs 
+    config.actuators = [];
+    let actuatorNames: Set<string> = new Set();
+    config.subscriptions.forEach(sub => actuatorNames.add(sub.actuator));
+    console.log(`we have actu`, actuatorNames)
+    // ... flesh 'em out, 
+    for (let actu of actuatorNames) {
+      let res = await osap.send(actu, "maxlMessages", new Uint8Array([MAXL_KEYS.MSG_GETINFO_REQ]));
+      let numTracks = res[0];
+      let tracks = [];
+      let offset = 1;
+      for (let t = 0; t < numTracks; t++) {
+        let type = keyToString(res[offset], MAXL_KEYS);
+        let reader = Serializers.readString(res, offset + 1);
+        offset += reader.length + 2;
+        tracks.push({ type, reader });
+      }
+      config.actuators.push({
+        name: actu, 
+        tracks: tracks
+      })
+    }
+    // heres's our config now:
+    console.warn(`after setup, this MAXL has config: `, config)
+    // and we can halt 'em out in case we are restarting mid-strem, 
     await halt();
+    // (2) now let's check that our subscriptions make sense, yeah ? 
+    for(let sub of config.subscriptions){
+      // check that we have this motion axes,
+      // *or* that some other exists, like "speed" or event axes... yonder... from the future 
+      let axis = config.motionAxes.findIndex(ax => ax == sub.track);
+      if(axis < 0) throw new Error(`couldn't find a motion axes for this subscription: ` + JSON.stringify(sub));
+      // check that we have this actuator, 
+      let actu = config.actuators.findIndex(a => a.name == sub.actuator);
+      if(actu < 0) throw new Error(`couldn't find an actuator for this subscription:` + JSON.stringify(sub));
+      // check that ... readers match, 
+      let reader = config.actuators[actu].tracks.findIndex(t => t.reader == sub.reader);
+      if(reader < 0) throw new Error(`couldn't find a track reader for this subscription:` + JSON.stringify(sub));
+    }
+    // (3) do time setup 
     // get some readings, 
     let count = 10
     let samples = []
     // for <count>, get a ping time per actuator 
     for (let i = 0; i < count; i++) {
-      samples.push(await Promise.all(actuators.map((actu) => {
-        return writeRemoteTime(0, actu.getName());
+      samples.push(await Promise.all(config.actuators.map((actu) => {
+        return writeRemoteTime(0, actu.name);
       })))
     }
     // urm, 
-    let res = new Array(actuators.length).fill(0)
+    let res = new Array(config.actuators.length).fill(0)
     for (let a = 0; a < res.length; a++) {
       for (let i = 0; i < count; i++) {
         res[a] += samples[i][a];
@@ -102,9 +165,8 @@ export default function createMAXL(actuators: Array<any>) {
     // now let's set their clocks... to whence-we-suspect-the-set-packet-will-land, 
     // WARNING: not 100% sure about this promise.all(), if we should return the 
     // result of the async call, or should do i.e. "return await" 
-    await Promise.all(actuators.map((actu, i) => {
-      let name = actu.getName();
-      return writeRemoteTime(getLocalTime() + res[i], name);
+    await Promise.all(config.actuators.map((actu, i) => {
+      return writeRemoteTime(getLocalTime() + res[i], actu.name);
     }))
     console.warn(`MAXL setup OK w/ avg RTTs of: `, res)
   }
@@ -136,6 +198,35 @@ export default function createMAXL(actuators: Array<any>) {
     }
     // console.warn(`LL: ${count}`)
     return count;
+  }
+
+  let transmitSegment = async (segment: ExplicitSegment) => {
+    // we'd like to parse out... actuators-configs to tracks... 
+    // and we've already checked their viability, so this should be all good? 
+    let outputs = [];
+    for (let pipe of config.subscriptions) {
+      // ... we know the name (pipe.name) of the actuator, 
+      // TODO: we should diagram how this multiplexing works when we have 
+      // various track types... none of which are done yet ! 
+      // we want also to know the motion index we're going to pull:
+      let motionIndex = config.motionAxes.indexOf(pipe.track);
+      // and the index of the track, within the actuator:
+      let actuator = config.actuators.findIndex(actu => actu.name == pipe.actuator);
+      let trackIndex = config.actuators[actuator].tracks.findIndex(t => t.reader == pipe.reader);
+      // now we can stash this serialized message, 
+      outputs.push({
+        actuator: pipe.actuator,
+        datagram: writeExplicitSegment(segment, motionIndex, trackIndex),
+      })
+    }
+    // then simultaneously stuff 'em each into our buffer, 
+    // OSAP will make best effort to deliver each 
+    let promises = []
+    for (let output of outputs) {
+      promises.push(osap.send(output.actuator, "maxlMessages", output.datagram));
+    }
+    // and resolve them all, 
+    await Promise.all(promises);
   }
 
   // checks whether / not to transmit a segment, and does so 
@@ -173,18 +264,8 @@ export default function createMAXL(actuators: Array<any>) {
         let timeUntilComplete = Math.ceil((current.explicit.timeEnd - now) * 1000);
         // console.log(`QM: time: ${current.transmitTime.toFixed(3)}, w/ end ${current.explicit.timeEnd.toFixed(3)}, complete in ${timeUntilComplete}ms`);
         console.log(`QM: sending from ${current.explicit.timeStart.toFixed(3)} -> (${(current.explicit.timeTotal).toFixed(3)}s) -> ${current.explicit.timeEnd.toFixed(3)}`);
-        // IDK if this takes any time at all - 
-        // let's do... per-actuator, whip out axes, 
-        // just using implicit axis-order (i.e. 0: x, 1: y, ...)
-        let datagrams = []
-        for (let a = 0; a < actuators.length; a++) {
-          datagrams.push(writeExplicitSegment(current.explicit, a));
-        }
-        // then make a synchronous-ish transmit of each segment... 
-        await Promise.all(actuators.map(((actu, i) => {
-          let name = actu.getName();
-          return osap.send(name, "maxlMessages", datagrams[i])
-        })));
+        // tx this 
+        await transmitSegment(current.explicit);
         // and set a timeout to check on queue states when it's done, 
         setTimeout(checkQueueState, timeUntilComplete);
         // ... then do the next, 
@@ -271,7 +352,7 @@ export default function createMAXL(actuators: Array<any>) {
 
   return {
     testPath: tp,
-    actuators,
+    // config, // maybe don't expose 
     begin,
     halt,
     addSegmentToQueue,

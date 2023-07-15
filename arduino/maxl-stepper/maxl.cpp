@@ -66,7 +66,7 @@ void MAXL::setSystemTime(uint32_t time){
   timeOffset = time - micros();
   // just for the debug ? 
   uint32_t nowTime = getSystemTime();
-  OSAP_DEBUG("set time... " + String(time) + " -> " + String(nowTime));
+  // OSAP_DEBUG("set time... " + String(time) + " -> " + String(nowTime));
 }
 
 uint32_t MAXL::getSystemTime(void){

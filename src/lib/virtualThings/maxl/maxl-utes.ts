@@ -57,28 +57,28 @@ let floatToUint32Micros = (flt: number): number => {
 }
 
 // this takes the explicit segment and packs it into a buffer 
-let writeExplicitSegment = (exSeg: ExplicitSegment, axis: number): Uint8Array => {
+let writeExplicitSegment = (exSeg: ExplicitSegment, motionIndex: number, trackIndex: number): Uint8Array => {
   // ok ok, first we should cut the rug, you know ? 
   let sdofSeg: SingleDOFExplicitSegment = {
     timeStart: exSeg.timeStart,
     timeEnd: exSeg.timeEnd,
     isLastSegment: exSeg.isLastSegment,
     // now pick 
-    start: exSeg.p1[axis],
+    start: exSeg.p1[motionIndex],
     // rates (are signed (!))
-    vi: exSeg.vi * exSeg.unit[axis],
-    // accel: Math.abs(exSeg.accel * exSeg.unit[axis]),
-    accel: exSeg.accel * exSeg.unit[axis],
-    vmax: exSeg.vmax * exSeg.unit[axis],
-    vf: exSeg.vf * exSeg.unit[axis],
+    vi: exSeg.vi * exSeg.unit[motionIndex],
+    // accel: Math.abs(exSeg.accel * exSeg.unit[motionIndex]),
+    accel: exSeg.accel * exSeg.unit[motionIndex],
+    vmax: exSeg.vmax * exSeg.unit[motionIndex],
+    vf: exSeg.vf * exSeg.unit[motionIndex],
     // times are all identical, 
     timeTotal: exSeg.timeTotal,
     timeAccelEnd: exSeg.timeAccelEnd, 
     timeCruiseEnd: exSeg.timeCruiseEnd,
     // and integrals are by-unit, 
-    distTotal: exSeg.distTotal * exSeg.unit[axis], 
-    distAccelPhase: exSeg.distAccelPhase * exSeg.unit[axis], 
-    distCruisePhase: exSeg.distCruisePhase * exSeg.unit[axis],   
+    distTotal: exSeg.distTotal * exSeg.unit[motionIndex], 
+    distAccelPhase: exSeg.distAccelPhase * exSeg.unit[motionIndex], 
+    distCruisePhase: exSeg.distCruisePhase * exSeg.unit[motionIndex],   
   }
   // console.log(`single DOF`, sdofSeg)
   // now we can write the output *of that* 
@@ -90,7 +90,7 @@ let writeExplicitSegment = (exSeg: ExplicitSegment, axis: number): Uint8Array =>
   wptr += Serializers.writeUint8(datagram, wptr, MAXL_KEYS.MSG_TRACK_ADDSEGMENT);
   // TODO: this needs to look at better-abstracted track info: the actuator's
   // ... trackIndex, ... 
-  wptr += Serializers.writeUint8(datagram, wptr, 0);
+  wptr += Serializers.writeUint8(datagram, wptr, trackIndex);
   wptr += Serializers.writeUint8(datagram, wptr, MAXL_KEYS.TRACKTYPE_POSLIN);
   // sequencing data 
   wptr += Serializers.writeInt32(datagram, wptr, floatToUint32Micros(sdofSeg.timeStart));

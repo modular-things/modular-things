@@ -69,7 +69,7 @@ let LGatewayTypeKeys = {
   UART: 3,
 }
 
-// it's useful to exchange nums-for-strings, here's a ute for that:
+// it's often useful to exchange nums-for-strings, here's a ute for that:
 let keyToString = (k: number, basis: any): string => {
   type types = keyof typeof basis;
   for(let key of Object.keys(basis)){
