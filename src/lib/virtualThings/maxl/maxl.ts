@@ -91,6 +91,12 @@ export default function createMAXL(config: MaxlConfig) {
 
   // halts all acutators *and* our own state 
   let halt = async () => {
+    // (0) cancel all of our timers
+    for (let timer of timers) {
+      console.warn(`clearing...`, timer);
+      clearTimeout(timer);
+    }
+    timers = []; 
     // shut each of our actuators down, this is the hard stop: 
     await Promise.all(config.actuators.map(actu => {
       return osap.send(actu.name, "maxlMessages", new Uint8Array([MAXL_KEYS.MSG_HALT]))
@@ -120,7 +126,7 @@ export default function createMAXL(config: MaxlConfig) {
         tracks.push({ type, reader });
       }
       config.actuators.push({
-        name: actu, 
+        name: actu,
         tracks: tracks
       })
     }
@@ -129,17 +135,17 @@ export default function createMAXL(config: MaxlConfig) {
     // and we can halt 'em out in case we are restarting mid-strem, 
     await halt();
     // (2) now let's check that our subscriptions make sense, yeah ? 
-    for(let sub of config.subscriptions){
+    for (let sub of config.subscriptions) {
       // check that we have this motion axes,
       // *or* that some other exists, like "speed" or event axes... yonder... from the future 
       let axis = config.motionAxes.findIndex(ax => ax == sub.track);
-      if(axis < 0) throw new Error(`couldn't find a motion axes for this subscription: ` + JSON.stringify(sub));
+      if (axis < 0) throw new Error(`couldn't find a motion axes for this subscription: ` + JSON.stringify(sub));
       // check that we have this actuator, 
       let actu = config.actuators.findIndex(a => a.name == sub.actuator);
-      if(actu < 0) throw new Error(`couldn't find an actuator for this subscription:` + JSON.stringify(sub));
+      if (actu < 0) throw new Error(`couldn't find an actuator for this subscription:` + JSON.stringify(sub));
       // check that ... readers match, 
       let reader = config.actuators[actu].tracks.findIndex(t => t.reader == sub.reader);
-      if(reader < 0) throw new Error(`couldn't find a track reader for this subscription:` + JSON.stringify(sub));
+      if (reader < 0) throw new Error(`couldn't find a track reader for this subscription:` + JSON.stringify(sub));
     }
     // (3) do time setup 
     // get some readings, 
@@ -229,6 +235,9 @@ export default function createMAXL(config: MaxlConfig) {
     await Promise.all(promises);
   }
 
+  // we track these, so that we can cancel them... 
+  let timers = []
+
   // checks whether / not to transmit a segment, and does so 
   let checkQueueState = async () => {
     try {
@@ -241,6 +250,7 @@ export default function createMAXL(config: MaxlConfig) {
       let now = getLocalTime();
       // 1st let's check that head is in the correct place, 
       if (head.explicit.timeEnd < now) {
+        console.warn(`WALK FWDS`)
         head = head.next;
         checkQueueState();
         return;
@@ -259,7 +269,7 @@ export default function createMAXL(config: MaxlConfig) {
         // if it's been tx'd, carry on:
         if (current.transmitTime != 0) continue;
         // otherwise calculate explicit, unless we already have it ?
-        if(!current.explicit) current.explicit = calculateExplicitSegment(current, current.prev.explicit.timeEnd);
+        if (!current.explicit) current.explicit = calculateExplicitSegment(current, current.prev.explicit.timeEnd);
         // and ship that, 
         current.transmitTime = now;
         let timeUntilComplete = Math.ceil((current.explicit.timeEnd - now) * 1000);
@@ -268,7 +278,7 @@ export default function createMAXL(config: MaxlConfig) {
         // tx this 
         await transmitSegment(current.explicit);
         // and set a timeout to check on queue states when it's done, 
-        setTimeout(checkQueueState, timeUntilComplete);
+        timers.push(setTimeout(checkQueueState, timeUntilComplete));
         // ... then do the next, 
         // get next ahead, 
         current = current.next;
@@ -310,7 +320,7 @@ export default function createMAXL(config: MaxlConfig) {
         p1: p1,
         p2: p2,
         vmax: vmax,
-        accel: 1000,
+        accel: 500,
         vi: vlink,
         vf: vlink,
         transmitTime: 0,
@@ -324,9 +334,10 @@ export default function createMAXL(config: MaxlConfig) {
       tail = seg;
       // and check...
       if (!head) {
+        console.warn(`CALC NEW HEAD`)
         head = seg;
-        head.explicit = calculateExplicitSegment(seg, getLocalTime() + QUEUE_START_DELAY);
         writeLocalTime(0);
+        head.explicit = calculateExplicitSegment(seg, getLocalTime() + QUEUE_START_DELAY);
       }
       // then check our queue states, only ingesting so many... 
       let ingestCheck = () => {
@@ -348,7 +359,7 @@ export default function createMAXL(config: MaxlConfig) {
   let awaitMotionEnd = async () => {
     return new Promise<void>((resolve, reject) => {
       let check = () => {
-        if(!head){
+        if (!head) {
           resolve()
         } else {
           setTimeout(check, 10)

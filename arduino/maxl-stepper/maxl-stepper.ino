@@ -17,7 +17,9 @@ MAXL maxl;
 
 // and we can write this func, to step our motor based on trajectory inputs... 
 // YL: -ve, 
+// X: -ve, 
 
+bool _dir = true;
 float stepsPerUnit = 100.0F;
 float unitsPerStep = 1.0F / stepsPerUnit;
 float stepModulo = 0.0F;
@@ -25,11 +27,11 @@ float stepModulo = 0.0F;
 void onPositionUpdate(float position, float delta){
   stepModulo += delta;
   if(stepModulo > unitsPerStep){
-    stepper_step(1, true);
+    stepper_step(1, _dir);
     stepModulo -= unitsPerStep;
   } 
   if (stepModulo < -unitsPerStep){
-    stepper_step(1, false);
+    stepper_step(1, !_dir);
     stepModulo += unitsPerStep;
   }
 }
