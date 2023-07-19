@@ -11,6 +11,7 @@ import potentiometer from "./virtualThings/potentiometer";
 import servo from "./virtualThings/servo";
 import stepper from "./virtualThings/stepper-notSequential";
 import maxlStepper from "./virtualThings/maxl/maxl-stepper";
+import maxlAccelerometer from "./virtualThings/maxl/maxl-accelerometer";
 
 import { global_state } from "./global_state";
 import { LGatewayTypeKeys } from "./osapjs/utils/keys";
@@ -27,7 +28,8 @@ const constructors = {
   accelerometer,
   potentiometer,
   servo,
-  maxlStepper
+  maxlStepper,
+  maxlAccelerometer,
 };
 
 // TODO: cleanup, rm this... 
@@ -105,18 +107,6 @@ let triggerMapUpdate = async () => {
     // do it, then 
     let newMap = await osap.updateMap();
     console.log(`yu've got a new map, lad`, newMap)  
-    // let's see if we can calculate routes-up for each... debugger
-    for(let runtime of newMap.runtimes){
-      for(let p in runtime.ports){
-        let port = runtime.ports[p]
-        if(port.typeName == "MessageEscape"){
-          // make a new listener and subscribe via... 
-          let listener = osap.messageEscapeListener()
-          await listener.begin(runtime.route, parseInt(p), runtime.uniqueName);
-          console.warn(`built escape for`, port, p)
-        }
-      }
-    }
     // uuuhh...
     if(mapShouldRescan){
       // this means that we've updated something locally mid-scan, 
@@ -156,8 +146,31 @@ let triggerMapUpdate = async () => {
         } else {
           if(constructors[rt.typeName]){
             console.log(`building a new "${rt.typeName}" thing...`)
+            // do pipes 
+            let pipes = [] 
+            for(let p in rt.ports){
+              let port = rt.ports[p]
+              // build escape routes 
+              if(port.typeName == "MessageEscape"){
+                // make a new listener and subscribe via... 
+                let listener = osap.messageEscapeListener()
+                await listener.begin(rt.route, parseInt(p), rt.uniqueName);
+                console.warn(`built escape for`, port, p);
+              }
+              // build pipes 
+              // ... error pipe is just a special case of string-encoded pipe 
+              // cleanup would... do better to spec this in the hilevel api-thing, 
+              // i.e. at setup do
+              // for(let pipe of pipes){ if pipe.name == "errors" ... } etc ? 
+              if(port.typeName == "OnePipe"){
+                let listener = osap.onePipeListener()
+                await listener.begin(rt.route, parseInt(p), rt.uniqueName);
+                pipes.push(listener);
+                console.warn(`build up-pipe for`, port, p);
+              }
+            } // end check-for-up-pipes       
             // constructor-it, 
-            let thing = constructors[rt.typeName](rt.uniqueName);
+            let thing = constructors[rt.typeName](rt.uniqueName, pipes);
             // add the typeName,
             thing.typeName = rt.typeName;
             console.log(`built that, it is this:`, thing)

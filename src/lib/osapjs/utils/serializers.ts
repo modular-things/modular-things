@@ -67,6 +67,10 @@ let Serializers = {
     dest[offset + stringStream.length] = 0;
     return stringStream.length + 1;
   },
+  // uint32:
+  readUint32: function (source: Uint8Array, offset: number): number {
+    return new Uint32Array(source.buffer.slice(offset, offset + 4))[0];
+  },
   // fluts 
   readFloat32: function (source: Uint8Array, offset: number): number {
     return new Float32Array(source.buffer.slice(offset, offset + 4))[0];

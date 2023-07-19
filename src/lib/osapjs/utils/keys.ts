@@ -59,6 +59,8 @@ let PortTypeKeys = {
   FancyNameManager: 6,
   MessageEscape: 7,
   MessageEscapeListener: 8,
+  OnePipe: 9, 
+  OnePipeListener: 10,
 }
 
 // encodes gateway-type into LGateInfo packets
