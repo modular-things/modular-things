@@ -255,24 +255,27 @@ export default function createMAXL(config: MaxlConfig) {
       let now = getLocalTime();
       // 1st let's check that head is in the correct place, 
       if (head.explicit.timeEnd < now) {
-        console.warn(`WALK FWDS`)
-        head = head.next;
-        checkQueueState();
-        return;
+        while(head.explicit.timeEnd < now){
+          console.warn(`WALK FWDS to ${head.explicit.timeEnd}`)
+          head = head.next;
+        }
       }
       // ok, supposing we have a well formed (and tx'd) head, 
       // which is the current segment, then we want to do:
       let current = head;
       // then roll thru the queue, 
       for (let s = 0; s < QUEUE_REMOTE_MAX_LEN; s++) {
-        // console.log(`HEAD ${head.transmitTime}`)
         // if it's empty, bail, 
         if (!current) {
           console.warn(`eof, bail`)
           return;
         }
+        // console.log(`W / HEAD ${head.transmitTime}, CUR ${current.transmitTime}`)
         // if it's been tx'd, carry on:
-        if (current.transmitTime != 0) continue;
+        if (current.transmitTime != 0){
+          current = current.next; 
+          continue;
+        }
         // otherwise calculate explicit, unless we already have it ?
         if (!current.explicit) current.explicit = calculateExplicitSegment(current, current.prev.explicit.timeEnd);
         // and ship that, 
@@ -297,7 +300,8 @@ export default function createMAXL(config: MaxlConfig) {
   // user-facing segment ingestion 
   let addSegmentToQueue = (end: Array<number>, vmax: number, vlink: number) => {
     return new Promise<void>(async (resolve, reject) => {
-      // console.warn(`addMove w/ end pos`, JSON.parse(JSON.stringify(end)), `vmax: `, vmax, `vlink: `, vlink)
+      // first, no action until we have space:
+      await awaitQueueSpace();
       // first, we are tacking this move on the end of a previous segments' end-point, 
       // so let's in-fill any missing DOF, also re-writing `end` arg as `p2` seg property 
       let p1 = new Array(defaultDOF).fill(0);
@@ -307,18 +311,18 @@ export default function createMAXL(config: MaxlConfig) {
       // infill w/ spare DOF 
       let p2 = p1.map((val, a) => {
         if (end[a] == undefined || isNaN(end[a])) {
-          return val
+          return val;
         } else {
-          return end[a]
+          return end[a];
         }
       })
       // evidently this was worth double checking 
-      console.warn(`P1: ${p1[0].toFixed(2)}, ${p1[1].toFixed(2)}; P2: ${p2[0].toFixed(2)}, ${p2[1].toFixed(2)}, DIST ${distance(p2, p1).toFixed(2)}`)
+      console.warn(`P1: ${p1[0].toFixed(2)}, ${p1[1].toFixed(2)}; P2: ${p2[0].toFixed(2)}, ${p2[1].toFixed(2)}, DIST ${distance(p2, p1).toFixed(2)}`);
       // if distance is very small, rm it, 
       if (distance(p2, p1) < 0.1) {
-        console.warn(`REJECTING very tiny move, ${distance(p2, p1).toFixed(3)}...`)
-        resolve()
-        return
+        console.warn(`REJECTING very tiny move, ${distance(p2, p1).toFixed(3)}...`);
+        resolve();
+        return;
       }
       // so we maybe don't have use for the unplanned type, 
       let seg: PlannedSegment = {
@@ -339,28 +343,27 @@ export default function createMAXL(config: MaxlConfig) {
       tail = seg;
       // and check...
       if (!head) {
-        console.warn(`CALC NEW HEAD`)
+        console.warn(`CALC NEW HEAD at ${getLocalTime()}`)
         head = seg;
-        // we have to take time-writing seriously... 
-        // and perhaps just shouldn't re-write it all the gd time ? 
-        // writeLocalTime(0);
-        console.warn(`local time...`, getLocalTime());
         head.explicit = calculateExplicitSegment(seg, getLocalTime() + QUEUE_START_DELAY);
       }
-      // then check our queue states, only ingesting so many... 
-      let ingestCheck = () => {
-        // and we can dump the segment into our queue, 
-        if (getLocalLookaheadLength() < QUEUE_LOCAL_MAX_LEN) {
-          queue.push(seg)
-          // console.warn(`QUEUE total ${queue.length}`)
-          checkQueueState()
+      // then ingest 
+      queue.push(seg);
+      checkQueueState();
+      resolve();
+    })
+  }
+
+  let awaitQueueSpace = async () => {
+    return new Promise<void>((resolve, reject) => {
+      let check = () => {
+        if(getLocalLookaheadLength() < QUEUE_LOCAL_MAX_LEN){
           resolve()
         } else {
-          setTimeout(ingestCheck, 1)
+          setTimeout(check, 1)
         }
       }
-      // kickoff
-      ingestCheck()
+      check();
     })
   }
 
