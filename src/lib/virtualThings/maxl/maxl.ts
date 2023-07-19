@@ -232,10 +232,12 @@ export default function createMAXL(config: MaxlConfig) {
   // checks whether / not to transmit a segment, and does so 
   let checkQueueState = async () => {
     try {
+      // bail if no head... 
       if (!head) {
         console.warn(`queue state bails on headlessness`)
         return;
       }
+      // ... 
       let now = getLocalTime();
       // 1st let's check that head is in the correct place, 
       if (head.explicit.timeEnd < now) {
@@ -246,10 +248,9 @@ export default function createMAXL(config: MaxlConfig) {
       // ok, supposing we have a well formed (and tx'd) head, 
       // which is the current segment, then we want to do:
       let current = head;
+      // then roll thru the queue, 
       for (let s = 0; s < QUEUE_REMOTE_MAX_LEN; s++) {
         // console.log(`HEAD ${head.transmitTime}`)
-        // get next ahead, 
-        current = current.next;
         // if it's empty, bail, 
         if (!current) {
           console.warn(`eof, bail`)
@@ -257,8 +258,8 @@ export default function createMAXL(config: MaxlConfig) {
         }
         // if it's been tx'd, carry on:
         if (current.transmitTime != 0) continue;
-        // otherwise calculate explicit,
-        current.explicit = calculateExplicitSegment(current, current.prev.explicit.timeEnd);
+        // otherwise calculate explicit, unless we already have it ?
+        if(!current.explicit) current.explicit = calculateExplicitSegment(current, current.prev.explicit.timeEnd);
         // and ship that, 
         current.transmitTime = now;
         let timeUntilComplete = Math.ceil((current.explicit.timeEnd - now) * 1000);
@@ -269,6 +270,8 @@ export default function createMAXL(config: MaxlConfig) {
         // and set a timeout to check on queue states when it's done, 
         setTimeout(checkQueueState, timeUntilComplete);
         // ... then do the next, 
+        // get next ahead, 
+        current = current.next;
       }
     } catch (err) {
       head = null;
@@ -307,7 +310,7 @@ export default function createMAXL(config: MaxlConfig) {
         p1: p1,
         p2: p2,
         vmax: vmax,
-        accel: 100,
+        accel: 1000,
         vi: vlink,
         vf: vlink,
         transmitTime: 0,
@@ -342,6 +345,19 @@ export default function createMAXL(config: MaxlConfig) {
     })
   }
 
+  let awaitMotionEnd = async () => {
+    return new Promise<void>((resolve, reject) => {
+      let check = () => {
+        if(!head){
+          resolve()
+        } else {
+          setTimeout(check, 10)
+        }
+      } //
+      check()
+    })
+  }
+
   // test path returnal 
   // erp, expose this also ? 
   // also... a library of difficult paths would be rad 
@@ -356,6 +372,7 @@ export default function createMAXL(config: MaxlConfig) {
     begin,
     halt,
     addSegmentToQueue,
+    awaitMotionEnd,
   }
 
 }

@@ -16,6 +16,7 @@
 MAXL maxl; 
 
 // and we can write this func, to step our motor based on trajectory inputs... 
+// YL: -ve, 
 
 float stepsPerUnit = 100.0F;
 float unitsPerStep = 1.0F / stepsPerUnit;

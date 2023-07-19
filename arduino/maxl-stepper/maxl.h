@@ -80,6 +80,8 @@ class MAXL_TrackPositionLinear : public MAXL_Track {
   private:
     // the funko to call, 
     void (*followerFunction)(float position, float delta) = nullptr;
+    // we keep a few variables... 
+    fpint32_t _lastPos = 0;
 };
 
 /*

@@ -126,7 +126,6 @@ void evalSeg(maxlSegmentPositionLinear_t* seg, fpint32_t now, fpint32_t* _pos, f
 
 void MAXL_TrackPositionLinear::evaluate(uint32_t time){
   // to track deltas, 
-  static fpint32_t lastPos = 0;
   static fpint32_t delta = 0;
   static fpint32_t pos = 0;
   static fpint32_t vel = 0;
@@ -147,10 +146,10 @@ void MAXL_TrackPositionLinear::evaluate(uint32_t time){
             fpint32_t segTime = fp_floatToFixed32(((float)(time - seg->tStart_us)) * 0.000001);
             // do the actual werk, 
             evalSeg(seg, segTime, &pos, &vel);
-            delta = pos - lastPos;
+            delta = pos - _lastPos;
             followerFunction(fp_fixed32ToFloat(pos), fp_fixed32ToFloat(delta));
             // and track 
-            lastPos = pos; 
+            _lastPos = pos; 
             // we're done 
             break; // break the segs-advancing loop 
           } else {
@@ -239,4 +238,6 @@ void MAXL_TrackPositionLinear::halt(void){
   // and reset these so that our start-up conditions are clean 
   head = &(queue[0]);  // where to write-in, 
   tail = &(queue[0]);  // which is ticking along... 
+  // and let's reset our stateful position-tracking things, 
+  _lastPos = 0;
 }

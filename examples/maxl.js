@@ -36,8 +36,8 @@ let maxl = createMAXL({
   motionAxes: ["x", "y"],
   subscriptions: [
     {
-      actuator: "maxlOne", 
-      track: "x",
+      actuator: "maxlOne",  // should be "device", non ? 
+      track: "x",           // since we could have multiple actu per cpu
       reader: "stepper"
     },
     {

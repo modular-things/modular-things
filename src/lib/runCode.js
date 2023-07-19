@@ -142,20 +142,28 @@ export async function runCode(code) {
     loop,
     render,
     delay,
-    console: {
-      log: (...args) => {
-        _log(...args)
-        global_state.logs.value = [...global_state.logs.value, args.join(" ")]
-      },
-      warn: (...args) => {
-        _warn(...args)
-        global_state.logs = [...global_state.logs.value, args.join(" ")]
-      },
-      error: (...args) => {
-        _error(...args)
-        global_state.logs = [...global_state.logs.value, args.join(" ")]
-      }
-    },
+    // this would be rad, but doesn't work if the log is inside of a loop 
+    // throws "global_state.logs.value is not iterable" error 
+    // test code was 
+    // ```
+    // for(let i = 0; i < 100; i ++){
+    //   console.warn(`switch... ${await xMotor.getLimitState()}`)
+    // } 
+    // ```
+    // console: {
+    //   log: (...args) => {
+    //     _log(...args)
+    //     global_state.logs.value = [...global_state.logs.value, args.join(" ")]
+    //   },
+    //   warn: (...args) => {
+    //     _warn(...args)
+    //     global_state.logs = [...global_state.logs.value, args.join(" ")]
+    //   },
+    //   error: (...args) => {
+    //     _error(...args)
+    //     global_state.logs = [...global_state.logs.value, args.join(" ")]
+    //   }
+    // },
     // document: null,
     // window: null,
     // eval: null,
