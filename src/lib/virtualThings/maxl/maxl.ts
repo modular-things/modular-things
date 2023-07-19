@@ -69,7 +69,8 @@ export default function createMAXL(config: MaxlConfig) {
 
   // return a local timestamp in seconds 
   let getLocalTime = () => {
-    return (Time.getTimeStamp() - maxlLocalClockOffset) / 1000;
+    // console.log(`offset is`, maxlLocalClockOffset, 'stamp at', Time.getTimeStamp())
+    return (Time.getTimeStamp() + maxlLocalClockOffset) / 1000;
   }
 
   // sets our local clock, 
@@ -189,7 +190,7 @@ export default function createMAXL(config: MaxlConfig) {
   // the tail is the most-recently appended segment, 
   let tail: PlannedSegment;
 
-  let QUEUE_START_DELAY = 0.050   // in seconds 
+  let QUEUE_START_DELAY = 0.500   // in seconds 
   let QUEUE_REMOTE_MAX_LEN = 16
   let QUEUE_LOCAL_MAX_LEN = 64
 
@@ -245,6 +246,10 @@ export default function createMAXL(config: MaxlConfig) {
       if (!head) {
         console.warn(`queue state bails on headlessness`)
         return;
+      }
+      // or if no explicit at the head ?
+      if(!head.explicit){
+        console.warn(`no explicit here...`, head)
       }
       // ... 
       let now = getLocalTime();
@@ -336,7 +341,10 @@ export default function createMAXL(config: MaxlConfig) {
       if (!head) {
         console.warn(`CALC NEW HEAD`)
         head = seg;
-        writeLocalTime(0);
+        // we have to take time-writing seriously... 
+        // and perhaps just shouldn't re-write it all the gd time ? 
+        // writeLocalTime(0);
+        console.warn(`local time...`, getLocalTime());
         head.explicit = calculateExplicitSegment(seg, getLocalTime() + QUEUE_START_DELAY);
       }
       // then check our queue states, only ingesting so many... 

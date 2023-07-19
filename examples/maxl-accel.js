@@ -73,11 +73,27 @@ await delay(500);
 console.warn(`end delay...`)
 
 await maxl.halt();
-await maxl.addSegmentToQueue([-100, -100], 150, 50);
+await maxl.addSegmentToQueue([-150, -150], 150, 50);
+console.warn(`await end...`);
+await maxl.awaitMotionEnd();
+console.warn(`awaited...`);
+await maxl.halt();
 
 // await maxl.addSegmentToQueue([100], 150, 50);
 // await maxl.addSegmentToQueue([150], 150, 50);
 
-console.warn(`...`)
+console.warn(`...`);
+
+// ------------ testpath ingest 
+for(let p = 0; p < maxl.testPath.length; p ++){
+  try {
+    console.log(`${p} / ${maxl.testPath.length}`);
+    // if(p > 32) break;
+    await maxl.addSegmentToQueue(maxl.testPath[p], 250, 5);
+  } catch (err) {
+    console.error(err);
+    break; 
+  }
+}
 
 // await xMotor.setCurrentScale(0.0)
