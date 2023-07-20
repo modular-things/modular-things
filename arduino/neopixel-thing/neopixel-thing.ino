@@ -28,7 +28,7 @@ OSAP_Port_MessageEscape debugPort;
 void onMaskUpdate(uint8_t mask){
   for(uint8_t p = 0; p < 8; p ++){
     if(mask & (1 << p)){
-      strip.setPixelColor(p, strip.Color(0, 0, 0, 25));
+      strip.setPixelColor(p, strip.Color(0, 0, 0, 255));
     } else {
       strip.setPixelColor(p, strip.Color(0, 0, 0, 0));
     }

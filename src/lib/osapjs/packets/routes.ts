@@ -66,7 +66,7 @@ export default class Route {
     // constructor-factory-chaining-thing... 
     return {
       end: function (maxSegmentSize?: number, perHopTimeToLive?: number): Route {
-        if (!maxSegmentSize) maxSegmentSize = 128;
+        if (!maxSegmentSize) maxSegmentSize = 256;
         if (!perHopTimeToLive) perHopTimeToLive = 2000;
         // return a complete Route object, 
         return new Route(new Uint8Array(path.subarray(0, wptr)), maxSegmentSize, perHopTimeToLive)
