@@ -20,8 +20,23 @@ MAXL maxl;
 // our comms 
 OSAP_Runtime osap;
 OSAP_Gateway_USBSerial serLink(&Serial);
-OSAP_Port_DeviceNames namePort("maxlAccelerometer");
+OSAP_Port_DeviceNames namePort("neopixelThing");
 OSAP_Port_MessageEscape debugPort;
+
+// ---------------------------------------------- MAXL over MUTTS 
+
+void onMaskUpdate(uint8_t mask){
+  for(uint8_t p = 0; p < 8; p ++){
+    if(mask & (1 << p)){
+      strip.setPixelColor(p, strip.Color(0, 0, 0, 25));
+    } else {
+      strip.setPixelColor(p, strip.Color(0, 0, 0, 0));
+    }
+  }
+  strip.show();
+}
+
+MAXL_TrackEvent8Bit pixelTrack("neopixelBitmap", onMaskUpdate);
 
 // ---------------------------------------------- MAXL over MUTTS 
 
@@ -30,14 +45,6 @@ size_t maxlMessageInterface(uint8_t* data, size_t len, uint8_t* reply){
 }
 
 OSAP_Port_Named maxlMessage_port("maxlMessages", maxlMessageInterface);
-
-// ---------------------------------------------- Pipe!
-
-OSAP_Port_OnePipe linearAccelPipe("linearAcceleration");
-
-// ... 
-
-bool bnoInitOK = false;
 
 void setup() {
   // startup pix 
@@ -60,19 +67,21 @@ bool lastPixelState = false;
 void loop() {
   // lewp 
   osap.loop();
+  maxl.loop();
+  // delay(10);
   // blinky / act 
   if(millis() > lastBlink + intervalBlink){
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     lastBlink = millis();
     // try write / rewrite 
     for(uint8_t p = 0; p < PIXEL_COUNT; p ++){
-      if(lastPixelState){
-        strip.setPixelColor(p, strip.Color(0, 0, 0, 255));
-      } else {
-        strip.setPixelColor(p, strip.Color(0, 0, 0, 0));
-      }
+      // if(lastPixelState){
+      //   strip.setPixelColor(p, strip.Color(0, 0, 0, 255));
+      // } else {
+      //   strip.setPixelColor(p, strip.Color(0, 0, 0, 0));
+      // }
     }
-    strip.show();
+    // strip.show();
     lastPixelState = !lastPixelState;
   }
 }

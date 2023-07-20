@@ -18,6 +18,7 @@
 
 // track-types 
 #define MAXL_KEY_TRACKTYPE_POSLIN 101 
+#define MAXL_KEY_TRACKTYPE_EVENT_8BIT 102
 
 // and a queue-thing interface, 
 // a purely virtual class 
@@ -62,7 +63,7 @@ class MAXL {
     MAXL_Track* tracks[MAXL_MAX_TRACKS];
     uint8_t numTracks = 0;
     // pls ignore 
-    uint8_t msgBuffer[256];
+    uint8_t msgBuffer[256];    
 };
 
 // let's try a basic... one of these:
@@ -82,6 +83,45 @@ class MAXL_TrackPositionLinear : public MAXL_Track {
     void (*followerFunction)(float position, float delta) = nullptr;
     // we keep a few variables... 
     fpint32_t _lastPos = 0;
+};
+
+// strange multiple-definitions trouble when we 
+// try to filescope this stuff, idk man 
+typedef struct maxlSegmentEvent8Bit_t {
+  uint32_t tStart_us = 0;
+  uint32_t tEnd_us = 0;
+  // then... 
+  uint8_t numEvents = 0;
+  uint8_t data[256];
+  uint8_t dataLen = 0;
+  // tracking / tracing 
+  maxlSegmentEvent8Bit_t* next;
+  maxlSegmentEvent8Bit_t* previous;
+  uint32_t indice = 0;
+  boolean isOccupied = false;
+} maxlSegmentEvent8Bit_t;
+
+#define MAXL_EVT8_MODE_NONE 0 
+#define MAXL_EVT8_MODE_QUEUE 1 
+
+// and here's some lights-thing, 
+class MAXL_TrackEvent8Bit : public MAXL_Track {
+  public:
+    MAXL_TrackEvent8Bit(const char* _name, void(*_followerFunction)(uint8_t mask));
+    // interf,
+    void begin(void) override;
+    void evaluate(uint32_t time) override;
+    size_t addSegment(uint8_t* data, size_t len, uint8_t* reply) override;
+    size_t getSegmentCompleteMessage(uint32_t time, uint8_t* msg) override;
+    void halt(void) override;
+  private:
+    void (*followerFunction)(uint8_t mask) = nullptr;
+    uint8_t _lastMask = 0;
+    maxlSegmentEvent8Bit_t queue[MAXL_QUEUE_LEN];
+    maxlSegmentEvent8Bit_t* head;
+    maxlSegmentEvent8Bit_t* tail;
+    uint8_t mode = MAXL_EVT8_MODE_NONE;
+    void evalEventSegment(maxlSegmentEvent8Bit_t* seg, uint32_t now);
 };
 
 /*

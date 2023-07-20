@@ -12,6 +12,7 @@ import servo from "./virtualThings/servo";
 import stepper from "./virtualThings/stepper-notSequential";
 import maxlStepper from "./virtualThings/maxl/maxl-stepper";
 import maxlAccelerometer from "./virtualThings/maxl/maxl-accelerometer";
+import neopixelThing from "./virtualThings/maxl/neopixelThing";
 
 import { global_state } from "./global_state";
 import { LGatewayTypeKeys } from "./osapjs/utils/keys";
@@ -30,6 +31,7 @@ const constructors = {
   servo,
   maxlStepper,
   maxlAccelerometer,
+  neopixelThing,
 };
 
 // TODO: cleanup, rm this... 

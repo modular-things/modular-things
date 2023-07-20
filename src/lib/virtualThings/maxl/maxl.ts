@@ -335,7 +335,7 @@ export default function createMAXL(config: MaxlConfig) {
           // and start a datagram, 
           let datagram = new Uint8Array(4096);
           let wptr = 1; // we'll start writing at this posn, 
-          let numEvents = 0;
+          let numEvents = 1;
           // start with 0, at time zero, 
           wptr += Serializers.writeUint32(datagram, wptr, 0);
           wptr += Serializers.writeUint8(datagram, wptr, 0);
@@ -356,17 +356,25 @@ export default function createMAXL(config: MaxlConfig) {
             }
             // console.warn(`time... ${t.toFixed(2)} d: \t ${states.dist.toFixed(2)}, ${mask}`);
             // ok, let's do edge-detect and then stuffage ? 
-            // let binaryStr = mask.toString(2).padStart(8, '0');
-            // console.log(binaryStr);
+            // this wuz some debug 
+            // if(states.accel == 0){
+            //   let binaryStr = mask.toString(2).padStart(8, '0');
+            //   console.log(binaryStr);  
+            // }
             // then we could use that... in a step-function manner, to author the event track ? 
             // so, finish eval, then write tracks 
           }
-          // now record final info, 
+          // last buffer event for time-stamp reading / to turn off 
+          // NOT CODE TO KEEP, FIX IIIIT 
+          wptr += Serializers.writeUint32(datagram, wptr, Math.ceil((current.explicit.timeEnd - current.explicit.timeStart) * 1000000));
+          wptr += Serializers.writeUint8(datagram, wptr, 0);
+          numEvents ++;
+          // now record final info,
           datagram[0] = numEvents;  // count of events, 
           // and truncate,
           // ok, here's our 
           datagram = datagram.slice(0, wptr);
-          console.warn(datagram);
+          // console.warn(datagram);
           // ... shit broh, we need this also:
           let header = new Uint8Array(4 * 2 + 3 + datagram.length);
           wptr = 0;
@@ -375,16 +383,17 @@ export default function createMAXL(config: MaxlConfig) {
           wptr += Serializers.writeUint8(header, wptr, 0);
           wptr += Serializers.writeUint8(header, wptr, MAXL_KEYS.TRACKTYPE_EVENT_8BIT);
           // times, 
-          wptr += Serializers.writeInt32(header, wptr, floatToUint32Micros(current.explicit.timeStart));
+          wptr += Serializers.writeInt32(header, wptr, floatToUint32Micros(current.explicit.timeStart));  
           wptr += Serializers.writeInt32(header, wptr, floatToUint32Micros(current.explicit.timeEnd));
-          console.warn(floatToUint32Micros(current.explicit.timeEnd));
           // and to combine, 
           header.set(datagram, 11);
-          console.warn(header);
+          // console.warn(floatToUint32Micros(current.explicit.timeEnd));
+          // console.warn(header);
           console.warn(`EVT EVAL TOOK ${(Time.getTimeStamp() - start).toFixed(3)} ms`)
           // and believe it or not, we are going to bypass all of the routing shit also,
           if(current.eventObject.sendy){
-            await osap.send("pixThing", "maxlMessages", header);
+            console.warn(`SENDY gram w/ len ${header.length}`)
+            await osap.send("pixOutput", "maxlMessages", header);
           }
         } // END SKETCHY EVENTOBJECT CODE ! 
         // and set a timeout to check on queue states when it's done, 
