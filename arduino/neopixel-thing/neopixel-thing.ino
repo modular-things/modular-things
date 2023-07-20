@@ -76,4 +76,3 @@ void loop() {
     lastPixelState = !lastPixelState;
   }
 }
-

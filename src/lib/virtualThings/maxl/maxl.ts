@@ -20,7 +20,7 @@ import {
   distance,
   unitVector,
   // floatToFixed, 
-  // floatToUint32Micros, 
+  floatToUint32Micros, 
   writeExplicitSegment,
   calculateExplicitSegment,
   getStatesInExplicitSegment
@@ -57,7 +57,7 @@ type MaxlConfig = {
   motionAxes: Array<string>,              // set
   subscriptions: Array<MaxlSubscription>, // set
   actuators?: Array<MaxlActuatorInfo>,    // discovered / matched 
-  auxiliaryDevices?: Array<string>, 
+  auxiliaryDevices?: Array<string>,
   // transformedAxes?: Array<string>,
   // transformForwards?: Function,
   // transformBackwards?: Function, 
@@ -116,7 +116,7 @@ export default function createMAXL(config: MaxlConfig) {
     let actuatorNames: Set<string> = new Set();
     config.subscriptions.forEach(sub => actuatorNames.add(sub.actuator));
     // and add aux devices here... 
-    if(config.auxiliaryDevices) config.auxiliaryDevices.forEach(dev => actuatorNames.add(dev));
+    if (config.auxiliaryDevices) config.auxiliaryDevices.forEach(dev => actuatorNames.add(dev));
     console.log(`we have actu`, actuatorNames)
     // ... flesh 'em out, 
     for (let actu of actuatorNames) {
@@ -268,14 +268,14 @@ export default function createMAXL(config: MaxlConfig) {
     //   }
     // }
     // queue is eternal, innit ?
-    for(let seg of queue){
-      if(!seg.explicit) continue;
-      if(seg.explicit.timeStart < time && time < seg.explicit.timeEnd){
+    for (let seg of queue) {
+      if (!seg.explicit) continue;
+      if (seg.explicit.timeStart < time && time < seg.explicit.timeEnd) {
         return getStatesInSegment(time, seg);
       }
     }
     // else 
-    return({accel: 0})
+    return ({ accel: 0 })
   }
 
   // checks whether / not to transmit a segment, and does so 
@@ -289,15 +289,18 @@ export default function createMAXL(config: MaxlConfig) {
       // or if no explicit at the head ?
       if (!head.explicit) {
         console.warn(`no explicit here...`, head)
+        return;
       }
       // ... 
       let now = getLocalTime();
       // 1st let's check that head is in the correct place, 
-      if (head.explicit.timeEnd < now) {
-        while (head.explicit.timeEnd < now) {
-          console.warn(`WALK FWDS to ${head.explicit.timeEnd}`)
-          // history.push(head);
-          head = head.next;
+      while (head.explicit.timeEnd < now) {
+        // console.warn(`WALK FWDS to ${head.explicit.timeEnd}`)
+        head = head.next;
+        // head.next can be undefined also, 
+        if(!head) {
+          console.warn(`bail on headless advance...`);
+          return;
         }
       }
       // ok, supposing we have a well formed (and tx'd) head, 
@@ -307,7 +310,7 @@ export default function createMAXL(config: MaxlConfig) {
       for (let s = 0; s < QUEUE_REMOTE_MAX_LEN; s++) {
         // if it's empty, bail, 
         if (!current) {
-          console.warn(`eof, bail`)
+          console.warn(`eof, bail`);
           return;
         }
         // console.log(`W / HEAD ${head.transmitTime}, CUR ${current.transmitTime}`)
@@ -325,6 +328,65 @@ export default function createMAXL(config: MaxlConfig) {
         console.log(`QM: sending from ${current.explicit.timeStart.toFixed(3)} -> (${(current.explicit.timeTotal).toFixed(3)}s) -> ${current.explicit.timeEnd.toFixed(3)}`);
         // tx this 
         await transmitSegment(current.explicit);
+        // and those... 
+        if (current.eventObject) {
+          // so, let's get a little evaluator functo in here ? 
+          let start = Time.getTimeStamp();
+          // and start a datagram, 
+          let datagram = new Uint8Array(4096);
+          let wptr = 1; // we'll start writing at this posn, 
+          let numEvents = 0;
+          // start with 0, at time zero, 
+          wptr += Serializers.writeUint32(datagram, wptr, 0);
+          wptr += Serializers.writeUint8(datagram, wptr, 0);
+          let lastMask = 0;
+          // ok ok 
+          for(let t = current.explicit.timeStart; t < current.explicit.timeEnd; t += current.eventObject.evaluationPrecision / 1000){
+            // ok ok... 
+            let states = getStatesInExplicitSegment(t, current.explicit);
+            // and use that... to eval w/ the func... 
+            let mask = current.eventObject.evaluationFunction(states);
+            if(mask != lastMask){
+              lastMask = mask;
+              let interSegTime = Math.ceil((t - current.explicit.timeStart) * 1000000);
+              // console.warn(`IST`, t, current.explicit.timeStart, interSegTime);
+              wptr += Serializers.writeUint32(datagram, wptr, interSegTime);
+              wptr += Serializers.writeUint8(datagram, wptr, mask);
+              numEvents ++;
+            }
+            // console.warn(`time... ${t.toFixed(2)} d: \t ${states.dist.toFixed(2)}, ${mask}`);
+            // ok, let's do edge-detect and then stuffage ? 
+            // let binaryStr = mask.toString(2).padStart(8, '0');
+            // console.log(binaryStr);
+            // then we could use that... in a step-function manner, to author the event track ? 
+            // so, finish eval, then write tracks 
+          }
+          // now record final info, 
+          datagram[0] = numEvents;  // count of events, 
+          // and truncate,
+          // ok, here's our 
+          datagram = datagram.slice(0, wptr);
+          console.warn(datagram);
+          // ... shit broh, we need this also:
+          let header = new Uint8Array(4 * 2 + 3 + datagram.length);
+          wptr = 0;
+          wptr += Serializers.writeUint8(header, wptr, MAXL_KEYS.MSG_TRACK_ADDSEGMENT);
+          // track index, of which we know (for this demo!) that lights will be 0 on that mcu... 
+          wptr += Serializers.writeUint8(header, wptr, 0);
+          wptr += Serializers.writeUint8(header, wptr, MAXL_KEYS.TRACKTYPE_EVENT_8BIT);
+          // times, 
+          wptr += Serializers.writeInt32(header, wptr, floatToUint32Micros(current.explicit.timeStart));
+          wptr += Serializers.writeInt32(header, wptr, floatToUint32Micros(current.explicit.timeEnd));
+          console.warn(floatToUint32Micros(current.explicit.timeEnd));
+          // and to combine, 
+          header.set(datagram, 11);
+          console.warn(header);
+          console.warn(`EVT EVAL TOOK ${(Time.getTimeStamp() - start).toFixed(3)} ms`)
+          // and believe it or not, we are going to bypass all of the routing shit also,
+          if(current.eventObject.sendy){
+            await osap.send("pixThing", "maxlMessages", header);
+          }
+        } // END SKETCHY EVENTOBJECT CODE ! 
         // and set a timeout to check on queue states when it's done, 
         timers.push(setTimeout(checkQueueState, timeUntilComplete));
         // ... then do the next, 
@@ -338,8 +400,12 @@ export default function createMAXL(config: MaxlConfig) {
   }
 
   // user-facing segment ingestion 
-  let addSegmentToQueue = (end: Array<number>, vmax: number, vlink: number) => {
+  let addSegmentToQueue = (move) => {
     return new Promise<void>(async (resolve, reject) => {
+      // should have move.endPos, move.velocity, move.junction, 
+      let end = move.endPos;
+      let vmax = move.velocity;
+      let vlink = move.junction;
       // first, no action until we have space:
       await awaitQueueSpace();
       // first, we are tacking this move on the end of a previous segments' end-point, 
@@ -374,6 +440,10 @@ export default function createMAXL(config: MaxlConfig) {
         vf: vlink,
         transmitTime: 0,
       }
+      // tack this on, lol, 
+      // we're going back to unformed spaghetti-type js for the crash stop, 
+      // sorry future jake! 
+      if (move.eventObject) seg.eventObject = move.eventObject;
       // do the list linking, 
       if (tail) {
         tail.next = seg;

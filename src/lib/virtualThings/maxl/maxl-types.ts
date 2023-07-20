@@ -58,6 +58,7 @@ export type PlannedSegment = UnplannedSegment & {
   transmitTime: number,
   next?: PlannedSegment,
   prev?: PlannedSegment,
+  eventObject?: any,
 }
 
 // it does seem as though... there could be some simpler representation ? 
@@ -115,6 +116,7 @@ let MAXL_KEYS = {
   MSG_TRACK_ADDSEGMENT: 61,
   MSG_GETINFO_REQ: 63,
   TRACKTYPE_POSLIN: 101,
+  TRACKTYPE_EVENT_8BIT: 102,
 }
 
 export {

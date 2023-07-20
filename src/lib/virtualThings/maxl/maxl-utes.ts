@@ -1,13 +1,13 @@
 // utes ! 
 
 import Serializers from "../../osapjs/utils/serializers"
-import { 
-  UnplannedSegment, 
-  PlannedSegment, 
-  ExplicitSegment, 
+import {
+  UnplannedSegment,
+  PlannedSegment,
+  ExplicitSegment,
   SingleDOFExplicitSegment,
   MAXL_KEYS,
- } from "./maxl-types"
+} from "./maxl-types"
 
 // addition...
 let vectorAddition = (A: Array<number>, B: Array<number>) => {
@@ -40,7 +40,7 @@ let unitVector = (A: Array<number>, B: Array<number>) => {
   return unit
 }
 
-let floatToFixed = (flt: number) : number => {
+let floatToFixed = (flt: number): number => {
   if (isNaN(flt)) { throw new Error(`NaN in floatToFixed`) }
   let fixed = Math.round(flt * (2 ** 17))
   // let float = fixed / (2 ** 17)
@@ -56,25 +56,37 @@ let floatToUint32Micros = (flt: number): number => {
   return micros
 }
 
-let getStatesInExplicitSegment = (time: number, exSeg: ExplicitSegment) => {
-  time = time - exSeg.timeStart;
-  console.log('intervals', time.toFixed(3), exSeg.timeStart.toFixed(3), exSeg.timeAccelEnd.toFixed(3));
+let getStatesInExplicitSegment = (time: number, seg: ExplicitSegment) => {
+  // get time as delta-into-seg, 
+  time = time - seg.timeStart;
+  // ... old debug 
+  // console.log('intervals', time.toFixed(3), seg.timeStart.toFixed(3), seg.timeAccelEnd.toFixed(3));
   let states = {
-    accel: 0, 
-    unitX: exSeg.unit[0],
-    unitY: exSeg.unit[1],
-    unitZ: exSeg.unit[2],
+    p1: seg.p1,
+    accel: 0,
+    vel: 0,
+    dist: 0,
+    unitX: seg.unit[0],
+    unitY: seg.unit[1],
+    unitZ: seg.unit[2],
   }
-  if(time < exSeg.timeAccelEnd){
-    states.accel = exSeg.accel;
-  } else if (time < exSeg.timeCruiseEnd){
+  if (time < seg.timeAccelEnd) {
+    states.accel = seg.accel;
+    states.vel = seg.vi + seg.accel * time;
+    states.dist = ((seg.vi + states.vel) / 2) * time;
+  } else if (time < seg.timeCruiseEnd) {
     states.accel = 0;
+    states.vel = seg.vmax;
+    states.dist = seg.distAccelPhase + (seg.vmax * (time - seg.timeAccelEnd));
   } else {
-    states.accel = - exSeg.accel;
+    states.accel = - seg.accel;
+    states.vel = seg.vmax - (seg.accel * (time - seg.timeCruiseEnd));
+    states.dist = seg.distAccelPhase + seg.distCruisePhase ;
+    states.dist += ((seg.vmax + states.vel) / 2) * (time - seg.timeCruiseEnd);
   }
   // do mm/sec^2 (from maxl) to m/sec^2 (from accelerometers...)
-  states.accel /= 1000;
-  console.log('states, ', states)
+  // states.accel /= 1000; 
+  // console.log('states, ', states)
   return states;
 }
 
@@ -142,12 +154,12 @@ let writeExplicitSegment = (exSeg: ExplicitSegment, motionIndex: number, trackIn
     vf: exSeg.vf * exSeg.unit[motionIndex],
     // times are all identical, 
     timeTotal: exSeg.timeTotal,
-    timeAccelEnd: exSeg.timeAccelEnd, 
+    timeAccelEnd: exSeg.timeAccelEnd,
     timeCruiseEnd: exSeg.timeCruiseEnd,
     // and integrals are by-unit, 
-    distTotal: exSeg.distTotal * exSeg.unit[motionIndex], 
-    distAccelPhase: exSeg.distAccelPhase * exSeg.unit[motionIndex], 
-    distCruisePhase: exSeg.distCruisePhase * exSeg.unit[motionIndex],   
+    distTotal: exSeg.distTotal * exSeg.unit[motionIndex],
+    distAccelPhase: exSeg.distAccelPhase * exSeg.unit[motionIndex],
+    distCruisePhase: exSeg.distCruisePhase * exSeg.unit[motionIndex],
   }
   // console.log(`single DOF`, sdofSeg)
   // now we can write the output *of that* 
@@ -162,6 +174,7 @@ let writeExplicitSegment = (exSeg: ExplicitSegment, motionIndex: number, trackIn
   wptr += Serializers.writeUint8(datagram, wptr, trackIndex);
   wptr += Serializers.writeUint8(datagram, wptr, MAXL_KEYS.TRACKTYPE_POSLIN);
   // sequencing data 
+  // aye, lads, shouldn't these be Uint32??? 
   wptr += Serializers.writeInt32(datagram, wptr, floatToUint32Micros(sdofSeg.timeStart));
   wptr += Serializers.writeInt32(datagram, wptr, floatToUint32Micros(sdofSeg.timeEnd));
   wptr += Serializers.writeBoolean(datagram, wptr, sdofSeg.isLastSegment);
@@ -219,7 +232,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number, l
   // and we can do some trapezoid binning... 
   if (maxVf <= seg.vf) {
     // seg is `//`
-    if(log) console.log(`ESX: seg: // ${exSeg.unit[0].toFixed(2)}`);
+    if (log) console.log(`ESX: seg: // ${exSeg.unit[0].toFixed(2)}`);
     // console.error(JSON.parse(JSON.stringify(seg)))
     exSeg.distAccelPhase = exSeg.distTotal
     exSeg.distCruisePhase = 0
@@ -233,7 +246,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number, l
     exSeg.timeTotal = exSeg.timeAccelEnd
   } else if (maxVi <= seg.vi) {
     // seg is `\\` 
-    if(log) console.log(`ESX: seg: \\\\ ${exSeg.unit[0].toFixed(2)}`);
+    if (log) console.log(`ESX: seg: \\\\ ${exSeg.unit[0].toFixed(2)}`);
     exSeg.distAccelPhase = 0
     exSeg.distCruisePhase = 0
     exSeg.timeAccelEnd = 0
@@ -242,7 +255,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number, l
     exSeg.timeTotal = exSeg.distTotal / (0.5 * (exSeg.vi + exSeg.vf))
   } else if (seg.vi == seg.vmax && seg.vmax == seg.vf) {
     // seg is `---`
-    if(log) console.log(`ESX: seg: --- ${exSeg.unit[0].toFixed(2)}`);
+    if (log) console.log(`ESX: seg: --- ${exSeg.unit[0].toFixed(2)}`);
     exSeg.distAccelPhase = 0
     exSeg.distCruisePhase = exSeg.distTotal
     exSeg.timeAccelEnd = 0
@@ -251,7 +264,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number, l
     exSeg.timeCruiseEnd = exSeg.timeTotal
   } else if (seg.vi == seg.vmax) {
     // seg is `---\\`
-    if(log) console.log(`ESX: seg: ---\\\\ ${exSeg.unit[0].toFixed(2)}`);
+    if (log) console.log(`ESX: seg: ---\\\\ ${exSeg.unit[0].toFixed(2)}`);
     // vf^2 = vi^2 + 2ad 
     // d = (vf^2 - vi^2) / (2a)
     let decelDist = (seg.vmax * seg.vmax - seg.vf * seg.vf) / (2 * seg.accel)
@@ -263,7 +276,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number, l
     exSeg.timeTotal = exSeg.timeCruiseEnd + decelTime
   } else if (seg.vf == seg.vmax) {
     // seg is `//---`
-    if(log) console.log(`ESX: seg: //--\\\\ ${exSeg.unit[0].toFixed(2)}`);
+    if (log) console.log(`ESX: seg: //--\\\\ ${exSeg.unit[0].toFixed(2)}`);
     exSeg.distAccelPhase = (seg.vmax * seg.vmax - seg.vi * seg.vi) / (2 * seg.accel)
     exSeg.distCruisePhase = exSeg.distTotal - exSeg.distAccelPhase
     exSeg.timeAccelEnd = exSeg.distAccelPhase / (0.5 * (exSeg.vmax + exSeg.vi))
@@ -275,7 +288,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number, l
     let decelDist = (seg.vmax * seg.vmax - seg.vf * seg.vf) / (2 * seg.accel)
     if (accelDist + decelDist >= exSeg.distTotal) {
       // seg is `//\\`
-      if(log) console.log(`ESX: seg: //\\\\ ${exSeg.unit[0].toFixed(2)}`);
+      if (log) console.log(`ESX: seg: //\\\\ ${exSeg.unit[0].toFixed(2)}`);
       // we need to figure when in time / or dist / the crossover happens, 
       // we know velocities at the peak are equal, 
       // vpeak^2 = vi^2 + 2ad_accel
@@ -312,7 +325,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number, l
       // that's it, innit ? 
     } else {
       // seg is `//---\\`
-      if(log) console.log(`ESX: seg: //--\\\\ ${exSeg.unit[0].toFixed(2)}`);
+      if (log) console.log(`ESX: seg: //--\\\\ ${exSeg.unit[0].toFixed(2)}`);
       exSeg.distAccelPhase = accelDist
       exSeg.distCruisePhase = exSeg.distTotal - accelDist - decelDist
       exSeg.timeAccelEnd = accelDist / (0.5 * (exSeg.vmax + exSeg.vi))
