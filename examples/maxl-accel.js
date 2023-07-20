@@ -1,3 +1,4 @@
+import Serializers from "../src/lib/osapjs/utils/serializers";
 
 let maxl = createMAXL({
   motionAxes: ["x", "y"],
@@ -17,7 +18,8 @@ let maxl = createMAXL({
       track: "y", 
       reader: "stepper",
     }
-  ]
+  ],
+  auxiliaryDevices: ["accel"]
 });
 
 console.warn(`(1) starting MAXL...`);
@@ -82,6 +84,32 @@ await maxl.halt();
 // await maxl.addSegmentToQueue([100], 150, 50);
 // await maxl.addSegmentToQueue([150], 150, 50);
 
+// now sub 2 accel
+
+let stash = [] 
+
+accel.on("linearAcceleration", (data) => {
+  // console.warn(`got data here`, data);
+  // let rptr = 0;
+  let obj = {
+    time: Serializers.readUint32(data, 0),
+    x: Serializers.readFloat32(data, 4),
+    y: Serializers.readFloat32(data, 8),
+    z: Serializers.readFloat32(data, 12),
+  }
+  // let's get the mag of all three, 
+  let accelMag = Math.sqrt(obj.x * obj.x  + obj.y * obj.y + obj.z * obj.z)
+  let maxlStates = maxl.getStatesAtTime(obj.time / 1000000)
+  console.log(`acc: ${accelMag.toFixed(3)} \t ${maxlStates.accel}`)
+  obj.accel = maxlStates.accel;
+  obj.unitX = maxlStates.unitX;
+  obj.unitY = maxlStates.unitY;
+  obj.unitZ = maxlStates.unitZ; 
+  stash.push(obj);
+  // console.log("maxl...", maxl.getStatesAtTime(obj.time / 1000000))
+  // console.log(data[0], data[1], data[2], data[3])
+})
+
 console.warn(`...`);
 
 // ------------ testpath ingest 
@@ -89,11 +117,40 @@ for(let p = 0; p < maxl.testPath.length; p ++){
   try {
     console.log(`${p} / ${maxl.testPath.length}`);
     // if(p > 32) break;
-    await maxl.addSegmentToQueue(maxl.testPath[p], 250, 5);
+    await maxl.addSegmentToQueue(maxl.testPath[p], 200, 50);
   } catch (err) {
     console.error(err);
     break; 
   }
 }
+
+await maxl.awaitMotionEnd()
+
+function saveObjectAsJSON(object, filename) {
+  // Convert object to JSON string
+  const jsonString = JSON.stringify(object, null, 2);
+  
+  // Create a Blob with the JSON data
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  
+  // Create a URL for the Blob
+  const url = URL.createObjectURL(blob);
+  
+  // Create a temporary <a> element to trigger the download
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  
+  // Append the link to the document and click it programmatically
+  document.body.appendChild(link);
+  link.click();
+  
+  // Clean up by removing the temporary link and revoking the URL
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+console.log(`THE OBJ`)
+saveObjectAsJSON(stash, "accelStash.json")
 
 // await xMotor.setCurrentScale(0.0)

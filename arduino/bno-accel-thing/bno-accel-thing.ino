@@ -44,13 +44,16 @@ void setup() {
   // Serial.begin(0);
   // while(!Serial) delay(10);
   // startup 
-  if(bno.begin()){bnoInitOK = true;}
+  if(bno.begin()){
+    bnoInitOK = true;
+    bno.setMode(OPERATION_MODE_ACCONLY);
+  }
   // we'll blink the user-led 
   pinMode(LED_BUILTIN, OUTPUT);
 }
 
 uint32_t lastBlink = 0;
-uint32_t intervalBlink = 100;
+uint32_t intervalBlink = 10;
 uint8_t datagram[256];
 
 void loop() {

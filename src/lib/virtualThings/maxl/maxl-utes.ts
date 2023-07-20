@@ -56,6 +56,75 @@ let floatToUint32Micros = (flt: number): number => {
   return micros
 }
 
+let getStatesInExplicitSegment = (time: number, exSeg: ExplicitSegment) => {
+  time = time - exSeg.timeStart;
+  console.log('intervals', time.toFixed(3), exSeg.timeStart.toFixed(3), exSeg.timeAccelEnd.toFixed(3));
+  let states = {
+    accel: 0, 
+    unitX: exSeg.unit[0],
+    unitY: exSeg.unit[1],
+    unitZ: exSeg.unit[2],
+  }
+  if(time < exSeg.timeAccelEnd){
+    states.accel = exSeg.accel;
+  } else if (time < exSeg.timeCruiseEnd){
+    states.accel = 0;
+  } else {
+    states.accel = - exSeg.accel;
+  }
+  // do mm/sec^2 (from maxl) to m/sec^2 (from accelerometers...)
+  states.accel /= 1000;
+  console.log('states, ', states)
+  return states;
+}
+
+/*
+void evalSeg(maxlSegmentPositionLinear_t* seg, fpint32_t now, fpint32_t* _pos, fpint32_t* _vel){
+  // we're going to calc a distance-from-segment-start-pt, that's this:
+  fpint32_t dist = 0;
+  // our current vels & accels will get stored / used, 
+  fpint32_t vel = 0; 
+  fpint32_t accel = 0;
+  // OK: everything is real-units (i.e. units/sec, units/sec/sec, and seconds)
+  // but in fixed point ! 
+  if(now < seg->tAccelEnd){
+    // we're pre-cruise, so are currently accelerating, 
+    accel = seg->accel;
+    // vel = vi + accel * t 
+    vel = seg->vi + fp_mult32x32(seg->accel, now);
+    // dist = ((vi + vf) / 2) * t
+    dist = fp_mult32x32(((seg->vi + vel) >> 1), now);
+  } else if (now < seg->tCruiseEnd){
+    // we've been thru accel phase, and are mid-cruise, 
+    accel = 0;
+    // v = cruise velocity ! 
+    vel = seg->vmax;
+    // d = previously-calculated-integral + vmax * t 
+    dist = seg->distAccelPhase;
+    dist += fp_mult32x32(seg->vmax, (now - seg->tAccelEnd));
+  } else {
+    // we're in the decel phase, 
+    accel = - seg->accel;
+    // vel = vmax - accel * t 
+    // #warning for a performance improvement, it seems likely that these 
+    // speed-x-time calcs could avoid the 64bit promotion used in fp_mult32x32() ?
+    // ... we could do some scale analysis, if we can limit segment time-sizes, 
+    // we could limit rates as well, and this could all be lickedy-split 32-bit 
+    vel = seg->vmax - fp_mult32x32(seg->accel, (now - seg->tCruiseEnd));
+    // d = both-previously-calculated-integrals + ((vi + vf) / 2) * t
+    dist = seg->distAccelPhase + seg->distCruisePhase;
+    dist += fp_mult32x32(((seg->vmax + vel) >> 1), (now - seg->tCruiseEnd));
+  }
+  // so, our position is just the start + our calculated distance at this time, 
+  *_pos = seg->start + dist;
+  *_vel = vel;
+  // we also have the velocity that we could write... 
+  // ok we have vels, accels, and distances, we can assign those, 
+  // _state->accel = accel;
+  // _state->vel = vel;
+}
+*/
+
 // this takes the explicit segment and packs it into a buffer 
 let writeExplicitSegment = (exSeg: ExplicitSegment, motionIndex: number, trackIndex: number): Uint8Array => {
   // ok ok, first we should cut the rug, you know ? 
@@ -264,5 +333,6 @@ export {
   floatToFixed,
   floatToUint32Micros,
   writeExplicitSegment,
-  calculateExplicitSegment
+  calculateExplicitSegment,
+  getStatesInExplicitSegment
 }

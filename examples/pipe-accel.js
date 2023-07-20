@@ -9,6 +9,6 @@ accel.on("linearAcceleration", (data) => {
     y: Serializers.readFloat32(data, 8),
     z: Serializers.readFloat32(data, 12),
   }
-  console.log(obj)
+  console.log(obj.x.toFixed(3))
   // console.log(data[0], data[1], data[2], data[3])
 })

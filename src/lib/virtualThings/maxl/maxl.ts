@@ -22,7 +22,8 @@ import {
   // floatToFixed, 
   // floatToUint32Micros, 
   writeExplicitSegment,
-  calculateExplicitSegment
+  calculateExplicitSegment,
+  getStatesInExplicitSegment
 } from "./maxl-utes"
 
 import {
@@ -56,6 +57,7 @@ type MaxlConfig = {
   motionAxes: Array<string>,              // set
   subscriptions: Array<MaxlSubscription>, // set
   actuators?: Array<MaxlActuatorInfo>,    // discovered / matched 
+  auxiliaryDevices?: Array<string>, 
   // transformedAxes?: Array<string>,
   // transformForwards?: Function,
   // transformBackwards?: Function, 
@@ -97,7 +99,7 @@ export default function createMAXL(config: MaxlConfig) {
       console.warn(`clearing...`, timer);
       clearTimeout(timer);
     }
-    timers = []; 
+    timers = [];
     // shut each of our actuators down, this is the hard stop: 
     await Promise.all(config.actuators.map(actu => {
       return osap.send(actu.name, "maxlMessages", new Uint8Array([MAXL_KEYS.MSG_HALT]))
@@ -113,6 +115,8 @@ export default function createMAXL(config: MaxlConfig) {
     config.actuators = [];
     let actuatorNames: Set<string> = new Set();
     config.subscriptions.forEach(sub => actuatorNames.add(sub.actuator));
+    // and add aux devices here... 
+    if(config.auxiliaryDevices) config.auxiliaryDevices.forEach(dev => actuatorNames.add(dev));
     console.log(`we have actu`, actuatorNames)
     // ... flesh 'em out, 
     for (let actu of actuatorNames) {
@@ -239,6 +243,41 @@ export default function createMAXL(config: MaxlConfig) {
   // we track these, so that we can cancel them... 
   let timers = []
 
+  // and... hurm... 
+  // let history = []
+
+  let getStatesInSegment = (time: number, seg: PlannedSegment) => {
+    // console.log(`would pop for ${seg.explicit.timeStart}`)
+    return getStatesInExplicitSegment(time, seg.explicit);
+  }
+
+  // then let's see if we can pull samples at some given time...
+  // time in.. seconds ? 
+  let getStatesAtTime = (time: number) => {
+    // seg is either in-history or in-current, 
+    // tho... history not needed, we have infinite queue 
+    // check in-history, 
+    // if (history.length != 0) {
+    //   if (time < history[0].explicit.timeStart && time < history[history.length - 1].timeEnd) {
+    //     for (let seg of history) {
+    //       if (seg.explicit.timeStart < time && time < seg.explicit.timeEnd) {
+    //         console.warn(`would pop historical seg`, seg)
+    //         return getStatesInSegment(time, seg);
+    //       }
+    //     }
+    //   }
+    // }
+    // queue is eternal, innit ?
+    for(let seg of queue){
+      if(!seg.explicit) continue;
+      if(seg.explicit.timeStart < time && time < seg.explicit.timeEnd){
+        return getStatesInSegment(time, seg);
+      }
+    }
+    // else 
+    return({accel: 0})
+  }
+
   // checks whether / not to transmit a segment, and does so 
   let checkQueueState = async () => {
     try {
@@ -248,15 +287,16 @@ export default function createMAXL(config: MaxlConfig) {
         return;
       }
       // or if no explicit at the head ?
-      if(!head.explicit){
+      if (!head.explicit) {
         console.warn(`no explicit here...`, head)
       }
       // ... 
       let now = getLocalTime();
       // 1st let's check that head is in the correct place, 
       if (head.explicit.timeEnd < now) {
-        while(head.explicit.timeEnd < now){
+        while (head.explicit.timeEnd < now) {
           console.warn(`WALK FWDS to ${head.explicit.timeEnd}`)
+          // history.push(head);
           head = head.next;
         }
       }
@@ -272,8 +312,8 @@ export default function createMAXL(config: MaxlConfig) {
         }
         // console.log(`W / HEAD ${head.transmitTime}, CUR ${current.transmitTime}`)
         // if it's been tx'd, carry on:
-        if (current.transmitTime != 0){
-          current = current.next; 
+        if (current.transmitTime != 0) {
+          current = current.next;
           continue;
         }
         // otherwise calculate explicit, unless we already have it ?
@@ -329,7 +369,7 @@ export default function createMAXL(config: MaxlConfig) {
         p1: p1,
         p2: p2,
         vmax: vmax,
-        accel: 500,
+        accel: 1500,
         vi: vlink,
         vf: vlink,
         transmitTime: 0,
@@ -357,7 +397,7 @@ export default function createMAXL(config: MaxlConfig) {
   let awaitQueueSpace = async () => {
     return new Promise<void>((resolve, reject) => {
       let check = () => {
-        if(getLocalLookaheadLength() < QUEUE_LOCAL_MAX_LEN){
+        if (getLocalLookaheadLength() < QUEUE_LOCAL_MAX_LEN) {
           resolve()
         } else {
           setTimeout(check, 1)
@@ -395,6 +435,7 @@ export default function createMAXL(config: MaxlConfig) {
     halt,
     addSegmentToQueue,
     awaitMotionEnd,
+    getStatesAtTime,
   }
 
 }
