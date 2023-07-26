@@ -65,6 +65,42 @@ class MAXL {
     uint8_t msgBuffer[256];
 };
 
+// ---------------- linear segment track-type !  
+
+typedef struct maxlSegmentPositionLinear_t {
+  // a start position 
+  fpint32_t start = 0;
+  // start rate, accel slope(s), cruise rate, end rate 
+  fpint32_t vi = 0;
+  fpint32_t accel = 0;
+  fpint32_t vmax = 0;
+  fpint32_t vf = 0;
+  // pre-calculated phase integrals, 
+  fpint32_t distTotal = 0;
+  fpint32_t distAccelPhase = 0;
+  fpint32_t distCruisePhase = 0;
+  // phase times, 
+  // i.e. when to stop accelerating, when to start decelerating 
+  fpint32_t tAccelEnd = 0;
+  fpint32_t tCruiseEnd = 0;
+} maxlSegmentPositionLinear_t;
+
+typedef struct maxlQueueItem_t {
+  // timing info (serialized)
+  // system-reckoned start and end times, in micros, 
+  uint32_t tStart_us = 0;
+  uint32_t tEnd_us = 0;
+  // sequencing aid,
+  boolean isLastSegment = false;
+  // the queue'en info (not serialized) 
+  maxlQueueItem_t* next;
+  maxlQueueItem_t* previous;
+  uint32_t indice = 0;
+  boolean isOccupied = false;
+  // the actual obj (serialized) 
+  maxlSegmentPositionLinear_t seg;
+} maxlQueueItem_t;
+
 // let's try a basic... one of these:
 class MAXL_TrackPositionLinear : public MAXL_Track {
   public:
@@ -82,47 +118,10 @@ class MAXL_TrackPositionLinear : public MAXL_Track {
     void (*followerFunction)(float position, float delta) = nullptr;
     // we keep a few variables... 
     fpint32_t _lastPos = 0;
+    // and our queue, per-instance 
+    maxlQueueItem_t queue[MAXL_QUEUE_LEN];
+    maxlQueueItem_t* head;
+    maxlQueueItem_t* tail;  
 };
-
-/*
-// ---------------- setup 
-
-void maxl_init(void);
-
-// ---------------- run, AFAP
-
-// run the loop code as often as possible, w/ log option 
-void maxl_loop(boolean log);
-
-// ---------------- config... motor pickins 
-
-void maxl_pushSettings(uint8_t _actuatorID, uint8_t _axisPick, float _spu);
-
-// ---------------- queue management
-
-// void maxl_addSegmentToQueue(maxlSegmentPositionLinear_t* seg);
-
-void maxl_addSegment(uint8_t* data, size_t len);
-
-size_t maxl_getSegmentCompleteMsg(uint8_t* msg);
-
-void maxl_evalSegment(fpint32_t* _pos, fpint32_t* _vel, maxlSegmentPositionLinear_t* seg, fpint32_t now, boolean log);
-
-void maxl_halt(void);
-
-// ---------------- time management
-
-void maxl_setSystemTime(uint32_t now);
-
-uint32_t maxl_getSystemTime(void);
-
-// ---------------- "user code"
-
-void maxl_tickHardware(fpint32_t _state, fpint32_t _delta);
-
-// ---------------- debuggen 
-
-void maxl_printDebug(void);
-*/
 
 #endif 

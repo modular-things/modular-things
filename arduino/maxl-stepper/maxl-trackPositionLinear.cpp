@@ -4,6 +4,13 @@
 // OSAP is just here for debugs, we should be able to decouple ? 
 #include "osap.h"
 
+// we have modal state, but might not need to? 
+#define MAXL_TPL_MODE_NONE 0 
+#define MAXL_TPL_MODE_QUEUE 1 
+uint8_t mode = MAXL_TPL_MODE_NONE;
+
+// constructor 
+
 MAXL_TrackPositionLinear::MAXL_TrackPositionLinear(const char* _name, void (*_followerFunction)(float position, float delta)){
   // register ourselves as a track... 
   MAXL::getInstance()->registerTrack(this);
@@ -13,51 +20,6 @@ MAXL_TrackPositionLinear::MAXL_TrackPositionLinear(const char* _name, void (*_fo
   // and assign our track type, 
   trackTypeKey = MAXL_KEY_TRACKTYPE_POSLIN;
 }
-
-// so, here's our linear piecewise position chunk 
-// ... I suppose we could have ahn .h for this, idk 
-
-typedef struct maxlSegmentPositionLinear_t {
-  // system-reckoned start and end times, in micros, 
-  uint32_t tStart_us = 0;
-  uint32_t tEnd_us = 0;
-  // sequencing aid,
-  boolean isLastSegment = false;
-  // valuuuues:
-  // a start position and total distance, 
-  fpint32_t start = 0;
-  // start rate, accel slope(s), cruise rate, end rate 
-  fpint32_t vi = 0;
-  fpint32_t accel = 0;
-  fpint32_t vmax = 0;
-  fpint32_t vf = 0;
-  // pre-calculated phase integrals, 
-  fpint32_t distTotal = 0;
-  fpint32_t distAccelPhase = 0;
-  fpint32_t distCruisePhase = 0;
-  // phase times, 
-  // i.e. when to stop accelerating, when to start decelerating 
-  fpint32_t tAccelEnd = 0;
-  fpint32_t tCruiseEnd = 0;
-  // now some queue management flags / links; 
-  // ready/set, token 
-  boolean isOccupied = false;
-  // linking 
-  maxlSegmentPositionLinear_t* next;
-  maxlSegmentPositionLinear_t* previous;
-  uint32_t indice = 0;  // track own location, 
-} maxlSegmentPositionLinear_t;
-
-// we keep a file-scoped queueue of them 
-maxlSegmentPositionLinear_t queue[MAXL_QUEUE_LEN];
-maxlSegmentPositionLinear_t* head;
-maxlSegmentPositionLinear_t* tail;  
-
-#define MAXL_TPL_MODE_NONE 0 
-#define MAXL_TPL_MODE_QUEUE 1 
-
-// ... and a queue mode
-uint8_t mode = MAXL_TPL_MODE_NONE;
 
 void MAXL_TrackPositionLinear::begin(void){
   // -------------------------------------------- queue needs some setup, 
@@ -85,6 +47,7 @@ void evalSeg(maxlSegmentPositionLinear_t* seg, fpint32_t now, fpint32_t* _pos, f
   // our current vels & accels will get stored / used, 
   fpint32_t vel = 0; 
   fpint32_t accel = 0;
+
   // OK: everything is real-units (i.e. units/sec, units/sec/sec, and seconds)
   // but in fixed point ! 
   if(now < seg->tAccelEnd){
@@ -118,6 +81,8 @@ void evalSeg(maxlSegmentPositionLinear_t* seg, fpint32_t now, fpint32_t* _pos, f
   // so, our position is just the start + our calculated distance at this time, 
   *_pos = seg->start + dist;
   *_vel = vel;
+
+
   // we also have the velocity that we could write... 
   // ok we have vels, accels, and distances, we can assign those, 
   // _state->accel = accel;
@@ -137,15 +102,15 @@ void MAXL_TrackPositionLinear::evaluate(uint32_t time){
     case MAXL_TPL_MODE_QUEUE:
       {
         // start with the tail, 
-        maxlSegmentPositionLinear_t* seg = tail;
-        // look for an in-band seggy 
+        maxlQueueItem_t* queueMarker = tail;
+        // try to figure which of 'em is in-band: 
         for(uint8_t s = 0; s < MAXL_QUEUE_LEN; s ++){
-          if(seg->isOccupied && seg->tStart_us <= time && time < seg->tEnd_us){
+          if(queueMarker->isOccupied && queueMarker->tStart_us <= time && time < queueMarker->tEnd_us){
             // OSAP_DEBUG("inseg");
             // calculate segment-relative time in fp32 seconds:
-            fpint32_t segTime = fp_floatToFixed32(((float)(time - seg->tStart_us)) * 0.000001);
+            fpint32_t segTime = fp_floatToFixed32(((float)(time - queueMarker->tStart_us)) * 0.000001);
             // do the actual werk, 
-            evalSeg(seg, segTime, &pos, &vel);
+            evalSeg(&(queueMarker->seg), segTime, &pos, &vel);
             delta = pos - _lastPos;
             followerFunction(fp_fixed32ToFloat(pos), fp_fixed32ToFloat(delta));
             // and track 
@@ -154,7 +119,7 @@ void MAXL_TrackPositionLinear::evaluate(uint32_t time){
             break; // break the segs-advancing loop 
           } else {
             // that segment wasn't in-band, look ahead:
-            seg = seg->next;
+            queueMarker = queueMarker->next;
           }
         }
       }
@@ -178,33 +143,39 @@ size_t MAXL_TrackPositionLinear::addSegment(uint8_t* data, size_t len, uint8_t* 
     OSAP_ERROR("bad track type : " + String(segmentType) + " to: " + String(trackTypeKey));
     return 0;
   }
-  // copy it out, 
+
+  // ---------------- (1) copy queue-info: 
   head->tStart_us = ts_readUint32(data, &rptr);
   head->tEnd_us = ts_readUint32(data, &rptr);
   head->isLastSegment = ts_readBoolean(data, &rptr);
   // print... 
   // OSAP_DEBUG("start, end: " + String(head->tStart_us) + ", " + String(head->tEnd_us));
-  // start and distance 
-  head->start = ts_readInt32(data, &rptr);
-  // vi, vmax, accel, 
-  head->vi = ts_readInt32(data, &rptr);
-  head->accel = ts_readInt32(data, &rptr);
-  head->vmax = ts_readInt32(data, &rptr);
-  head->vf = ts_readInt32(data, &rptr);
-  // pre-computed integrals, 
-  head->distTotal = ts_readInt32(data, &rptr); 
-  head->distAccelPhase = ts_readInt32(data, &rptr);
-  head->distCruisePhase = ts_readInt32(data, &rptr);
-  // and trapezoid times
-  head->tAccelEnd = ts_readInt32(data, &rptr);
-  head->tCruiseEnd = ts_readInt32(data, &rptr);
-  // and setup to run;
+
+  // ---------------- (2) copy the remainder: 
+  memcpy(&(head->seg), data + rptr, sizeof head->seg);
+  // uuuh 
+  // head->seg.start = ts_readInt32(data, &rptr);
+  // // vi, vmax, accel, 
+  // head->seg.vi = ts_readInt32(data, &rptr);
+  // head->seg.accel = ts_readInt32(data, &rptr);
+  // head->seg.vmax = ts_readInt32(data, &rptr);
+  // head->seg.vf = ts_readInt32(data, &rptr);
+  // // pre-computed integrals, 
+  // head->seg.distTotal = ts_readInt32(data, &rptr); 
+  // head->seg.distAccelPhase = ts_readInt32(data, &rptr);
+  // head->seg.distCruisePhase = ts_readInt32(data, &rptr);
+  // // and trapezoid times
+  // head->seg.tAccelEnd = ts_readInt32(data, &rptr);
+  // head->seg.tCruiseEnd = ts_readInt32(data, &rptr);
+
+  // ---------------- (3) now hit the queue'en info: 
+  // flag as OK to run;
   head->isOccupied = true;
-  // now advance the head ptr, 
+  // and advance the head ptr, 
   head = head->next;
-  // now we r queue'en, 
+  // confirm that we are queue'en 
   mode = MAXL_TPL_MODE_QUEUE;
-  // we don't have a return message at this moment... 
+  // no info to return ATM
   return 0;
 }
 
