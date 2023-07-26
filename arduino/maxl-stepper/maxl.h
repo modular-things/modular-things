@@ -18,6 +18,7 @@
 
 // track-types 
 #define MAXL_KEY_TRACKTYPE_POSLIN 101 
+#define MAXL_KEY_TRACKTYPE_EVENT_8BIT 102
 
 // and a queue-thing interface, 
 // a purely virtual class 
@@ -62,7 +63,7 @@ class MAXL {
     MAXL_Track* tracks[MAXL_MAX_TRACKS];
     uint8_t numTracks = 0;
     // pls ignore 
-    uint8_t msgBuffer[256];
+    uint8_t msgBuffer[256];    
 };
 
 // ---------------- linear segment track-type !  
@@ -85,7 +86,7 @@ typedef struct maxlSegmentPositionLinear_t {
   fpint32_t tCruiseEnd = 0;
 } maxlSegmentPositionLinear_t;
 
-typedef struct maxlQueueItem_t {
+typedef struct maxlQueueItemLinear_t {
   // timing info (serialized)
   // system-reckoned start and end times, in micros, 
   uint32_t tStart_us = 0;
@@ -93,13 +94,13 @@ typedef struct maxlQueueItem_t {
   // sequencing aid,
   boolean isLastSegment = false;
   // the queue'en info (not serialized) 
-  maxlQueueItem_t* next;
-  maxlQueueItem_t* previous;
+  maxlQueueItemLinear_t* next;
+  maxlQueueItemLinear_t* previous;
   uint32_t indice = 0;
   boolean isOccupied = false;
   // the actual obj (serialized) 
   maxlSegmentPositionLinear_t seg;
-} maxlQueueItem_t;
+} maxlQueueItemLinear_t;
 
 // let's try a basic... one of these:
 class MAXL_TrackPositionLinear : public MAXL_Track {
@@ -119,9 +120,58 @@ class MAXL_TrackPositionLinear : public MAXL_Track {
     // we keep a few variables... 
     fpint32_t _lastPos = 0;
     // and our queue, per-instance 
-    maxlQueueItem_t queue[MAXL_QUEUE_LEN];
-    maxlQueueItem_t* head;
-    maxlQueueItem_t* tail;  
+    maxlQueueItemLinear_t queue[MAXL_QUEUE_LEN];
+    maxlQueueItemLinear_t* head;
+    maxlQueueItemLinear_t* tail;  
+};
+
+// ---------------- 8bit event type !
+
+// strange multiple-definitions trouble when we 
+// try to filescope this stuff, idk man 
+typedef struct maxlSegmentEvent8Bit_t {
+  uint8_t numEvents = 0;
+  uint8_t data[256];
+  uint8_t dataLen = 0;
+} maxlSegmentEvent8Bit_t;
+
+typedef struct maxlQueueItemEvent_t {
+  // timing info (serialized)
+  // system-reckoned start and end times, in micros, 
+  uint32_t tStart_us = 0;
+  uint32_t tEnd_us = 0;
+  // sequencing aid,
+  boolean isLastSegment = false;
+  // the queue'en info (not serialized) 
+  maxlQueueItemEvent_t* next;
+  maxlQueueItemEvent_t* previous;
+  uint32_t indice = 0;
+  boolean isOccupied = false;
+  // the actual obj (serialized) 
+  maxlSegmentEvent8Bit_t seg;
+} maxlQueueItemEvent_t;
+
+#define MAXL_EVT8_MODE_NONE 0 
+#define MAXL_EVT8_MODE_QUEUE 1 
+
+// and here's some lights-thing, 
+class MAXL_TrackEvent8Bit : public MAXL_Track {
+  public:
+    MAXL_TrackEvent8Bit(const char* _name, void(*_followerFunction)(uint8_t val));
+    // interf,
+    void begin(void) override;
+    void evaluate(uint32_t time) override;
+    size_t addSegment(uint8_t* data, size_t len, uint8_t* reply) override;
+    size_t getSegmentCompleteMessage(uint32_t time, uint8_t* msg) override;
+    void halt(void) override;
+  private:
+    void (*followerFunction)(uint8_t val) = nullptr;
+    uint8_t _lastMask = 0;
+    maxlQueueItemEvent_t queue[MAXL_QUEUE_LEN];
+    maxlQueueItemEvent_t* head;
+    maxlQueueItemEvent_t* tail;
+    uint8_t mode = MAXL_EVT8_MODE_NONE;
+    void evalEventSegment(maxlSegmentEvent8Bit_t* seg, uint32_t now);
 };
 
 #endif 

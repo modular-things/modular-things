@@ -102,7 +102,7 @@ void MAXL_TrackPositionLinear::evaluate(uint32_t time){
     case MAXL_TPL_MODE_QUEUE:
       {
         // start with the tail, 
-        maxlQueueItem_t* queueMarker = tail;
+        maxlQueueItemLinear_t* queueMarker = tail;
         // try to figure which of 'em is in-band: 
         for(uint8_t s = 0; s < MAXL_QUEUE_LEN; s ++){
           if(queueMarker->isOccupied && queueMarker->tStart_us <= time && time < queueMarker->tEnd_us){
@@ -148,30 +148,15 @@ size_t MAXL_TrackPositionLinear::addSegment(uint8_t* data, size_t len, uint8_t* 
   head->tStart_us = ts_readUint32(data, &rptr);
   head->tEnd_us = ts_readUint32(data, &rptr);
   head->isLastSegment = ts_readBoolean(data, &rptr);
-  // print... 
   // OSAP_DEBUG("start, end: " + String(head->tStart_us) + ", " + String(head->tEnd_us));
 
-  // ---------------- (2) copy the remainder: 
+  // ---------------- (2) copy the remainder, using *trust*
   memcpy(&(head->seg), data + rptr, sizeof head->seg);
-  // uuuh 
-  // head->seg.start = ts_readInt32(data, &rptr);
-  // // vi, vmax, accel, 
-  // head->seg.vi = ts_readInt32(data, &rptr);
-  // head->seg.accel = ts_readInt32(data, &rptr);
-  // head->seg.vmax = ts_readInt32(data, &rptr);
-  // head->seg.vf = ts_readInt32(data, &rptr);
-  // // pre-computed integrals, 
-  // head->seg.distTotal = ts_readInt32(data, &rptr); 
-  // head->seg.distAccelPhase = ts_readInt32(data, &rptr);
-  // head->seg.distCruisePhase = ts_readInt32(data, &rptr);
-  // // and trapezoid times
-  // head->seg.tAccelEnd = ts_readInt32(data, &rptr);
-  // head->seg.tCruiseEnd = ts_readInt32(data, &rptr);
 
   // ---------------- (3) now hit the queue'en info: 
   // flag as OK to run;
   head->isOccupied = true;
-  // and advance the head ptr, 
+  // and advance the head ptr,
   head = head->next;
   // confirm that we are queue'en 
   mode = MAXL_TPL_MODE_QUEUE;

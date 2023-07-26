@@ -66,6 +66,42 @@ class MAXL {
     uint8_t msgBuffer[256];    
 };
 
+// ---------------- linear segment track-type !  
+
+typedef struct maxlSegmentPositionLinear_t {
+  // a start position 
+  fpint32_t start = 0;
+  // start rate, accel slope(s), cruise rate, end rate 
+  fpint32_t vi = 0;
+  fpint32_t accel = 0;
+  fpint32_t vmax = 0;
+  fpint32_t vf = 0;
+  // pre-calculated phase integrals, 
+  fpint32_t distTotal = 0;
+  fpint32_t distAccelPhase = 0;
+  fpint32_t distCruisePhase = 0;
+  // phase times, 
+  // i.e. when to stop accelerating, when to start decelerating 
+  fpint32_t tAccelEnd = 0;
+  fpint32_t tCruiseEnd = 0;
+} maxlSegmentPositionLinear_t;
+
+typedef struct maxlQueueItemLinear_t {
+  // timing info (serialized)
+  // system-reckoned start and end times, in micros, 
+  uint32_t tStart_us = 0;
+  uint32_t tEnd_us = 0;
+  // sequencing aid,
+  boolean isLastSegment = false;
+  // the queue'en info (not serialized) 
+  maxlQueueItemLinear_t* next;
+  maxlQueueItemLinear_t* previous;
+  uint32_t indice = 0;
+  boolean isOccupied = false;
+  // the actual obj (serialized) 
+  maxlSegmentPositionLinear_t seg;
+} maxlQueueItemLinear_t;
+
 // let's try a basic... one of these:
 class MAXL_TrackPositionLinear : public MAXL_Track {
   public:
@@ -83,23 +119,37 @@ class MAXL_TrackPositionLinear : public MAXL_Track {
     void (*followerFunction)(float position, float delta) = nullptr;
     // we keep a few variables... 
     fpint32_t _lastPos = 0;
+    // and our queue, per-instance 
+    maxlQueueItemLinear_t queue[MAXL_QUEUE_LEN];
+    maxlQueueItemLinear_t* head;
+    maxlQueueItemLinear_t* tail;  
 };
+
+// ---------------- 8bit event type !
 
 // strange multiple-definitions trouble when we 
 // try to filescope this stuff, idk man 
 typedef struct maxlSegmentEvent8Bit_t {
-  uint32_t tStart_us = 0;
-  uint32_t tEnd_us = 0;
-  // then... 
   uint8_t numEvents = 0;
   uint8_t data[256];
   uint8_t dataLen = 0;
-  // tracking / tracing 
-  maxlSegmentEvent8Bit_t* next;
-  maxlSegmentEvent8Bit_t* previous;
+} maxlSegmentEvent8Bit_t;
+
+typedef struct maxlQueueItemEvent_t {
+  // timing info (serialized)
+  // system-reckoned start and end times, in micros, 
+  uint32_t tStart_us = 0;
+  uint32_t tEnd_us = 0;
+  // sequencing aid,
+  boolean isLastSegment = false;
+  // the queue'en info (not serialized) 
+  maxlQueueItemEvent_t* next;
+  maxlQueueItemEvent_t* previous;
   uint32_t indice = 0;
   boolean isOccupied = false;
-} maxlSegmentEvent8Bit_t;
+  // the actual obj (serialized) 
+  maxlSegmentEvent8Bit_t seg;
+} maxlQueueItemEvent_t;
 
 #define MAXL_EVT8_MODE_NONE 0 
 #define MAXL_EVT8_MODE_QUEUE 1 
@@ -107,7 +157,7 @@ typedef struct maxlSegmentEvent8Bit_t {
 // and here's some lights-thing, 
 class MAXL_TrackEvent8Bit : public MAXL_Track {
   public:
-    MAXL_TrackEvent8Bit(const char* _name, void(*_followerFunction)(uint8_t mask));
+    MAXL_TrackEvent8Bit(const char* _name, void(*_followerFunction)(uint8_t val));
     // interf,
     void begin(void) override;
     void evaluate(uint32_t time) override;
@@ -115,54 +165,13 @@ class MAXL_TrackEvent8Bit : public MAXL_Track {
     size_t getSegmentCompleteMessage(uint32_t time, uint8_t* msg) override;
     void halt(void) override;
   private:
-    void (*followerFunction)(uint8_t mask) = nullptr;
+    void (*followerFunction)(uint8_t val) = nullptr;
     uint8_t _lastMask = 0;
-    maxlSegmentEvent8Bit_t queue[MAXL_QUEUE_LEN];
-    maxlSegmentEvent8Bit_t* head;
-    maxlSegmentEvent8Bit_t* tail;
+    maxlQueueItemEvent_t queue[MAXL_QUEUE_LEN];
+    maxlQueueItemEvent_t* head;
+    maxlQueueItemEvent_t* tail;
     uint8_t mode = MAXL_EVT8_MODE_NONE;
     void evalEventSegment(maxlSegmentEvent8Bit_t* seg, uint32_t now);
 };
-
-/*
-// ---------------- setup 
-
-void maxl_init(void);
-
-// ---------------- run, AFAP
-
-// run the loop code as often as possible, w/ log option 
-void maxl_loop(boolean log);
-
-// ---------------- config... motor pickins 
-
-void maxl_pushSettings(uint8_t _actuatorID, uint8_t _axisPick, float _spu);
-
-// ---------------- queue management
-
-// void maxl_addSegmentToQueue(maxlSegmentPositionLinear_t* seg);
-
-void maxl_addSegment(uint8_t* data, size_t len);
-
-size_t maxl_getSegmentCompleteMsg(uint8_t* msg);
-
-void maxl_evalSegment(fpint32_t* _pos, fpint32_t* _vel, maxlSegmentPositionLinear_t* seg, fpint32_t now, boolean log);
-
-void maxl_halt(void);
-
-// ---------------- time management
-
-void maxl_setSystemTime(uint32_t now);
-
-uint32_t maxl_getSystemTime(void);
-
-// ---------------- "user code"
-
-void maxl_tickHardware(fpint32_t _state, fpint32_t _delta);
-
-// ---------------- debuggen 
-
-void maxl_printDebug(void);
-*/
 
 #endif 

@@ -45,10 +45,6 @@ let evaluator = (pos, bitmap) => {
   return mask;
 }
 
-// for(let i = span[0]; i < span[1]; i += 5){
-//   evaluator(i, bitmapHello);
-// }
-
 // let's do... dummy maxl w/ no devices 
 // WARNING: 
 // current state: pixel pushing device does not run more than once 
@@ -78,16 +74,6 @@ let maxl = createMAXL({
   ],
 });
 
-// await maxl.addSegmentToQueue({
-//   endPos: [0, 100], 
-//   velocity: 250,
-//   junction: 50,
-//   eventObject: {
-//     name: "neopixelBitmap",
-//     val: 0,
-//   }
-// })
-
 await maxl.begin();
 
 await xMotor.setCurrentScale(0.25);
@@ -116,15 +102,6 @@ await maxl.addSegmentToQueue({
   endPos: [0, yShift], 
   velocity: 250,
   junction: 50,
-  // eventObject: {
-  //   name: "neopixelBitmap",
-  //   evaluationPrecision: 10,  // in milliseconds 
-  //   sendy: true,
-  //   evaluationFunction: (states) => {
-  //     let xpos = states.unitX * states.dist + states.p1[0];
-  //     return evaluator(xpos, bitmapHello)
-  //   }
-  // }
 })
 
 await maxl.addSegmentToQueue({

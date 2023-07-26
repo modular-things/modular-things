@@ -374,9 +374,9 @@ export default function createMAXL(config: MaxlConfig) {
           // and truncate,
           // ok, here's our 
           datagram = datagram.slice(0, wptr);
-          // console.warn(datagram);
+          console.warn(datagram);
           // ... shit broh, we need this also:
-          let header = new Uint8Array(4 * 2 + 3 + datagram.length);
+          let header = new Uint8Array(4 * 2 + 4 + datagram.length);
           wptr = 0;
           wptr += Serializers.writeUint8(header, wptr, MAXL_KEYS.MSG_TRACK_ADDSEGMENT);
           // track index, of which we know (for this demo!) that lights will be 0 on that mcu... 
@@ -385,14 +385,16 @@ export default function createMAXL(config: MaxlConfig) {
           // times, 
           wptr += Serializers.writeInt32(header, wptr, floatToUint32Micros(current.explicit.timeStart));  
           wptr += Serializers.writeInt32(header, wptr, floatToUint32Micros(current.explicit.timeEnd));
+          // this is where we set "isLastSegment" flag, which we are (for now) not using; 
+          header[wptr] = 0;
           // and to combine, 
-          header.set(datagram, 11);
+          header.set(datagram, 12);
           // console.warn(floatToUint32Micros(current.explicit.timeEnd));
           // console.warn(header);
           console.warn(`EVT EVAL TOOK ${(Time.getTimeStamp() - start).toFixed(3)} ms`)
           // and believe it or not, we are going to bypass all of the routing shit also,
           if(current.eventObject.sendy){
-            console.warn(`SENDY gram w/ len ${header.length}`)
+            console.warn(`SENDY gram w/ len ${header.length}, evts: ${numEvents}`)
             await osap.send("pixOutput", "maxlMessages", header);
           }
         } // END SKETCHY EVENTOBJECT CODE ! 

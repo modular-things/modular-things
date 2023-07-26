@@ -8,7 +8,6 @@
 #include <Adafruit_NeoPixel.h>
 
 #define PIXEL_COUNT 8 
-// or GPIO-4, idk 
 #define PIXEL_PIN 4 
 #define BRIGHTNESS 50
 
@@ -51,11 +50,10 @@ void setup() {
   strip.begin();
   strip.show();
   strip.setBrightness(BRIGHTNESS);
-
+  // startup our sys 
   osap.begin();
   maxl.begin();
   osap.attachDebugFunction(debugPort.escape);
-  // setup and wait for serial 
   // we'll blink the user-led 
   pinMode(LED_BUILTIN, OUTPUT);
 }
@@ -65,7 +63,7 @@ uint32_t intervalBlink = 50;
 bool lastPixelState = false;
 
 void loop() {
-  // lewp 
+  // lewps 
   osap.loop();
   maxl.loop();
   // delay(10);
