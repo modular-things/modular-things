@@ -50,6 +50,9 @@ let evaluator = (pos, bitmap) => {
 // }
 
 // let's do... dummy maxl w/ no devices 
+// WARNING: 
+// current state: pixel pushing device does not run more than once 
+// per boot cycle... idk 
 
 let maxl = createMAXL({
   auxiliaryDevices: ["pixOutput"], 

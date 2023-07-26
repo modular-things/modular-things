@@ -444,7 +444,7 @@ export default function createMAXL(config: MaxlConfig) {
         p1: p1,
         p2: p2,
         vmax: vmax,
-        accel: 1500,
+        accel: 1000,
         vi: vlink,
         vf: vlink,
         transmitTime: 0,

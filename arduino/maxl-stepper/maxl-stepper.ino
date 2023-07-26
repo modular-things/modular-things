@@ -111,9 +111,6 @@ void loop() {
   osap.loop();
   // do maxl stuff 
   maxl.loop();
-  // maxl_loop(false);
-  // and clear out-messages (TODO... rm, or ?)
-  // size_t msgLen = maxl_getSegmentCompleteMsg(msgOut);
   // check check
   // we should blink a light or sth 
   if(lastBlink + intervalBlink < millis()){

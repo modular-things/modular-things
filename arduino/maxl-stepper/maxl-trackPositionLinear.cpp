@@ -51,7 +51,7 @@ typedef struct maxlSegmentPositionLinear_t {
 // we keep a file-scoped queueue of them 
 maxlSegmentPositionLinear_t queue[MAXL_QUEUE_LEN];
 maxlSegmentPositionLinear_t* head;
-maxlSegmentPositionLinear_t* tail;
+maxlSegmentPositionLinear_t* tail;  
 
 #define MAXL_TPL_MODE_NONE 0 
 #define MAXL_TPL_MODE_QUEUE 1 
