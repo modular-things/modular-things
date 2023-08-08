@@ -199,7 +199,7 @@ float getCurrentTemp(void){
   return 9000.0F;
 }
 
-float _setPoint = 25.0F;
+float _setPoint = 65.0F;
 
 float _errEstimate = 0.0F;
 float _errEstimateLast = 0.0F;
