@@ -7,10 +7,11 @@
 // see i.e. https://www.tme.eu/Document/f9d2f5e38227fc1c7d979e546ff51768/NTCM-100K-B3950.pdf 
 // or search "NTC 100K 3950 Table"
 
-#define THERM_R1_VAL      9100.0F   // in the voltage divider, what's the top resistor's val, ohms ? 
-#define THERM_VIN_VAL     3.3F      // voltage applied to top of thermistor-divider ?
-#define THERM_ADC_RANGE   4096      // num. ticks in the ADC ?
-#define THERM_PWM_RANGE   4096      // num. ticks in the pwm output 
+#define THERM_ABS_MAX_TEMP  300.0F
+#define THERM_R1_VAL        9100.0F   // in the voltage divider, what's the top resistor's val, ohms ? 
+#define THERM_VIN_VAL       3.3F      // voltage applied to top of thermistor-divider ?
+#define THERM_ADC_RANGE     4096      // num. ticks in the ADC ?
+#define THERM_PWM_RANGE     4096      // num. ticks in the pwm output 
 
 #define THERM_TABLE_LEN   52        
 

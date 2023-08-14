@@ -5,7 +5,7 @@
 
 typedef struct pid_heater_states_t {
   // setpoint, current, and efforts:
-  float setPoint = 65.0F;
+  float setPoint = 0.0F;
   float tempEstimate = 0.0F;
   // loop internal 
   float errEstimate = 0.0F;
@@ -38,6 +38,7 @@ class PIDHeater {
     void loop(void);
     // give'ems 
     void setTemperature(float _temp);
+    void setConfig(pid_heater_config_t* _config);
     // gettem's 
     // gets temperature w/ a freshy reading 
     float getTemperature(void);

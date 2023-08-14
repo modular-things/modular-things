@@ -66,6 +66,20 @@ pid_heater_states_t PIDHeater::getStates(void){
   return state;
 }
 
+void PIDHeater::setTemperature(float _temp){
+  if(_temp > THERM_ABS_MAX_TEMP){
+    _temp = THERM_ABS_MAX_TEMP;    
+  }  
+  state.setPoint = _temp;
+}
+
+void PIDHeater::setConfig(pid_heater_config_t* _config){
+  // erm, lol 
+  memcpy(&config, _config, sizeof config);
+  // and re-calculate this: 
+  loopInterval = config.delT * 1000;
+}
+
 void PIDHeater::loop(void){
   // we loop on the interval, yah ?
   if(lastLoop + loopInterval > millis()) return;
@@ -93,7 +107,6 @@ void PIDHeater::loop(void){
   }
 
   // now we can do:
-
   state.pContrib = state.errEstimate * config.pTerm;
   state.iContrib = state.errIntegral * config.iTerm;
   state.dContrib = errDerivative * config.dTerm;

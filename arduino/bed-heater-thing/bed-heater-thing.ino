@@ -24,6 +24,45 @@ OSAP_Port_DeviceNames namePort("bedHeater");
 
 PIDHeater heater(THERM_PWM_PIN, THERM_ADC_PIN);
 
+// -------------------------- Coupla OSAP Hookups 
+
+// write a new config 
+
+void writeHeaterConfig(uint8_t* data, size_t len){
+  // it's the hot new extraction technique 
+  pid_heater_config_t config;
+  memcpy(&config, data, sizeof config);
+  // hand that off 
+  heater.setConfig(&config);
+}
+
+OSAP_Port_Named heaterConfig_port("writeHeaterConfig", writeHeaterConfig);
+
+// update the setpoint 
+
+void writeHeaterSetPoint(uint8_t* data, size_t len){
+  // same trick works just as well 
+  float setPoint = 0.0F;
+  memcpy(&setPoint, data, sizeof setPoint);
+  // again 
+  heater.setTemperature(setPoint);
+}
+
+OSAP_Port_Named heaterSetPoint_port("writeHeaterSetPoint", writeHeaterSetPoint);
+
+// get them states,
+
+size_t getHeaterStates(uint8_t* data, size_t len, uint8_t* reply){
+  // get one 
+  pid_heater_states_t states = heater.getStates();
+  // copy it into the msg, 
+  memcpy(reply, &states, sizeof states);
+  // reply the len, 
+  return sizeof states; 
+}
+
+OSAP_Port_Named heaterStates_Port("getHeaterStates", getHeaterStates);
+
 // -------------------------- Arduino Setup 
 
 void setup() {
