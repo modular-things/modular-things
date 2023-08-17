@@ -105,6 +105,7 @@ void loop() {
   osap.loop();
   heater.loop();
   if(debugLastTime + debugInterval < millis()){
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     pid_heater_states_t states = heater.getStates();
     // every once-and-a-while:
     display.clearDisplay();
