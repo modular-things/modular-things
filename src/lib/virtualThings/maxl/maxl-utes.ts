@@ -5,6 +5,7 @@ import {
   UnplannedSegment,
   PlannedSegment,
   ExplicitSegment,
+  TransformFunction,
   SingleDOFExplicitSegment,
   MAXL_KEYS,
 } from "./maxl-types"
@@ -81,7 +82,7 @@ let getStatesInExplicitSegment = (time: number, seg: ExplicitSegment) => {
   } else {
     states.accel = - seg.accel;
     states.vel = seg.vmax - (seg.accel * (time - seg.timeCruiseEnd));
-    states.dist = seg.distAccelPhase + seg.distCruisePhase ;
+    states.dist = seg.distAccelPhase + seg.distCruisePhase;
     states.dist += ((seg.vmax + states.vel) / 2) * (time - seg.timeCruiseEnd);
   }
   // do mm/sec^2 (from maxl) to m/sec^2 (from accelerometers...)
@@ -136,6 +137,43 @@ void evalSeg(maxlSegmentPositionLinear_t* seg, fpint32_t now, fpint32_t* _pos, f
   // _state->vel = vel;
 }
 */
+
+// this applies a transform to an explicit segment, returning a new one, 
+let transformExplicitSegment = (exSeg: ExplicitSegment, transform: TransformFunction): ExplicitSegment => {
+  // let's get the OG P1, 
+  let ogp1 = JSON.parse(JSON.stringify(exSeg.p1));
+  // and a P2, which is implicit:
+  let ogp2 = ogp1.map((elem, index) => {
+    return elem + exSeg.unit[index] * exSeg.distTotal;
+  })
+  // then we tf both, 
+  let tfp1 = transform(ogp1);
+  let tfp2 = transform(ogp2);
+  // a transform is a projection - we can loose some distance
+  // so i.e.
+  let dist = distance(tfp1, tfp2);
+  let ogDist = exSeg.distTotal;
+  // I think we want to recover that... with
+  let scale = ogDist / dist;
+  // and that'll apply to all of our rates etc... ??
+  // we'll re-calculate the whole gd thing though, check check:
+  let tfSeg: PlannedSegment = {
+    p1: tfp1,
+    p2: tfp2,
+    vi: exSeg.vi / scale, 
+    accel: exSeg.accel / scale, 
+    vmax: exSeg.vmax / scale, 
+    vf: exSeg.vf / scale, 
+    transmitTime: 0, // just to appease ts 
+  }
+  // and we can re-plan: 
+  let tfExSeg = calculateExplicitSegment(tfSeg, exSeg.timeStart);
+  // and, ok, we can compare timings to ensure we have not bodged it:
+  // console.warn(exSeg)
+  // console.warn(tfExSeg)
+  // and we can return that, 
+  return tfExSeg;
+}
 
 // this takes the explicit segment and packs it into a buffer 
 let writeExplicitSegment = (exSeg: ExplicitSegment, motionIndex: number, trackIndex: number): Uint8Array => {
@@ -346,6 +384,7 @@ export {
   floatToFixed,
   floatToUint32Micros,
   writeExplicitSegment,
+  transformExplicitSegment,
   calculateExplicitSegment,
   getStatesInExplicitSegment
 }

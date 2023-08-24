@@ -109,6 +109,8 @@ export type SingleDOFExplicitSegment = {
   distCruisePhase: number,
 }
 
+export type TransformFunction = (xyz: Array<number>) => Array<number>;
+
 let MAXL_KEYS = {
   MSG_TIME_REQ: 55, 
   MSG_TIME_SET: 57, 

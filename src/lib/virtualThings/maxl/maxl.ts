@@ -14,7 +14,7 @@ import Serializers from "../../osapjs/utils/serializers"
 import { keyToString } from "../../osapjs/utils/keys"
 import Time from "../../osapjs/utils/time"
 
-import testPath from "./maxl-test-paths"
+import testPaths from "./maxl-test-paths"
 
 import {
   distance,
@@ -22,6 +22,7 @@ import {
   // floatToFixed, 
   floatToUint32Micros, 
   writeExplicitSegment,
+  transformExplicitSegment, 
   calculateExplicitSegment,
   getStatesInExplicitSegment
 } from "./maxl-utes"
@@ -30,6 +31,7 @@ import {
   PlannedSegment,
   MAXL_KEYS,
   ExplicitSegment,
+  TransformFunction,
 } from "./maxl-types"
 
 let MOTION_MAX_DOF = 7
@@ -58,9 +60,9 @@ type MaxlConfig = {
   subscriptions: Array<MaxlSubscription>, // set
   devices?: Array<MaxldeviceInfo>,    // discovered / matched 
   auxiliaryDevices?: Array<string>,
-  // transformedAxes?: Array<string>,
-  // transformForwards?: Function,
-  // transformBackwards?: Function, 
+  transformedAxes?: Array<string>,
+  transformForwards?: TransformFunction,
+  transformBackwards?: TransformFunction, 
 }
 
 export default function createMAXL(config: MaxlConfig) {
@@ -111,6 +113,8 @@ export default function createMAXL(config: MaxlConfig) {
   }
 
   let begin = async () => {
+    // if ! transforms in config, supply an empty dummy 
+    if(!config.transformedAxes) config.transformedAxes; 
     // (1) gather info about our remotes so that we can build subs 
     config.devices = [];
     let deviceNames: Set<string> = new Set();
@@ -143,7 +147,7 @@ export default function createMAXL(config: MaxlConfig) {
     for (let sub of config.subscriptions) {
       // check that we have this motion axes,
       // *or* that some other exists, like "speed" or event axes... yonder... from the future 
-      let axis = config.motionAxes.findIndex(ax => ax == sub.track);
+      let axis = (config.motionAxes.concat(config.transformedAxes)).findIndex(ax => ax == sub.track);
       if (axis < 0) throw new Error(`couldn't find a motion axes for this subscription: ` + JSON.stringify(sub));
       // check that we have this device, 
       let actu = config.devices.findIndex(a => a.name == sub.device);
@@ -216,19 +220,31 @@ export default function createMAXL(config: MaxlConfig) {
     // and we've already checked their viability, so this should be all good? 
     let outputs = [];
     for (let pipe of config.subscriptions) {
-      // ... we know the name (pipe.name) of the device, 
-      // TODO: we should diagram how this multiplexing works when we have 
-      // various track types... none of which are done yet ! 
-      // we want also to know the motion index we're going to pull:
-      let motionIndex = config.motionAxes.indexOf(pipe.track);
-      // and the index of the track, within the device:
+      // we collect the device and the listener (== track) ... 
       let device = config.devices.findIndex(actu => actu.name == pipe.device);
       let trackIndex = config.devices[device].tracks.findIndex(t => t.listener == pipe.listener);
-      // now we can stash this serialized message, 
-      outputs.push({
-        device: pipe.device,
-        datagram: writeExplicitSegment(segment, motionIndex, trackIndex),
-      })
+      // it's via-the transform, or it aint, 
+      // we want also to know the motion index we're going to pull:
+      let motionIndex = config.motionAxes.indexOf(pipe.track);
+      // or it's a transformed axis ? 
+      let transformedIndex = config.transformedAxes.indexOf(pipe.track);
+      // but it should only be one, eh ? 
+      if(motionIndex > -1){
+        // now we can stash this serialized message, 
+        outputs.push({
+          device: pipe.device,
+          datagram: writeExplicitSegment(segment, motionIndex, trackIndex),
+        })
+      } else if (transformedIndex > -1){
+        // we need to tf the seggo first, innit ?
+        // console.log(segment)
+        let transformedSegment = transformExplicitSegment(segment, config.transformForwards)
+        // now pick that... per transformed index, 
+        outputs.push({
+          device: pipe.device, 
+          datagram: writeExplicitSegment(transformedSegment, transformedIndex, trackIndex),
+        })
+      }
     }
     // then simultaneously stuff 'em each into our buffer, 
     // OSAP will make best effort to deliver each 
@@ -504,17 +520,8 @@ export default function createMAXL(config: MaxlConfig) {
     })
   }
 
-  // test path returnal 
-  // erp, expose this also ? 
-  // also... a library of difficult paths would be rad 
-  let tp = []
-  for (let reps = 0; reps < 3; reps++) {
-    tp = tp.concat(testPath)
-  }
-
   return {
-    testPath: tp,
-    // config, // maybe don't expose 
+    testPaths,
     begin,
     halt,
     addSegmentToQueue,

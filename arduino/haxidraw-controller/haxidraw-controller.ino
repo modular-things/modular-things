@@ -30,12 +30,12 @@ void hardwareBegin(void){
   aMotorSettings.stepPin = PIN_A_STEP;
   aMotorSettings.dirPin = PIN_A_DIR;
   aMotorSettings.dir = false;
-  aMotorSettings.stepsPerUnit = 80.0F;
+  aMotorSettings.stepsPerUnit = 160.0F;
   // config b 
   bMotorSettings.stepPin = PIN_B_STEP;
   bMotorSettings.dirPin = PIN_B_DIR;
   bMotorSettings.dir = false;
-  bMotorSettings.stepsPerUnit = 80.0F;
+  bMotorSettings.stepsPerUnit = 160.0F;
   // calc
   aMotorSettings.unitsPerStep = 1.0F / aMotorSettings.stepsPerUnit;
   bMotorSettings.unitsPerStep = 1.0F / bMotorSettings.stepsPerUnit;
