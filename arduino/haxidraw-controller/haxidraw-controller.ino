@@ -46,7 +46,7 @@ void hardwareBegin(void){
   pinMode(bMotorSettings.stepPin, OUTPUT);
   // aaaand 
   servo.attach(PIN_SERVO);
-  servo.writeMicroseconds(1100);
+  servo.writeMicroseconds(1500);
 }
 
 stepperSettings* stpr = nullptr;
@@ -93,12 +93,21 @@ void bStepperListener(float position, float delta){
   }
 }
 
+void servoListener(float position, float delta){
+  // let's map position to servo ranges, 
+  // say... 100 microseconds of advance for every "unit" 
+  // and we'll center at 1500... 
+  float micros = 1500.0F - position * 100.0F;
+  servo.writeMicroseconds(micros);
+}
+
 // ---------------------------------------------- PROTOTYPE MAXL API THINGS 
 
 MAXL maxl; 
 
 MAXL_TrackPositionLinear stepperATrack("aStepper", aStepperListener);
 MAXL_TrackPositionLinear stepperBTrack("bStepper", bStepperListener);
+MAXL_TrackPositionLinear servoTrack("servo", servoListener);
 
 // ---------------------------------------------- OSAP SETUP 
 
