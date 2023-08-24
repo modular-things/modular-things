@@ -329,6 +329,9 @@ export default function createMAXL(config: MaxlConfig) {
         // tx this 
         await transmitSegment(current.explicit);
         // and those... 
+        // TODO: we should be able to do each maxl track-type as a separate ts file, 
+        // instead of this chaos 
+        // also bringing decent types into this world... 
         if (current.eventObject) {
           // so, let's get a little evaluator functo in here ? 
           let start = Time.getTimeStamp();

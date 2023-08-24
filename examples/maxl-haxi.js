@@ -13,7 +13,7 @@ let maxl = createMAXL({
       track: "b",
       listener: "bStepper",
     }
-  ]
+  ],
 })
 
 await maxl.begin();

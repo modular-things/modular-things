@@ -1,38 +1,101 @@
+#include <Servo.h>
 #include "maxl.h"
 #include <osap.h>
 
-// ---------------------------------------------- PROTOTYPE MAXL API THINGS 
+//      PIN           RP2040 GPIO PIN         XIAO Generic Pin 
+#define PIN_SERVO     6                       // A4 
+#define PIN_A_DIR     7                       // A5 
+#define PIN_A_STEP    0                       // A6 
+#define PIN_B_DIR     2                       // A8 
+#define PIN_B_STEP    1                       // A7
+#define PIN_C_DIR     4                       // A9 
+#define PIN_C_STEP    3                       // A10 
 
-// we'll use a MAXL object, 
+Servo servo; 
 
-MAXL maxl; 
+typedef struct stepperSettings {
+  uint32_t stepPin = 0;
+  uint32_t dirPin = 0;
+  bool dir = false;
+  float stepsPerUnit = 0.0F;
+  float unitsPerStep = 0.0F;
+  float stepModulo = 0.0F;
+} stepperSettings;
 
-// and we can write this func, to step our motor based on trajectory inputs... 
-// YL: -ve, 
-// X: -ve, 
+stepperSettings aMotorSettings;
+stepperSettings bMotorSettings;
 
-bool _dir = true;
-float stepsPerUnit = 100.0F;
-float unitsPerStep = 1.0F / stepsPerUnit;
-float stepModulo = 0.0F;
+void hardwareBegin(void){
+  // config a 
+  aMotorSettings.stepPin = PIN_A_STEP;
+  aMotorSettings.dirPin = PIN_A_DIR;
+  aMotorSettings.dir = false;
+  aMotorSettings.stepsPerUnit = 80.0F;
+  // config b 
+  bMotorSettings.stepPin = PIN_B_STEP;
+  bMotorSettings.dirPin = PIN_B_DIR;
+  bMotorSettings.dir = false;
+  bMotorSettings.stepsPerUnit = 80.0F;
+  // calc
+  aMotorSettings.unitsPerStep = 1.0F / aMotorSettings.stepsPerUnit;
+  bMotorSettings.unitsPerStep = 1.0F / bMotorSettings.stepsPerUnit;
+  // pin config 
+  pinMode(aMotorSettings.dirPin, OUTPUT);
+  pinMode(aMotorSettings.stepPin, OUTPUT);
+  pinMode(bMotorSettings.dirPin, OUTPUT);
+  pinMode(bMotorSettings.stepPin, OUTPUT);
+  // aaaand 
+  servo.attach(PIN_SERVO);
+  servo.writeMicroseconds(1100);
+}
+
+stepperSettings* stpr = nullptr;
 
 void aStepperListener(float position, float delta){
-  // stepModulo += delta;
-  // if(stepModulo > unitsPerStep){
-  //   // stepper_step(1, _dir);
-  //   stepModulo -= unitsPerStep;
-  // } 
-  // if (stepModulo < -unitsPerStep){
-  //   // stepper_step(1, !_dir);
-  //   stepModulo += unitsPerStep;
-  // }
+  stpr = &aMotorSettings;
+  stpr->stepModulo += delta;
+  if(stpr->stepModulo > stpr->unitsPerStep){
+    digitalWrite(stpr->dirPin, stpr->dir);
+    digitalWrite(stpr->stepPin, HIGH);
+    delayMicroseconds(1);
+    digitalWrite(stpr->stepPin, LOW);
+    delayMicroseconds(1);
+    stpr->stepModulo -= stpr->unitsPerStep;
+  } 
+  if (stpr->stepModulo < -stpr->unitsPerStep){
+    digitalWrite(stpr->dirPin, !stpr->dir);
+    digitalWrite(stpr->stepPin, HIGH);
+    delayMicroseconds(1);
+    digitalWrite(stpr->stepPin, LOW);
+    delayMicroseconds(1);
+    stpr->stepModulo += stpr->unitsPerStep;
+  }
 }
 
 void bStepperListener(float position, float delta){
-
+  stpr = &bMotorSettings;
+  stpr->stepModulo += delta;
+  if(stpr->stepModulo > stpr->unitsPerStep){
+    digitalWrite(stpr->dirPin, stpr->dir);
+    digitalWrite(stpr->stepPin, HIGH);
+    delayMicroseconds(1);
+    digitalWrite(stpr->stepPin, LOW);
+    delayMicroseconds(1);
+    stpr->stepModulo -= stpr->unitsPerStep;
+  } 
+  if (stpr->stepModulo < -stpr->unitsPerStep){
+    digitalWrite(stpr->dirPin, !stpr->dir);
+    digitalWrite(stpr->stepPin, HIGH);
+    delayMicroseconds(1);
+    digitalWrite(stpr->stepPin, LOW);
+    delayMicroseconds(1);
+    stpr->stepModulo += stpr->unitsPerStep;
+  }
 }
 
-// and we can hand that over as an on-delta callback, 
+// ---------------------------------------------- PROTOTYPE MAXL API THINGS 
+
+MAXL maxl; 
 
 MAXL_TrackPositionLinear stepperATrack("aStepper", aStepperListener);
 MAXL_TrackPositionLinear stepperBTrack("bStepper", bStepperListener);
@@ -71,6 +134,8 @@ OSAP_Port_MessageEscape debugPort;
 // ---------------------------------------------- arduino setup 
 
 void setup() {
+  // startup self 
+  hardwareBegin();
   // startup sys
   osap.begin();
   maxl.begin();
