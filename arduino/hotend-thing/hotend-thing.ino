@@ -19,6 +19,13 @@ OSAP_Port_DeviceNames namePort("hotend");
 
 PIDHeater heater(THERM_PWM_PIN, THERM_ADC_PIN);
 
+// CURRENT STATE OF DEV (2023-08-17)
+/*
+- have found circuit mistake in the loadcell (no loading caps on the crystal)
+- am going to correct that, re-order, re-fab, and unfk the filament sensor design as well 
+- then will get back 2 rolling this thing up 
+*/
+
 // CS5530_Loadcell loadcell(LOADCELL_PIN_CS, LOADCELL_PIN_CLK, LOADCELL_PIN_MOSI, LOADCELL_PIN_MISO);
 
 // -------------------------- Coupla OSAP Hookups 

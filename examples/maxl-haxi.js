@@ -1,26 +1,22 @@
-
 // make the maxl
 
 let maxl = createMAXL({
   motionAxes: ["a", "b"],
   subscriptions: [
     {
-      actuator: "aMotor",
+      device: "haxiBoard",
       track: "a",
-      reader: "stepper",
+      listener: "aStepper",
     },
     {
-      actuator: "bMotor",
+      device: "haxiBoard",
       track: "b",
-      reader: "stepper",
+      listener: "bStepper",
     }
   ]
 })
 
 await maxl.begin();
-
-await aMotor.setCurrentScale(0.35);
-await bMotor.setCurrentScale(0.35);
 
 await maxl.addSegmentToQueue({
   endPos: [50, 50],

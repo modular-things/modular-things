@@ -38,17 +38,17 @@ let MOTION_MAX_DOF = 7
 // that would be... 
 
 type MaxlSubscription = {
-  actuator: string,
+  device: string,
   track: string,
-  reader: string,
+  listener: string,
 }
 
 type MaxlTrackInfo = {
   type: string,
-  reader: string
+  listener: string
 }
 
-type MaxlActuatorInfo = {
+type MaxldeviceInfo = {
   name: string,
   tracks: Array<MaxlTrackInfo>,
 }
@@ -56,7 +56,7 @@ type MaxlActuatorInfo = {
 type MaxlConfig = {
   motionAxes: Array<string>,              // set
   subscriptions: Array<MaxlSubscription>, // set
-  actuators?: Array<MaxlActuatorInfo>,    // discovered / matched 
+  devices?: Array<MaxldeviceInfo>,    // discovered / matched 
   auxiliaryDevices?: Array<string>,
   // transformedAxes?: Array<string>,
   // transformForwards?: Function,
@@ -80,7 +80,7 @@ export default function createMAXL(config: MaxlConfig) {
     maxlLocalClockOffset = time - Time.getTimeStamp();
   }
 
-  // writes a new time out to a string-id'd actuator 
+  // writes a new time out to a string-id'd device 
   let writeRemoteTime = async (time: number, actu: string) => {
     // time is handed over here in *seconds* - we write microseconds as unsigned int, 
     let micros = Math.ceil(time * 1000000);
@@ -100,8 +100,8 @@ export default function createMAXL(config: MaxlConfig) {
       clearTimeout(timer);
     }
     timers = [];
-    // shut each of our actuators down, this is the hard stop: 
-    await Promise.all(config.actuators.map(actu => {
+    // shut each of our devices down, this is the hard stop: 
+    await Promise.all(config.devices.map(actu => {
       return osap.send(actu.name, "maxlMessages", new Uint8Array([MAXL_KEYS.MSG_HALT]))
     }))
     // and reset / wipe our own state, 
@@ -112,25 +112,25 @@ export default function createMAXL(config: MaxlConfig) {
 
   let begin = async () => {
     // (1) gather info about our remotes so that we can build subs 
-    config.actuators = [];
-    let actuatorNames: Set<string> = new Set();
-    config.subscriptions.forEach(sub => actuatorNames.add(sub.actuator));
+    config.devices = [];
+    let deviceNames: Set<string> = new Set();
+    config.subscriptions.forEach(sub => deviceNames.add(sub.device));
     // and add aux devices here... 
-    if (config.auxiliaryDevices) config.auxiliaryDevices.forEach(dev => actuatorNames.add(dev));
-    console.log(`we have actu`, actuatorNames)
+    if (config.auxiliaryDevices) config.auxiliaryDevices.forEach(dev => deviceNames.add(dev));
+    console.log(`we have actu`, deviceNames)
     // ... flesh 'em out, 
-    for (let actu of actuatorNames) {
+    for (let actu of deviceNames) {
       let res = await osap.send(actu, "maxlMessages", new Uint8Array([MAXL_KEYS.MSG_GETINFO_REQ]));
       let numTracks = res[0];
       let tracks = [];
       let offset = 1;
       for (let t = 0; t < numTracks; t++) {
         let type = keyToString(res[offset], MAXL_KEYS);
-        let reader = Serializers.readString(res, offset + 1);
-        offset += reader.length + 2;
-        tracks.push({ type, reader });
+        let listener = Serializers.readString(res, offset + 1);
+        offset += listener.length + 2;
+        tracks.push({ type, listener });
       }
-      config.actuators.push({
+      config.devices.push({
         name: actu,
         tracks: tracks
       })
@@ -145,25 +145,25 @@ export default function createMAXL(config: MaxlConfig) {
       // *or* that some other exists, like "speed" or event axes... yonder... from the future 
       let axis = config.motionAxes.findIndex(ax => ax == sub.track);
       if (axis < 0) throw new Error(`couldn't find a motion axes for this subscription: ` + JSON.stringify(sub));
-      // check that we have this actuator, 
-      let actu = config.actuators.findIndex(a => a.name == sub.actuator);
-      if (actu < 0) throw new Error(`couldn't find an actuator for this subscription:` + JSON.stringify(sub));
-      // check that ... readers match, 
-      let reader = config.actuators[actu].tracks.findIndex(t => t.reader == sub.reader);
-      if (reader < 0) throw new Error(`couldn't find a track reader for this subscription:` + JSON.stringify(sub));
+      // check that we have this device, 
+      let actu = config.devices.findIndex(a => a.name == sub.device);
+      if (actu < 0) throw new Error(`couldn't find an device for this subscription:` + JSON.stringify(sub));
+      // check that ... listeners match, 
+      let listener = config.devices[actu].tracks.findIndex(t => t.listener == sub.listener);
+      if (listener < 0) throw new Error(`couldn't find a track listener for this subscription:` + JSON.stringify(sub));
     }
     // (3) do time setup 
     // get some readings, 
     let count = 10
     let samples = []
-    // for <count>, get a ping time per actuator 
+    // for <count>, get a ping time per device 
     for (let i = 0; i < count; i++) {
-      samples.push(await Promise.all(config.actuators.map((actu) => {
+      samples.push(await Promise.all(config.devices.map((actu) => {
         return writeRemoteTime(0, actu.name);
       })))
     }
     // urm, 
-    let res = new Array(config.actuators.length).fill(0)
+    let res = new Array(config.devices.length).fill(0)
     for (let a = 0; a < res.length; a++) {
       for (let i = 0; i < count; i++) {
         res[a] += samples[i][a];
@@ -176,7 +176,7 @@ export default function createMAXL(config: MaxlConfig) {
     // now let's set their clocks... to whence-we-suspect-the-set-packet-will-land, 
     // WARNING: not 100% sure about this promise.all(), if we should return the 
     // result of the async call, or should do i.e. "return await" 
-    await Promise.all(config.actuators.map((actu, i) => {
+    await Promise.all(config.devices.map((actu, i) => {
       return writeRemoteTime(getLocalTime() + res[i], actu.name);
     }))
     console.warn(`MAXL setup OK w/ avg RTTs of: `, res)
@@ -212,21 +212,21 @@ export default function createMAXL(config: MaxlConfig) {
   }
 
   let transmitSegment = async (segment: ExplicitSegment) => {
-    // we'd like to parse out... actuators-configs to tracks... 
+    // we'd like to parse out... devices-configs to tracks... 
     // and we've already checked their viability, so this should be all good? 
     let outputs = [];
     for (let pipe of config.subscriptions) {
-      // ... we know the name (pipe.name) of the actuator, 
+      // ... we know the name (pipe.name) of the device, 
       // TODO: we should diagram how this multiplexing works when we have 
       // various track types... none of which are done yet ! 
       // we want also to know the motion index we're going to pull:
       let motionIndex = config.motionAxes.indexOf(pipe.track);
-      // and the index of the track, within the actuator:
-      let actuator = config.actuators.findIndex(actu => actu.name == pipe.actuator);
-      let trackIndex = config.actuators[actuator].tracks.findIndex(t => t.reader == pipe.reader);
+      // and the index of the track, within the device:
+      let device = config.devices.findIndex(actu => actu.name == pipe.device);
+      let trackIndex = config.devices[device].tracks.findIndex(t => t.listener == pipe.listener);
       // now we can stash this serialized message, 
       outputs.push({
-        actuator: pipe.actuator,
+        device: pipe.device,
         datagram: writeExplicitSegment(segment, motionIndex, trackIndex),
       })
     }
@@ -234,7 +234,7 @@ export default function createMAXL(config: MaxlConfig) {
     // OSAP will make best effort to deliver each 
     let promises = []
     for (let output of outputs) {
-      promises.push(osap.send(output.actuator, "maxlMessages", output.datagram));
+      promises.push(osap.send(output.device, "maxlMessages", output.datagram));
     }
     // and resolve them all, 
     await Promise.all(promises);

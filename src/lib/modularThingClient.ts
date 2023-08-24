@@ -15,6 +15,7 @@ import maxlAccelerometer from "./virtualThings/maxl/maxl-accelerometer";
 import neopixelThing from "./virtualThings/maxl/neopixelThing";
 import bedHeater from "./virtualThings/bedHeater";
 import hotend from "./virtualThings/hotend"
+import haxidrawController from "./virtualThings/haxidrawController";
 
 import { global_state } from "./global_state";
 import { LGatewayTypeKeys } from "./osapjs/utils/keys";
@@ -36,6 +37,7 @@ const constructors = {
   neopixelThing,
   bedHeater,
   hotend, 
+  haxidrawController
 };
 
 // TODO: cleanup, rm this... 

@@ -6,7 +6,7 @@ await hotend.setConfig({
   iTerm: 0.0,
   iLim: 50.0,
   dTerm: 0.0,
-  tempAlpha: 0.05
+  tempAlpha: 0.1
 })
 
 const view = (state) => html`
