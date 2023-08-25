@@ -19,8 +19,8 @@ const state = {
   strokes: {},
   selectedShapes: new Set(),
   workArea: {
-    width: 200,
-    height: 500,
+    width: 150,
+    height: 150,
   },
   transforming: false,
   panZoomFuncs: null,
@@ -502,29 +502,6 @@ function addTranslateHandle(el, state) {
 
 addTranslateHandle(svgEl, state);
 
-function addSVGDropUpload(el, state) {
-  const listenSVG = createListener(el);
-  let moved = false;
-
-  listenSVG("mousedown", "", e => {
-    moved = false;
-  })
-
-  listenSVG("mousemove", "", e => {
-    moved = true;
-  })
-
-  listenSVG("mouseup", "", (e) => {
-    const pt = state.panZoomFuncs.svgPoint({ x: e.offsetX, y: e.offsetY });
-
-    if (!moved) {
-      state.position = pt;
-      onSVGmouseup(pt);
-      r();
-    }
-  })
-}
-
 svgEl.addEventListener("wheel", () => {
   r();
 })
@@ -535,7 +512,24 @@ function onHomeClick() {
 }
 
 function onCutClick() {
-  console.log("you clicked cut");
+  console.warn("you clicked cut");
+  console.log(state);
+  for(let s = 0; s < state.selectedShapes.size; s ++){
+    let id = [...state.selectedShapes][s];
+    // let shape = state.shapes[id];
+    let transformed = getTransformedShape(id);
+    console.log(transformed);
+    // shapes are organized into polylines, 
+    for(let pl = 0; pl < transformed.length; pl ++){
+      // which are just lists of points... 
+      for(let pt = 0; pt < transformed[pl].length; pt ++){
+        let point = transformed[pl][pt];
+        console.warn(`${pl + 1} / ${transformed.length} ... ${point[0].toFixed(2)}, ${point[1].toFixed(2)}`);
+      }
+    }
+  }
+  // we will probably want to grab the selected shapes' points, 
+
 }
 
 function onSVGmouseup({x, y}) {
@@ -557,30 +551,67 @@ function readFileSVG(file) {
     const seperatedColors = [];
 
     const colors = {};
+    // making a set of colors 
     pls.forEach(pl => {
+      // this code is for drawing *on* lines, so we force strokes: 
+      if(pl.stroke == null || pl.stroke == 'none') pl.stroke = "black"
+      // if the polyline's stroke is not in our set, add it 
       if (!(pl.stroke in colors)) colors[pl.stroke] = [ pl ];
+      // otherwise add to this colors' list, the polyline 
       else colors[pl.stroke].push(pl);
     })
 
     for (const color in colors) {
-      seperatedColors.push(colors[color])
+      seperatedColors.push(colors[color]);
     }
 
+    // to get bounding boxes for each 
+    let shapes = pls.map(obj => obj.points);
+    let bboxes = shapes.map(shape => extrema(shape));
+    // and one bbox of them all, 
+    let bbox = extrema(bboxes);
+    // now width / height scaling check 
+    let width = bbox.xMax - bbox.xMin;
+    let height = bbox.yMax - bbox.yMin;
+    let wScale = state.workArea.width / width; 
+    let hScale = state.workArea.height / height;
+    console.log(wScale, hScale);
+    // shrink 2 fit 
+    let scale = 1;
+    let minScale = Math.min(wScale, hScale);
+    if(minScale < 1) scale = minScale;
+
+    // ok, build 'em 
+    let ids = []; 
     const makeNewShape = (pls) => {
       const id = guidGenerator();
-      // map imported points
+      ids.push(id);
+      // map imported points...
       state.shapes[id] = pls.map(x => x.points.map( ([x, y]) => [x, -y] ));
       state.strokes[id] = pls.map(x => x.stroke);
       state.transformations[id] = {
         dx: 0,
         dy: 0,
         rotate: 0,
-        scaleX: 1,
-        scaleY: 1,
+        scaleX: scale,
+        scaleY: scale,
       };
     }
-
     seperatedColors.forEach(makeNewShape);
+    
+    // now we want to get transformed bounding boxes, 
+    // to move the thing onto the machine bed best we can 
+    shapes = ids.map(id => getTransformedShape(id).flat());
+    bboxes = shapes.map(shape => extrema(shape));
+    // and one bbox of them all, 
+    bbox = extrema(bboxes);
+    console.log(bbox); 
+
+    // then we just move by... 
+    ids.forEach(id => {
+      state.transformations[id].dx = - bbox.xMin
+      state.transformations[id].dy = - bbox.yMin 
+    })
 
     r();
   };
@@ -761,14 +792,24 @@ function extrema(pts) {
   let yMin = Number.POSITIVE_INFINITY;
   let yMax = Number.NEGATIVE_INFINITY;
 
-  pts.forEach(p => {
-    const [ x, y ] = p;
-    
-    if (xMin > x) xMin = x;
-    if (xMax < x) xMax = x;
-    if (yMin > y) yMin = y;
-    if (yMax < y) yMax = y;
-  });
+  // fn is used on previously calculated
+  // bounding boxes or on sets of pts, 
+  if(pts[0].xMin){
+    pts.forEach(box => {
+      if(xMin > box.xMin) xMin = box.xMin;
+      if(xMax < box.xMax) xMax = box.xMax;
+      if(yMin > box.yMin) yMin = box.yMin;
+      if(yMax < box.yMax) yMax = box.yMax;
+    });
+  } else {
+    pts.forEach(p => {
+      const [ x, y ] = p;      
+      if (xMin > x) xMin = x;
+      if (xMax < x) xMax = x;
+      if (yMin > y) yMin = y;
+      if (yMax < y) yMax = y;
+    });  
+  }
 
   return {
     xMin,
@@ -834,28 +875,3 @@ function getColoredShapes(state) {
 
   return groups
 }
-
-// function uploadSVG(file) {
-
-//   var reader = new FileReader();
-
-//   reader.onload = (event) => {
-//     let text = event.target.result;
-
-//     let tempSVG = viewWindow.querySelector('.temp-svg');
-//     tempSVG.innerHTML = text;
-    
-//     let paths = flattenSVG(tempSVG);
-
-//     console.log(paths);
-
-//   };
-
-//   reader.readAsText(file);
-// }
-
-
-
-
-
-
