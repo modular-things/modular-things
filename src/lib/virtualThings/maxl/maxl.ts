@@ -225,7 +225,6 @@ export default function createMAXL(config: MaxlConfig) {
   }
 
   let transmitSegment = async (segment: ExplicitSegment) => {
-    console.log(segment);
     // we'd like to parse out... devices-configs to tracks... 
     // and we've already checked their viability, so this should be all good? 
     let outputs = [];
@@ -249,7 +248,6 @@ export default function createMAXL(config: MaxlConfig) {
         // we need to tf the seggo first, innit ?
         // console.log(segment)
         let transformedSegment = transformExplicitSegment(segment, config.transformForwards)
-        console.log(transformedSegment);
         // now pick that... per transformed index, 
         outputs.push({
           device: pipe.device, 

@@ -45,21 +45,21 @@ let home = async () => {
     // startup maxl 
     await maxl.begin();
 
-    // // sendy to top-right corner, 
-    // // first out, then back
-    // // ... limits would be hot / sexy, alas 
-    // await maxl.addSegmentToQueue({
-    //   endPos: [140, 0, 10],
-    //   velocity: jogVelocity,
-    //   junction: 5,
-    // })
-    // await maxl.awaitMotionEnd()
-    // await maxl.addSegmentToQueue({
-    //   endPos: [140, 150, 10],
-    //   velocity: jogVelocity,
-    //   junction: 5,
-    // })
-    // await maxl.awaitMotionEnd()
+    // sendy to top-right corner, 
+    // first out, then back
+    // ... limits would be hot / sexy, alas 
+    await maxl.addSegmentToQueue({
+      endPos: [140, 0, 10],
+      velocity: jogVelocity,
+      junction: 5,
+    })
+    await maxl.awaitMotionEnd()
+    await maxl.addSegmentToQueue({
+      endPos: [140, 150, 10],
+      velocity: jogVelocity,
+      junction: 5,
+    })
+    await maxl.awaitMotionEnd()
   } catch (err) {
     throw err
   }
@@ -628,13 +628,10 @@ async function onPlotClick() {
         console.warn(startPt, endPt);
         // goto start pt at hi-z, 
         await maxl.addSegmentToQueue({
-          // endPos: [startPt[0], startPt[1], 10],
-          endPos: [0, 0, 10],
+          endPos: [startPt[0], startPt[1], 10],
           velocity: jogVelocity,
-          junction: 5,
+          junction: 25,
         })
-        // which are just lists of points... 
-        let plineLength = polyLines[pl].length
         // we should lift on pt-to-pt, ... then enter each, 
         for (let pt = 0; pt < polyLines[pl].length; pt++) {
           let point = polyLines[pl][pt];
@@ -646,12 +643,17 @@ async function onPlotClick() {
           });
         } // end pline 
         // goto end at hi-z, 
-        // await maxl.addSegmentToQueue({
-        //   endPos: [endPt[0], endPt[1], 10],
-        //   velocity: jogVelocity,
-        //   junction: 5,
-        // })
-      }
+        await maxl.addSegmentToQueue({
+          endPos: [endPt[0], endPt[1], 10],
+          velocity: jogVelocity,
+          junction: 5,
+        })
+      } // end for line-in-lines, 
+      await maxl.addSegmentToQueue({
+        endPos: [130, 130, 10],
+        velocity: jogVelocity,
+        junction: 5,
+      })
     }
   } catch (err) {
     console.error(err);

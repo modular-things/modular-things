@@ -154,6 +154,21 @@ let transformExplicitSegment = (exSeg: ExplicitSegment, transform: TransformFunc
   // then we tf both, 
   let tfp1 = transform(ogp1);
   let tfp2 = transform(ogp2);
+  // now... oftentimes transforms only define some dof, so we want to splice 'em back:
+  tfp1 = ogp1.map((val, a) => {
+    if (tfp1[a] == undefined || isNaN(tfp1[a])) {
+      return val;
+    } else {
+      return tfp1[a];
+    }
+  })
+  tfp2 = ogp2.map((val, a) => {
+    if (tfp2[a] == undefined || isNaN(tfp2[a])) {
+      return val;
+    } else {
+      return tfp2[a];
+    }
+  })
   // a transform is a projection - we can loose some distance
   // so i.e.
   let dist = distance(tfp1, tfp2);
@@ -165,10 +180,10 @@ let transformExplicitSegment = (exSeg: ExplicitSegment, transform: TransformFunc
   let tfSeg: PlannedSegment = {
     p1: tfp1,
     p2: tfp2,
-    vi: exSeg.vi / scale, 
-    accel: exSeg.accel / scale, 
-    vmax: exSeg.vmax / scale, 
-    vf: exSeg.vf / scale, 
+    vi: exSeg.vi / scale,
+    accel: exSeg.accel / scale,
+    vmax: exSeg.vmax / scale,
+    vf: exSeg.vf / scale,
     transmitTime: 0, // just to appease ts 
   }
   // and we can re-plan: 
@@ -376,7 +391,6 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number, l
       exSeg.timeTotal = exSeg.timeCruiseEnd + decelDist / (0.5 * (exSeg.vmax + exSeg.vf))
     }
   }
-  console.log("time total...", exSeg.timeTotal);
   exSeg.timeEnd = exSeg.timeStart + exSeg.timeTotal
   // console.warn(exSeg.timeEnd - exSeg.timeStart, exSeg.timeStart, exSeg.timeEnd)
   return exSeg
