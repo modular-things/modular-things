@@ -64,6 +64,7 @@ let getStatesInExplicitSegment = (time: number, seg: ExplicitSegment) => {
   // console.log('intervals', time.toFixed(3), seg.timeStart.toFixed(3), seg.timeAccelEnd.toFixed(3));
   let states = {
     p1: seg.p1,
+    pos: [],
     accel: 0,
     vel: 0,
     dist: 0,
@@ -85,6 +86,10 @@ let getStatesInExplicitSegment = (time: number, seg: ExplicitSegment) => {
     states.dist = seg.distAccelPhase + seg.distCruisePhase;
     states.dist += ((seg.vmax + states.vel) / 2) * (time - seg.timeCruiseEnd);
   }
+  // we'll do this maths for the user, 
+  states.pos = states.p1.map((p, i) => {
+    return p + seg.unit[i] * states.dist;
+  })
   // do mm/sec^2 (from maxl) to m/sec^2 (from accelerometers...)
   // states.accel /= 1000; 
   // console.log('states, ', states)
@@ -371,6 +376,7 @@ let calculateExplicitSegment = (seg: PlannedSegment, segmentStartTime: number, l
       exSeg.timeTotal = exSeg.timeCruiseEnd + decelDist / (0.5 * (exSeg.vmax + exSeg.vf))
     }
   }
+  console.log("time total...", exSeg.timeTotal);
   exSeg.timeEnd = exSeg.timeStart + exSeg.timeTotal
   // console.warn(exSeg.timeEnd - exSeg.timeStart, exSeg.timeStart, exSeg.timeEnd)
   return exSeg

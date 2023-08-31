@@ -1,13 +1,84 @@
+// it's basically the machine-interface example, featuring a maxl instance 
+// configured for the haxidraw 
+
 import { html, svg, render } from "https://unpkg.com/lit-html@2.6.1/lit-html.js";
 import { flattenSVG } from 'https://cdn.jsdelivr.net/npm/flatten-svg@0.3.0/+esm'
 
-/*
-TODO
+// ---------------------------------------------- MAXL 
 
-- differentiate by color
+let jogVelocity = 100
+let plotVelocity = 50
 
-*/
+// make the maxl, 
+let maxl = createMAXL({
+  motionAxes: ["x", "y", "z"],
+  transformedAxes: ["a", "b"],
+  // tf goes from motionAxes -> transformedAxes 
+  transformForwards: (xyz) => {
+    // see http://corexy.com/theory.html
+    let a = 0.5 * (xyz[0] + xyz[1]);
+    let b = 0.5 * (xyz[0] - xyz[1]);
+    // return an array of "transformed axes" length 
+    return [a, b]
+  },
+  subscriptions: [
+    {
+      device: "haxiBoard",
+      track: "a",
+      listener: "aStepper",
+    },
+    {
+      device: "haxiBoard",
+      track: "b",
+      listener: "bStepper",
+    },
+    {
+      device: "haxiBoard",
+      track: "z",
+      listener: "servo"
+    }
+  ],
+})
 
+let home = async () => {
+  try {
+    // startup maxl 
+    await maxl.begin();
+
+    // // sendy to top-right corner, 
+    // // first out, then back
+    // // ... limits would be hot / sexy, alas 
+    // await maxl.addSegmentToQueue({
+    //   endPos: [140, 0, 10],
+    //   velocity: jogVelocity,
+    //   junction: 5,
+    // })
+    // await maxl.awaitMotionEnd()
+    // await maxl.addSegmentToQueue({
+    //   endPos: [140, 150, 10],
+    //   velocity: jogVelocity,
+    //   junction: 5,
+    // })
+    // await maxl.awaitMotionEnd()
+  } catch (err) {
+    throw err
+  }
+}
+
+// maxl already thinks it's up at 150, 150,
+// so we are good for origin-setting,
+
+// let path = maxl.testPaths.clicky2D;
+// for(let pt of path){
+//   console.warn(pt)
+//   await maxl.addSegmentToQueue({
+//     endPos: pt,
+//     velocity: 100,
+//     junction: 10
+//   })
+// }
+
+// ---------------------------------------------- Interface
 
 const state = {
   position: {
@@ -19,10 +90,12 @@ const state = {
   strokes: {},
   selectedShapes: new Set(),
   workArea: {
-    width: 200,
-    height: 500,
+    width: 150,
+    height: 150,
   },
   transforming: false,
+  homed: false,
+  message: "",
   panZoomFuncs: null,
 };
 
@@ -193,20 +266,23 @@ const view = (state) => html`
         <div class="y-value">y:<span class="position-value">${state.position.y.toFixed(2)}</span></div>
       </div>
       <div class="button-container">
-        <div class="button" @click=${onHomeClick}>home</div>
+        <div class="button" style="background:${state.homed ? "green" : "red"};" @click=${onHomeClick}>home</div>
+      </div>
+      <div>
+      ${state.message}
       </div>
       <div class="jobs">
         <div class="job-title">Job List</div>
         ${Object.entries(state.shapes).map((shape, i) => {
-          return html`<div 
+  return html`<div 
             class="job-entry"
             @mousedown=${() => {
-              const isSelected = state.selectedShapes.has(shape[0]);
-              if (isSelected) state.selectedShapes.delete(shape[0]);
-              else state.selectedShapes.add(shape[0]);
+      const isSelected = state.selectedShapes.has(shape[0]);
+      if (isSelected) state.selectedShapes.delete(shape[0]);
+      else state.selectedShapes.add(shape[0]);
 
-              r();
-            }}
+      r();
+    }}
             style="
               background: ${state.selectedShapes.has(shape[0]) ? "#ffaf2e5c" : "none"}
             ">
@@ -214,56 +290,56 @@ const view = (state) => html`
               <span 
                 class="delete-shape"
                 @mousedown=${(e) => {
-                  state.selectedShapes.delete(shape[0]);
-                  delete state.shapes[shape[0]];
-                  delete state.transformations[shape[0]];
-                  r();
-                  pauseEvent(e);
-                }}
+      state.selectedShapes.delete(shape[0]);
+      delete state.shapes[shape[0]];
+      delete state.transformations[shape[0]];
+      r();
+      pauseEvent(e);
+    }}
                 >x</span>
             </div>`
-        })}
+})}
       </div>
       <div class="button-container">
-        <div class="button" @click=${onCutClick}>cut</div>
+        <div class="button" @click=${onPlotClick}>plot</div>
       </div>
       ${state.selectedShapes.size === 1 ? transformWidget(state) : ""}
     </div>
     <svg class="svg-viewer">
       <g class="transform-group">
         <rect class="work-area" width="${state.workArea.width}" height="${state.workArea.height}" />
-        ${ true ? "" :
-        Object.entries(state.shapes).map(shape => {
-          let d = "";
-          const transform = state.transformations[shape[0]];
-         
-          const transformedShape = getTransformedShape(shape[0]);
-          transformedShape.forEach(pl => pl.forEach((pt, i) => {
-            if (i === 0) d += `M ${pt[0]} ${pt[1]}`;
-            else d += `L ${pt[0]} ${pt[1]}`
-          }))
+        ${true ? "" :
+    Object.entries(state.shapes).map(shape => {
+      let d = "";
+      const transform = state.transformations[shape[0]];
 
-          return svg`<path 
+      const transformedShape = getTransformedShape(shape[0]);
+      transformedShape.forEach(pl => pl.forEach((pt, i) => {
+        if (i === 0) d += `M ${pt[0]} ${pt[1]}`;
+        else d += `L ${pt[0]} ${pt[1]}`
+      }))
+
+      return svg`<path 
             class="shape"
             @mousedown=${(e) => {
-              if (state.selectedShapes.has(shape[0])) {
-                state.selectedShapes.delete(shape[0]);
-              } else {
-                state.selectedShapes.add(shape[0]);
-              }
-              r();
-              pauseEvent(e);
-            }} 
+          if (state.selectedShapes.has(shape[0])) {
+            state.selectedShapes.delete(shape[0]);
+          } else {
+            state.selectedShapes.add(shape[0]);
+          }
+          r();
+          pauseEvent(e);
+        }} 
             fill="none" 
             stroke=${state.selectedShapes.has(shape[0]) ? "red" : "black"}
             vector-effect="non-scaling-stroke" 
             d="${d}">
             </path>`
-        })
-        }
+    })
+  }
         ${getColoredShapes(state)}
-        <circle r="${5/(state.panZoomFuncs ? state.panZoomFuncs.scale() : 1)}" fill="teal" cx=${0} cy=${0}></circle>
-        <circle r="${5/(state.panZoomFuncs ? state.panZoomFuncs.scale() : 1)}" fill="red" cx=${state.position.x} cy=${state.position.y}></circle>
+        <circle r="${5 / (state.panZoomFuncs ? state.panZoomFuncs.scale() : 1)}" fill="teal" cx=${0} cy=${0}></circle>
+        <circle r="${5 / (state.panZoomFuncs ? state.panZoomFuncs.scale() : 1)}" fill="red" cx=${state.position.x} cy=${state.position.y}></circle>
         ${transformHandle(state)}
       </g>
     </svg>
@@ -271,7 +347,7 @@ const view = (state) => html`
   <svg class="temp-svg"></svg>
 `
 
-function r() { 
+function r() {
   render(view(state), viewWindow);
 }
 
@@ -478,8 +554,8 @@ function addTranslateHandle(el, state) {
     const dy = pt.y - clickedPt.y;
 
     [...state.selectedShapes].forEach(id => {
-      state.transformations[id].dx = Math.round((dx + ogDxs[id])*100)/100;
-      state.transformations[id].dy = Math.round((dy + ogDys[id])*100)/100;
+      state.transformations[id].dx = Math.round((dx + ogDxs[id]) * 100) / 100;
+      state.transformations[id].dy = Math.round((dy + ogDys[id]) * 100) / 100;
     })
 
     r();
@@ -502,43 +578,91 @@ function addTranslateHandle(el, state) {
 
 addTranslateHandle(svgEl, state);
 
-function addSVGDropUpload(el, state) {
-  const listenSVG = createListener(el);
-  let moved = false;
-
-  listenSVG("mousedown", "", e => {
-    moved = false;
-  })
-
-  listenSVG("mousemove", "", e => {
-    moved = true;
-  })
-
-  listenSVG("mouseup", "", (e) => {
-    const pt = state.panZoomFuncs.svgPoint({ x: e.offsetX, y: e.offsetY });
-
-    if (!moved) {
-      state.position = pt;
-      onSVGmouseup(pt);
-      r();
-    }
-  })
-}
-
 svgEl.addEventListener("wheel", () => {
   r();
 })
 
 function onHomeClick() {
   console.log("you clicked home");
-  console.log(getColoredShapes(state));
+  // console.log(getColoredShapes(state));
+  home().then(() => {
+    state.homed = true;
+    r();
+  }).catch((err) => {
+    console.error(err);
+    state.message = "setup failed, see console";
+    r();
+  })
 }
 
-function onCutClick() {
-  console.log("you clicked cut");
+async function onPlotClick() {
+  console.warn("you clicked plot");
+  console.log(state);
+  try {
+    // while we're plotting, we'll update out positional state w/ this:
+    let posRenderTimer = null;
+    let posRender = () => {
+      // whenever thing has finished ingesting, we can plot current pos:
+      let maxlState = maxl.getStatesAtTime(maxl.getLocalTime());
+      if (maxlState.pos) {
+        state.position.x = maxlState.pos[0];
+        state.position.y = maxlState.pos[1];
+        // MAXL not currently reporting real states (besides acceleration?) lol 
+        // console.log(state.position);
+        r();
+      }
+      // 10Hz is plenti 
+      posRenderTimer = setTimeout(posRender, 100);
+    }
+    posRender();
+    // now run thru the list o' points, 
+    for (let s = 0; s < state.selectedShapes.size; s++) {
+      let id = [...state.selectedShapes][s];
+      // let shape = state.shapes[id];
+      let polyLines = getTransformedShape(id);
+      console.log(polyLines);
+      // shapes are organized into polylines, 
+      for (let pl = 0; pl < polyLines.length; pl++) {
+        let startPt = polyLines[pl][0];
+        let endPt = polyLines[pl][polyLines[pl].length - 1];
+        console.warn(startPt, endPt);
+        // goto start pt at hi-z, 
+        await maxl.addSegmentToQueue({
+          // endPos: [startPt[0], startPt[1], 10],
+          endPos: [0, 0, 10],
+          velocity: jogVelocity,
+          junction: 5,
+        })
+        // which are just lists of points... 
+        let plineLength = polyLines[pl].length
+        // we should lift on pt-to-pt, ... then enter each, 
+        for (let pt = 0; pt < polyLines[pl].length; pt++) {
+          let point = polyLines[pl][pt];
+          // console.warn(`sendy pline ${pl + 1}/${polyLines.length}, pt ${pt}/${polyLines[pl].length} ... ${point[0].toFixed(2)}, ${point[1].toFixed(2)}`);
+          await maxl.addSegmentToQueue({
+            endPos: [point[0], point[1], 0],
+            velocity: plotVelocity,
+            junction: 5,
+          });
+        } // end pline 
+        // goto end at hi-z, 
+        // await maxl.addSegmentToQueue({
+        //   endPos: [endPt[0], endPt[1], 10],
+        //   velocity: jogVelocity,
+        //   junction: 5,
+        // })
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    state.message = "encountered an error during plot, ";
+    r();
+  } finally {
+    clearTimeout(posRenderTimer);
+  }
 }
 
-function onSVGmouseup({x, y}) {
+function onSVGmouseup({ x, y }) {
   console.log("you clicked in the svg");
 }
 
@@ -548,44 +672,87 @@ function readFileSVG(file) {
 
   reader.onloadend = event => {
     let text = reader.result;
-    
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(text, "image/svg+xml");
     const svg = doc.querySelector("svg");
     const pls = flattenSVG(svg, { maxError: 0.001 });
-    
+
     const seperatedColors = [];
 
     const colors = {};
+    // making a set of colors 
     pls.forEach(pl => {
-      const stroke = pl.stroke ?? "black";
-      if (!(stroke in colors)) colors[stroke] = [ pl ];
-      else colors[stroke].push(pl);
+      // this code is for drawing *on* lines, so we force strokes: 
+      if (pl.stroke == null || pl.stroke == 'none') pl.stroke = "black"
+      // if the polyline's stroke is not in our set, add it 
+      if (!(pl.stroke in colors)) colors[pl.stroke] = [pl];
+      // otherwise add to this colors' list, the polyline 
+      else colors[pl.stroke].push(pl);
     })
 
     for (const color in colors) {
-      seperatedColors.push(colors[color])
+      seperatedColors.push(colors[color]);
     }
 
+    // to get bounding boxes for each 
+    let shapes = pls.map(obj => obj.points);
+    let bboxes = shapes.map(shape => extrema(shape));
+    // and one bbox of them all, 
+    let bbox = extrema(bboxes);
+    // now width / height scaling check 
+    let width = bbox.xMax - bbox.xMin;
+    let height = bbox.yMax - bbox.yMin;
+    let wScale = state.workArea.width / width;
+    let hScale = state.workArea.height / height;
+    console.log(wScale, hScale);
+    // shrink 2 fit 
+    let scale = 1;
+    let minScale = Math.min(wScale, hScale);
+    if (minScale < 1) scale = minScale * 0.75;
+
+    // ok, build 'em 
+    let ids = [];
     const makeNewShape = (pls) => {
-      const id = crypto.randomUUID();
-      // map imported points
-      state.shapes[id] = pls.map(x => x.points.map( ([x, y]) => [x, -y] ));
-      state.strokes[id] = pls.map(x => x.stroke ?? "black");
+      const id = guidGenerator();
+      ids.push(id);
+      // map imported points...
+      state.shapes[id] = pls.map(x => x.points.map(([x, y]) => [x, -y]));
+      state.strokes[id] = pls.map(x => x.stroke);
       state.transformations[id] = {
         dx: 0,
         dy: 0,
         rotate: 0,
-        scaleX: 1,
-        scaleY: 1,
+        scaleX: scale,
+        scaleY: scale,
       };
     }
-
     seperatedColors.forEach(makeNewShape);
+
+    // now we want to get transformed bounding boxes, 
+    // to move the thing onto the machine bed best we can 
+    shapes = ids.map(id => getTransformedShape(id).flat());
+    bboxes = shapes.map(shape => extrema(shape));
+    // and one bbox of them all, 
+    bbox = extrema(bboxes);
+    console.log(bbox);
+
+    // then we just move by... 
+    ids.forEach(id => {
+      state.transformations[id].dx = - bbox.xMin
+      state.transformations[id].dy = - bbox.yMin
+    })
 
     r();
   };
 
+}
+
+function guidGenerator() {
+  var S4 = function () {
+    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+  };
+  return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
 }
 
 function addDropUpload(el, state) {
@@ -595,12 +762,12 @@ function addDropUpload(el, state) {
     el.classList.add("dragged-over");
   })
 
-  listenSVG("dragover", "", function(evt) {    
+  listenSVG("dragover", "", function (evt) {
     el.classList.add("dragged-over");
     pauseEvent(evt);
   });
-  
-  listenSVG("drop", "", function(evt) {    
+
+  listenSVG("drop", "", function (evt) {
     let dt = evt.dataTransfer;
     let files = dt.files;
 
@@ -609,7 +776,7 @@ function addDropUpload(el, state) {
     // upload(files);
 
     pauseEvent(evt);
-    
+
     el.classList.remove("dragged-over");
 
   });
@@ -624,11 +791,11 @@ function addDropUpload(el, state) {
 addDropUpload(svgEl, state);
 
 function pauseEvent(e) {
-    if(e.stopPropagation) e.stopPropagation();
-    if(e.preventDefault) e.preventDefault();
-    e.cancelBubble=true;
-    e.returnValue=false;
-    return false;
+  if (e.stopPropagation) e.stopPropagation();
+  if (e.preventDefault) e.preventDefault();
+  e.cancelBubble = true;
+  e.returnValue = false;
+  return false;
 }
 
 function transformHandle(state) {
@@ -639,7 +806,7 @@ function transformHandle(state) {
   return svg`
     <circle 
       class="translate-handle"
-      r="${5/(state.panZoomFuncs ? state.panZoomFuncs.scale() : 1)}" 
+      r="${5 / (state.panZoomFuncs ? state.panZoomFuncs.scale() : 1)}" 
       fill="blue" 
       cx=${x} 
       cy=${y}>
@@ -647,7 +814,7 @@ function transformHandle(state) {
   `
 }
 
-function transformWidget(state) {  
+function transformWidget(state) {
   return html`
     <div class="transform-toolbox">
       <div class="transform-term">
@@ -656,12 +823,12 @@ function transformWidget(state) {
           <input 
             data-type="dx"
             .value=${state.transformations[[...state.selectedShapes][0]].dx}
-            @input=${e => {}}
+            @input=${e => { }}
             />
           <input 
             data-type="dy"
             .value=${state.transformations[[...state.selectedShapes][0]].dy}
-            @input=${e => {}}
+            @input=${e => { }}
             />
         </span>
       </div>
@@ -672,7 +839,7 @@ function transformWidget(state) {
           <input 
             data-type="rotate"
             .value=${state.transformations[[...state.selectedShapes][0]].rotate}
-            @input=${e => {}}
+            @input=${e => { }}
             />
         </span>
       </div>
@@ -683,12 +850,12 @@ function transformWidget(state) {
           <input 
             data-type="scaleX"
             .value=${state.transformations[[...state.selectedShapes][0]].scaleX}
-            @input=${e => {}}
+            @input=${e => { }}
             />
           <input 
             data-type="scaleY"
             .value=${state.transformations[[...state.selectedShapes][0]].scaleY}
-            @input=${e => {}}
+            @input=${e => { }}
             />
         </span>
       </div>
@@ -733,16 +900,16 @@ function scale(pt, origin, scale) {
   const [xScale, yScale] = scale;
   const [x, y] = origin;
   const newPoint = [
-    ((pt[0]-x) * xScale) + x,
-    ((pt[1]-y) * yScale) + y
+    ((pt[0] - x) * xScale) + x,
+    ((pt[1] - y) * yScale) + y
   ];
 
   return newPoint;
 }
 
 function getCenter(pts) {
-  const {xMax, xMin, yMax, yMin} = extrema(pts);
-  
+  const { xMax, xMin, yMax, yMin } = extrema(pts);
+
   let middX = (xMax + xMin) / 2;
   let middY = (yMax + yMin) / 2;
 
@@ -755,14 +922,24 @@ function extrema(pts) {
   let yMin = Number.POSITIVE_INFINITY;
   let yMax = Number.NEGATIVE_INFINITY;
 
-  pts.forEach(p => {
-    const [ x, y ] = p;
-    
-    if (xMin > x) xMin = x;
-    if (xMax < x) xMax = x;
-    if (yMin > y) yMin = y;
-    if (yMax < y) yMax = y;
-  });
+  // fn is used on previously calculated
+  // bounding boxes or on sets of pts, 
+  if (pts[0].xMin) {
+    pts.forEach(box => {
+      if (xMin > box.xMin) xMin = box.xMin;
+      if (xMax < box.xMax) xMax = box.xMax;
+      if (yMin > box.yMin) yMin = box.yMin;
+      if (yMax < box.yMax) yMax = box.yMax;
+    });
+  } else {
+    pts.forEach(p => {
+      const [x, y] = p;
+      if (xMin > x) xMin = x;
+      if (xMax < x) xMax = x;
+      if (yMin > y) yMin = y;
+      if (yMax < y) yMax = y;
+    });
+  }
 
   return {
     xMin,
@@ -774,7 +951,7 @@ function extrema(pts) {
 
 function getTransformedShape(id) {
   const shape = state.shapes[id];
-  const transform = state.transformations[id];    
+  const transform = state.transformations[id];
   const center = getCenter(shape.flat());
 
   const newShape = shape.map(pl => pl.map(pt => {
@@ -788,7 +965,7 @@ function getTransformedShape(id) {
     return pt;
   }))
 
-  return newShape;   
+  return newShape;
 }
 
 function getColoredShapes(state) {
@@ -797,7 +974,7 @@ function getColoredShapes(state) {
     const paths = [];
     const transformedShape = getTransformedShape(id);
     transformedShape.forEach((pl, i) => {
-      let d = "";   
+      let d = "";
 
       pl.forEach((pt, j) => {
         if (j === 0) d += `M ${pt[0]} ${pt[1]}`;
@@ -807,14 +984,14 @@ function getColoredShapes(state) {
       paths.push(svg`
         <path 
           @mousedown=${(e) => {
-            if (state.selectedShapes.has(id)) {
-              state.selectedShapes.delete(id);
-            } else {
-              state.selectedShapes.add(id);
-            }
-            r();
-            pauseEvent(e);
-          }} 
+          if (state.selectedShapes.has(id)) {
+            state.selectedShapes.delete(id);
+          } else {
+            state.selectedShapes.add(id);
+          }
+          r();
+          pauseEvent(e);
+        }} 
           fill="none" 
           stroke=${state.selectedShapes.has(id) ? "red" : state.strokes[id][i]}
           vector-effect="non-scaling-stroke" 
@@ -828,9 +1005,3 @@ function getColoredShapes(state) {
 
   return groups
 }
-
-
-
-
-
-

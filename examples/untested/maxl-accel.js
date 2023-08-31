@@ -1,3 +1,6 @@
+// this was a demo code to align accelerometer readings with 
+// as-planned trajectory objects... 
+
 import Serializers from "../src/lib/osapjs/utils/serializers";
 
 let maxl = createMAXL({

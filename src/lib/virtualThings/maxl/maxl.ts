@@ -67,6 +67,15 @@ type MaxlConfig = {
 
 export default function createMAXL(config: MaxlConfig) {
 
+  // it's useful to accumulate stats and report on 'em later, 
+  let stats = {
+    tooTinyMovesAccumulated: 0,
+  }
+
+  let getStats = () => {
+    return stats;
+  }
+
   // -------------------------------------------- we'll get a time-base going on each startup, 
 
   let maxlLocalClockOffset = 0;
@@ -121,7 +130,7 @@ export default function createMAXL(config: MaxlConfig) {
     config.subscriptions.forEach(sub => deviceNames.add(sub.device));
     // and add aux devices here... 
     if (config.auxiliaryDevices) config.auxiliaryDevices.forEach(dev => deviceNames.add(dev));
-    console.log(`we have actu`, deviceNames)
+    console.log(`we should have devices...`, deviceNames)
     // ... flesh 'em out, 
     for (let actu of deviceNames) {
       let res = await osap.send(actu, "maxlMessages", new Uint8Array([MAXL_KEYS.MSG_GETINFO_REQ]));
@@ -216,6 +225,7 @@ export default function createMAXL(config: MaxlConfig) {
   }
 
   let transmitSegment = async (segment: ExplicitSegment) => {
+    console.log(segment);
     // we'd like to parse out... devices-configs to tracks... 
     // and we've already checked their viability, so this should be all good? 
     let outputs = [];
@@ -239,6 +249,7 @@ export default function createMAXL(config: MaxlConfig) {
         // we need to tf the seggo first, innit ?
         // console.log(segment)
         let transformedSegment = transformExplicitSegment(segment, config.transformForwards)
+        console.log(transformedSegment);
         // now pick that... per transformed index, 
         outputs.push({
           device: pipe.device, 
@@ -341,7 +352,7 @@ export default function createMAXL(config: MaxlConfig) {
         current.transmitTime = now;
         let timeUntilComplete = Math.ceil((current.explicit.timeEnd - now) * 1000);
         // console.log(`QM: time: ${current.transmitTime.toFixed(3)}, w/ end ${current.explicit.timeEnd.toFixed(3)}, complete in ${timeUntilComplete}ms`);
-        console.log(`QM: sending from ${current.explicit.timeStart.toFixed(3)} -> (${(current.explicit.timeTotal).toFixed(3)}s) -> ${current.explicit.timeEnd.toFixed(3)}`);
+        // console.log(`QM: sending from ${current.explicit.timeStart.toFixed(3)} -> (${(current.explicit.timeTotal).toFixed(3)}s) -> ${current.explicit.timeEnd.toFixed(3)}`);
         // tx this 
         await transmitSegment(current.explicit);
         // and those... 
@@ -453,10 +464,11 @@ export default function createMAXL(config: MaxlConfig) {
         }
       })
       // evidently this was worth double checking 
-      console.warn(`P1: ${p1[0].toFixed(2)}, ${p1[1].toFixed(2)}; P2: ${p2[0].toFixed(2)}, ${p2[1].toFixed(2)}, DIST ${distance(p2, p1).toFixed(2)}`);
+      // console.warn(`P1: ${p1[0].toFixed(2)}, ${p1[1].toFixed(2)}; P2: ${p2[0].toFixed(2)}, ${p2[1].toFixed(2)}, DIST ${distance(p2, p1).toFixed(2)}`);
       // if distance is very small, rm it, 
-      if (distance(p2, p1) < 0.1) {
-        console.warn(`REJECTING very tiny move, ${distance(p2, p1).toFixed(3)}...`);
+      if (distance(p2, p1) < 0.2) {
+        // console.warn(`DANGER very tiny move, ${distance(p2, p1).toFixed(3)}...`);
+        stats.tooTinyMovesAccumulated ++;
         resolve();
         return;
       }
@@ -489,7 +501,7 @@ export default function createMAXL(config: MaxlConfig) {
       }
       // then ingest 
       queue.push(seg);
-      checkQueueState();
+      await checkQueueState();
       resolve();
     })
   }
@@ -527,6 +539,8 @@ export default function createMAXL(config: MaxlConfig) {
     addSegmentToQueue,
     awaitMotionEnd,
     getStatesAtTime,
+    getLocalTime,
+    getStats,
   }
 
 }

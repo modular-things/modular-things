@@ -1,14 +1,6 @@
 import { html, svg, render } from "https://unpkg.com/lit-html@2.6.1/lit-html.js";
 import { flattenSVG } from 'https://cdn.jsdelivr.net/npm/flatten-svg@0.3.0/+esm'
 
-/*
-TODO
-
-- differentiate by color
-
-*/
-
-
 const state = {
   position: {
     x: 0,
