@@ -9,10 +9,10 @@ Jake Read at the Center for Bits and Atoms
 
 */
 
-import { osap } from "../../osapjs/osap"
-import Serializers from "../../osapjs/utils/serializers"
-import { keyToString } from "../../osapjs/utils/keys"
-import Time from "../../osapjs/utils/time"
+import { osap } from "../osapjs/osap"
+import Serializers from "../osapjs/utils/serializers"
+import { keyToString } from "../osapjs/utils/keys"
+import Time from "../osapjs/utils/time"
 
 import testPaths from "./maxl-test-paths"
 

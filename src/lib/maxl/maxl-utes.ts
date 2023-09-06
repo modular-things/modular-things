@@ -1,6 +1,6 @@
 // utes ! 
 
-import Serializers from "../../osapjs/utils/serializers"
+import Serializers from "../osapjs/utils/serializers"
 import {
   UnplannedSegment,
   PlannedSegment,

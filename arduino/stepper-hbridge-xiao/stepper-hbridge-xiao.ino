@@ -1,3 +1,11 @@
+// NOTE:
+/*
+this is the "standalone motor" firmware, that we can subsequently "sync" 
+and it's developed for the XIAO stepper h-bridge board, but doesn't properly 
+differentiate build for the D21 pin-nums or the RP2040 pin-nums, though it should do 
+and could do perhaps just using arduino pin numbers, why not ? 
+*/
+
 #include "motionStateMachine.h"
 #include "stepperDriver.h"
 #include <osap.h>

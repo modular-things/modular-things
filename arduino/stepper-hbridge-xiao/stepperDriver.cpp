@@ -16,8 +16,6 @@ is; no warranty is provided, and users accept all liability.
 
 #define RPSTEPPER_IS_NEWSHIT
 
-// AFAIK this is using "GPIO nums" on the RP2040... 
-
 #ifdef RPSTEPPER_IS_NEWSHIT
 
 #define AIN1_PIN 6

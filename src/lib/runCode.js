@@ -1,6 +1,6 @@
 import { global_state } from "./global_state";
-// import createSynchronizer from "./virtualThings/synchronizer";
-import createMAXL from "./virtualThings/maxl/maxl"
+import createSynchronizer from "./virtualThings/synchronizer";
+import createMAXL from "./maxl/maxl"
 import { rollup } from '@rollup/browser';
 
 let intervals = [];
@@ -140,7 +140,7 @@ export async function runCode(code) {
 
   const args = {
     ...things,
-    // createSynchronizer,
+    createSynchronizer,
     createMAXL,
     setInterval: patchedInterval,
     setTimeout: patchedTimeout,
