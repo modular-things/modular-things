@@ -20,9 +20,9 @@ import {
   distance,
   unitVector,
   // floatToFixed, 
-  floatToUint32Micros, 
+  floatToUint32Micros,
   writeExplicitSegment,
-  transformExplicitSegment, 
+  transformExplicitSegment,
   calculateExplicitSegment,
   getStatesInExplicitSegment
 } from "./maxl-utes"
@@ -62,7 +62,7 @@ type MaxlConfig = {
   auxiliaryDevices?: Array<string>,
   transformedAxes?: Array<string>,
   transformForwards?: TransformFunction,
-  transformBackwards?: TransformFunction, 
+  transformBackwards?: TransformFunction,
 }
 
 export default function createMAXL(config: MaxlConfig) {
@@ -75,6 +75,11 @@ export default function createMAXL(config: MaxlConfig) {
   let getStats = () => {
     return stats;
   }
+
+  // also adhoc:
+
+  let _accel = 1000;
+  let setAccel = (val) => { _accel = Math.abs(val); }
 
   // -------------------------------------------- we'll get a time-base going on each startup, 
 
@@ -107,7 +112,6 @@ export default function createMAXL(config: MaxlConfig) {
   let halt = async () => {
     // (0) cancel all of our timers
     for (let timer of timers) {
-      console.warn(`clearing...`, timer);
       clearTimeout(timer);
     }
     timers = [];
@@ -123,7 +127,7 @@ export default function createMAXL(config: MaxlConfig) {
 
   let begin = async () => {
     // if ! transforms in config, supply an empty dummy 
-    if(!config.transformedAxes) config.transformedAxes; 
+    if (!config.transformedAxes) config.transformedAxes;
     // (1) gather info about our remotes so that we can build subs 
     config.devices = [];
     let deviceNames: Set<string> = new Set();
@@ -235,22 +239,23 @@ export default function createMAXL(config: MaxlConfig) {
       // it's via-the transform, or it aint, 
       // we want also to know the motion index we're going to pull:
       let motionIndex = config.motionAxes.indexOf(pipe.track);
-      // or it's a transformed axis ? 
-      let transformedIndex = config.transformedAxes.indexOf(pipe.track);
+      // or it's a transformed axis, if we do have one ?
+      let transformedIndex = config.transformedAxes ? config.transformedAxes.indexOf(pipe.track) : -1;
       // but it should only be one, eh ? 
-      if(motionIndex > -1){
+      if (motionIndex > -1) {
+        console.warn(segment);
         // now we can stash this serialized message, 
         outputs.push({
           device: pipe.device,
           datagram: writeExplicitSegment(segment, motionIndex, trackIndex),
         })
-      } else if (transformedIndex > -1){
+      } else if (transformedIndex > -1) {
         // we need to tf the seggo first, innit ?
         // console.log(segment)
         let transformedSegment = transformExplicitSegment(segment, config.transformForwards)
         // now pick that... per transformed index, 
         outputs.push({
-          device: pipe.device, 
+          device: pipe.device,
           datagram: writeExplicitSegment(transformedSegment, transformedIndex, trackIndex),
         })
       }
@@ -323,7 +328,7 @@ export default function createMAXL(config: MaxlConfig) {
         // console.warn(`WALK FWDS to ${head.explicit.timeEnd}`)
         head = head.next;
         // head.next can be undefined also, 
-        if(!head) {
+        if (!head) {
           console.warn(`bail on headless advance...`);
           return;
         }
@@ -369,18 +374,18 @@ export default function createMAXL(config: MaxlConfig) {
           wptr += Serializers.writeUint8(datagram, wptr, 0);
           let lastMask = 0;
           // ok ok 
-          for(let t = current.explicit.timeStart; t < current.explicit.timeEnd; t += current.eventObject.evaluationPrecision / 1000){
+          for (let t = current.explicit.timeStart; t < current.explicit.timeEnd; t += current.eventObject.evaluationPrecision / 1000) {
             // ok ok... 
             let states = getStatesInExplicitSegment(t, current.explicit);
             // and use that... to eval w/ the func... 
             let mask = current.eventObject.evaluationFunction(states);
-            if(mask != lastMask){
+            if (mask != lastMask) {
               lastMask = mask;
               let interSegTime = Math.ceil((t - current.explicit.timeStart) * 1000000);
               // console.warn(`IST`, t, current.explicit.timeStart, interSegTime);
               wptr += Serializers.writeUint32(datagram, wptr, interSegTime);
               wptr += Serializers.writeUint8(datagram, wptr, mask);
-              numEvents ++;
+              numEvents++;
             }
             // console.warn(`time... ${t.toFixed(2)} d: \t ${states.dist.toFixed(2)}, ${mask}`);
             // ok, let's do edge-detect and then stuffage ? 
@@ -396,7 +401,7 @@ export default function createMAXL(config: MaxlConfig) {
           // NOT CODE TO KEEP, FIX IIIIT 
           wptr += Serializers.writeUint32(datagram, wptr, Math.ceil((current.explicit.timeEnd - current.explicit.timeStart) * 1000000));
           wptr += Serializers.writeUint8(datagram, wptr, 0);
-          numEvents ++;
+          numEvents++;
           // now record final info,
           datagram[0] = numEvents;  // count of events, 
           // and truncate,
@@ -411,7 +416,7 @@ export default function createMAXL(config: MaxlConfig) {
           wptr += Serializers.writeUint8(header, wptr, 0);
           wptr += Serializers.writeUint8(header, wptr, MAXL_KEYS.TRACKTYPE_EVENT_8BIT);
           // times, 
-          wptr += Serializers.writeInt32(header, wptr, floatToUint32Micros(current.explicit.timeStart));  
+          wptr += Serializers.writeInt32(header, wptr, floatToUint32Micros(current.explicit.timeStart));
           wptr += Serializers.writeInt32(header, wptr, floatToUint32Micros(current.explicit.timeEnd));
           // this is where we set "isLastSegment" flag, which we are (for now) not using; 
           header[wptr] = 0;
@@ -421,7 +426,7 @@ export default function createMAXL(config: MaxlConfig) {
           // console.warn(header);
           console.warn(`EVT EVAL TOOK ${(Time.getTimeStamp() - start).toFixed(3)} ms`)
           // and believe it or not, we are going to bypass all of the routing shit also,
-          if(current.eventObject.sendy){
+          if (current.eventObject.sendy) {
             console.warn(`SENDY gram w/ len ${header.length}, evts: ${numEvents}`)
             await osap.send("pixOutput", "maxlMessages", header);
           }
@@ -439,7 +444,7 @@ export default function createMAXL(config: MaxlConfig) {
   }
 
   // user-facing segment ingestion 
-  let addSegmentToQueue = (move) => {
+  let addSegmentToQueue = (move: { endPos: Array<number>, velocity: number, junction: number }) => {
     return new Promise<void>(async (resolve, reject) => {
       // should have move.endPos, move.velocity, move.junction, 
       let end = move.endPos;
@@ -466,7 +471,7 @@ export default function createMAXL(config: MaxlConfig) {
       // if distance is very small, rm it, 
       if (distance(p2, p1) < 0.2) {
         // console.warn(`DANGER very tiny move, ${distance(p2, p1).toFixed(3)}...`);
-        stats.tooTinyMovesAccumulated ++;
+        stats.tooTinyMovesAccumulated++;
         resolve();
         return;
       }
@@ -539,6 +544,7 @@ export default function createMAXL(config: MaxlConfig) {
     getStatesAtTime,
     getLocalTime,
     getStats,
+    setAccel,
   }
 
 }

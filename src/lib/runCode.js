@@ -99,7 +99,12 @@ export async function runCode(code) {
     return timeout;
   }
 
-  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const delay = (ms) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(resolve, ms)
+      // resolve();
+    })
+  }
 
   const loop = async (fn, minterval = 0) => {
     let n = loops.length;

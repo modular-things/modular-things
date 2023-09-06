@@ -15,13 +15,17 @@ import Serializers from "../../osapjs/utils/serializers"
 export default function maxlStepper(name: string) {
   // motor specific settings... 
   let settings = {
-    currentScale: 0.0
+    currentScale: 0.0,
+    stepsPerUnit: 100.0,
+    invert: false,
   }
 
   let publishSettings = async () => {
-    let datagram = new Uint8Array(4);
+    let datagram = new Uint8Array(9);
     let wptr = 0;
     wptr += Serializers.writeFloat32(datagram, wptr, settings.currentScale);
+    wptr += Serializers.writeFloat32(datagram, wptr, settings.stepsPerUnit);
+    wptr += Serializers.writeBoolean(datagram, wptr, settings.invert);
     await osap.send(name, "writeMotorSettings", datagram);
   }
 
@@ -37,9 +41,22 @@ export default function maxlStepper(name: string) {
       name = newName;
     },
     getName: () => { return name },
-    setCurrentScale: async (currentScale: number) => {
+    setCurrentScale: (currentScale: number) => {
       settings.currentScale = currentScale;
-      await publishSettings();
+    },
+    setStepsPerUnit: (stepsPerUnit: number) => {
+      settings.stepsPerUnit = stepsPerUnit;
+    },
+    setDirInversion: (invert: boolean) => {
+      settings.invert = invert;
+    },
+    publishSettings: async () => {
+      try {
+        await publishSettings();
+      } catch (err) {
+        console.error(err);
+        console.error("failed to push settings to ${name} maxl-stepper motor");
+      }
     },
     getLimitState,
     api: [], // TBD 

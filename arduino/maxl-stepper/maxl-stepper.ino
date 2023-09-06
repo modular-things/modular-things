@@ -57,12 +57,18 @@ OSAP_Port_Named maxlMessage_port("maxlMessages", maxlMessageInterface);
 // ---------------------------------------------- ACTU config the actual actuator 
 
 void writeMotorSettings(uint8_t* data, size_t len){
-  // it's just <cscale> for the time being, 
+  // we have cscale, then steps-per-unit, and finally dir-invert, 
   uint16_t rptr = 0;
   float cscale = ts_readFloat32(data, &rptr);
+  float spu = ts_readFloat32(data, &rptr);
+  bool invert = ts_readBoolean(data, &rptr);
   // yarp, yarp, yarp, 
   stepper_setCScale(cscale);
-  OSAP_DEBUG("writing cscale: " + String(cscale));
+  stepsPerUnit = spu; 
+  unitsPerStep = 1.0F / stepsPerUnit;
+  _dir = invert;
+  // ... 
+  OSAP_DEBUG("writing cscale: " + String(cscale) + ", spu: " + String(spu) + ", dir: " + String(invert));
 }
 
 OSAP_Port_Named writeMotorSettings_port("writeMotorSettings", writeMotorSettings);
