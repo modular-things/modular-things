@@ -2,6 +2,7 @@ import CodeMirror from './codemirror'
 import TopMenu from './TopMenu'
 import SideMenu from './SideMenu'
 import ScanButton from './ScanButton'
+// astro allows us to do funky stuff like import markdown... 
 import HelpMarkdown from "./HelpMarkdown.md"
 import styles from "../styles/HelpMarkdown.module.css"
 
