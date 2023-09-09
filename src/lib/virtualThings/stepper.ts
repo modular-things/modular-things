@@ -226,6 +226,16 @@ export default function stepper(name: string) {
     }
   }
 
+  // get limit state 
+  let getLimitState = async () => {
+    try {
+      let reply = await osap.send(name, "getLimitState", new Uint8Array([0]));
+      return reply[0] ? true : false;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   // we return fns that user can call,
   return {
     // operate w/
@@ -244,13 +254,17 @@ export default function stepper(name: string) {
     setCurrentScale,
     setStepsPerUnit,
     // inspect...
+    getState,
     getPosition,
     getVelocity,
     getAbsMaxVelocity,
     getAbsMaxAccel,
+    // switch 
+    getLimitState,
     updateName: (newName: string) => {
       name = newName;
     },
+    getName: () => { return name },
     api: [
       {
         name: "absolute",

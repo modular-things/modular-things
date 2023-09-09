@@ -37,14 +37,14 @@ void ts_writeFloat32(float val, volatile unsigned char* buf, uint16_t* ptr){
 // ---------------------------------------------- set a new target 
 
 void setTarget(uint8_t* data, size_t len){
-  uint16_t wptr = 0;
+  uint16_t wptr = 1;
   // there's no value in getting clever here: we have two possible requests...
-  if(data[wptr ++] == MOTION_MODE_POS){
+  if(data[0] == MOTION_MODE_POS){
     float targ = ts_readFloat32(data, &wptr);
     float maxVel = ts_readFloat32(data, &wptr);
     float maxAccel = ts_readFloat32(data, &wptr);
     motion_setPositionTarget(targ, maxVel, maxAccel);
-  } else if (data[wptr ++] == MOTION_MODE_VEL){
+  } else if (data[0] == MOTION_MODE_VEL){
     float targ = ts_readFloat32(data, &wptr);
     float maxAccel = ts_readFloat32(data, &wptr);
     motion_setVelocityTarget(targ, maxAccel);
@@ -120,7 +120,7 @@ void setup() {
   // uuuh...
   osap.begin();
   // and our limit pin 
-  pinMode(PIN_LIMIT, INPUT_PULLUP);
+  pinMode(PIN_LIMIT, INPUT_PULLDOWN);
 }
 
 uint32_t debounceDelay = 1;
