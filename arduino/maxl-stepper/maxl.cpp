@@ -34,12 +34,49 @@ void MAXL::begin(void){
   for(uint8_t t = 0; t < numTracks; t ++){
     tracks[t]->begin();
   }
+  // (clock-scope-debugging-code)
+  // we additionally are going to setup to debug 
+  // out of the backpack pins (time being):
+  // pinMode(D10, OUTPUT);
 }
 
 // ---------------------------------------------- runtime 
 
+// (clock-scope-debugging-code)
+// bool plot = false;
+// #define TEST_MODULO 14
+// #define TEST_PRINT 32 
+// #define TEST_BIT_TIME 125
+
 void MAXL::loop(void){
   uint32_t now = getSystemTime();
+
+  // (clock-scope-debugging-code)
+  // if(now & (1 << TEST_MODULO) && !plot){
+  //   // set edge, 
+  //   plot = true;
+  //   // do action 
+  //   // start bit, 
+  //   digitalWrite(D10, HIGH);
+  //   delayMicroseconds(TEST_BIT_TIME);
+  //   digitalWrite(D10, LOW);
+  //   delayMicroseconds(TEST_BIT_TIME);
+  //   // plot bits, lower 16 
+  //   for(uint8_t i = 0; i < TEST_PRINT; i ++){
+  //     digitalWrite(D10, (now & (uint32_t)(1 << (TEST_PRINT - i)) ? HIGH : LOW));
+  //     delayMicroseconds(TEST_BIT_TIME);
+  //   }    
+  //   digitalWrite(D10, HIGH);
+  //   delayMicroseconds(TEST_BIT_TIME);
+  //   digitalWrite(D10, LOW);
+  //   delayMicroseconds(TEST_BIT_TIME);
+  // } else if (!(now & (1 << TEST_MODULO)) && plot){
+  //   // reset edge, 
+  //   plot = false;
+  //   // do action 
+  //   // digitalWrite(D10, LOW);
+  // }
+
   for(uint8_t t = 0; t < numTracks; t ++){
     tracks[t]->evaluate(now);
     // we have interfaces to get messages on segment completion, 
@@ -58,19 +95,24 @@ void MAXL::halt(void){
 
 // ---------------------------------------------- time utes 
 
-void MAXL::setSystemTime(uint32_t time){
+void MAXL::setClockConfig(int32_t offset, float skew){
+  // no unlikely skews, 
+  if(skew > 1.1F) skew = 1.1F;
+  if(skew < 0.9F) skew = 0.9F;
   // current underlying time, 
   // uint32_t us = micros();
   // we do now = micros() + timeOffset;
   // so setTime = micros() + timeOffset; at this instant, 
-  timeOffset = time - micros();
+  // timeOffset = time - micros();
   // just for the debug ? 
+  timeOffset = offset; 
+  timeSkew = skew;
   uint32_t nowTime = getSystemTime();
-  // OSAP_DEBUG("set time... " + String(time) + " -> " + String(nowTime));
+  // OSAP_DEBUG("CLK offset: " + String(timeOffset) + ", skew: " + String(timeSkew, 6) + ", time: " + String(nowTime));
 }
 
 uint32_t MAXL::getSystemTime(void){
-  return micros() + timeOffset;
+  return (micros() + timeOffset) * timeSkew;
 }
 
 // ---------------------------------------------- message ingest 
@@ -81,11 +123,20 @@ size_t MAXL::messageHandler(uint8_t* data, size_t len, uint8_t* reply){
   uint16_t rptr = 0;
   // same old same old 
   switch(data[rptr ++]){
-    case MAXL_KEY_MSG_TIME_REQ:
+    case MAXL_KEY_MSG_TIME_GET:
       ts_writeUint32(getSystemTime(), reply, &wptr);
+      ts_writeUint32(micros(), reply, &wptr);
       break;
-    case MAXL_KEY_MSG_TIME_SET:
-      setSystemTime(ts_readUint32(data, &rptr));
+    case MAXL_KEY_MSG_CLK_CONFIG_SET:
+      {
+        int32_t offset = ts_readInt32(data, &rptr);
+        float skew = ts_readFloat32(data, &rptr);
+        setClockConfig(offset, skew);
+      }
+      break;
+    case MAXL_KEY_MSG_CLK_CONFIG_GET:
+      ts_writeInt32(timeOffset, reply, &wptr);
+      ts_writeFloat32(timeSkew, reply, &wptr);
       break;
     case MAXL_KEY_MSG_HALT:
       halt();

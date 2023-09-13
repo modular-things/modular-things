@@ -69,6 +69,13 @@ void ts_writeUint32(uint32_t val, volatile unsigned char* buf, uint16_t* ptr){
   (*ptr) += 4;
 }
 
+void ts_writeInt32(int32_t val, volatile unsigned char* buf, uint16_t* ptr){
+  chunk_int32 chunk;
+  chunk.i = val;
+  buf[(*ptr)] = chunk.bytes[0]; buf[(*ptr) + 1] = chunk.bytes[1]; buf[(*ptr) + 2] = chunk.bytes[2]; buf[(*ptr) + 3] = chunk.bytes[3];
+  (*ptr) += 4;
+}
+
 void ts_writeFloat32(float val, volatile unsigned char* buf, uint16_t* ptr){
   chunk_float32 chunk;
   chunk.f = val;

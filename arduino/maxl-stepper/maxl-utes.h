@@ -40,6 +40,7 @@ union chunk_int32 {
 }; 
 
 void ts_writeUint8(uint8_t val, volatile unsigned char* buf, uint16_t* ptr);
+void ts_writeInt32(int32_t val, volatile unsigned char* buf, uint16_t* ptr);
 void ts_writeUint32(uint32_t val, volatile unsigned char* buf, uint16_t* ptr);
 void ts_writeFloat32(float val, volatile unsigned char* buf, uint16_t* ptr);
 void ts_writeString(char* val, unsigned char* buf, uint16_t* ptr);

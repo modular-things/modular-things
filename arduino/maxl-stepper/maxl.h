@@ -10,8 +10,9 @@
 #define MAXL_QUEUE_LEN 32 
 
 // messages 
-#define MAXL_KEY_MSG_TIME_REQ 55
-#define MAXL_KEY_MSG_TIME_SET 57
+#define MAXL_KEY_MSG_TIME_GET 54 
+#define MAXL_KEY_MSG_CLK_CONFIG_GET 55
+#define MAXL_KEY_MSG_CLK_CONFIG_SET 57
 #define MAXL_KEY_MSG_HALT 59
 #define MAXL_KEY_MSG_TRACK_ADDSEGMENT 61 
 #define MAXL_KEY_MSG_GETINFO_REQ 63 
@@ -56,8 +57,9 @@ class MAXL {
     uint32_t getSystemTime(void);
   private:
     // time trackers 
-    void setSystemTime(uint32_t time);
+    void setClockConfig(int32_t offset, float skew);
     int32_t timeOffset;
+    float timeSkew = 1.0F;
     // self and self's track collection 
     static MAXL* instance;
     MAXL_Track* tracks[MAXL_MAX_TRACKS];
