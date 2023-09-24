@@ -1,5 +1,5 @@
 import { global_state } from "./global_state";
-import createSynchronizer from "./virtualThings/synchronizer";
+import createSynchronizer from "./synchronizer";
 import createMAXL from "./maxl/maxl"
 import { rollup } from '@rollup/browser';
 

@@ -1,5 +1,5 @@
-import { osap } from "../osapjs/osap";
-import Serializers from "../osapjs/utils/serializers"
+import { osap } from "../../src/lib/osapjs/osap"; 
+import Serializers from "../../src/lib/osapjs/utils/serializers"
 const readUint16 = Serializers.readUint16;
 
 let N_PADS = 6

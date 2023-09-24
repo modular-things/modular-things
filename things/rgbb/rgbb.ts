@@ -1,12 +1,4 @@
-import { osap } from "../osapjs/osap";
-
-// this file lives in `modular-things/src/lib/virtualThings/rgbb.ts`
-// to add new thing, simply drop a similar file in the same directory 
-// and give it the same name as your "typeName" in the embedded example
-// i.e. the line `OSAP_Port_DeviceNames namePort("rgbb");` 
-// ... finally, add the file as an import in 
-// `modular-things/src/lib/modularThingClient.ts` around line 4, 
-// and add it to the constructors list (around line 18)
+import { osap } from "../../src/lib/osapjs/osap"; 
 
 // the name given to us here is the "uniqueName" of the matched 
 // device, we use this as a kind of address 

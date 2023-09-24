@@ -1,0 +1,24 @@
+{
+    "Header": {
+        "Comment": "All values are metric (mm)",
+        "CreationDate": "2023-09-24T16:01:08Z",
+        "GenerationSoftware": {
+            "Application": "Fusion 360 Electronics",
+            "Vendor": "Autodesk",
+            "Version": "9.7.0"
+        },
+        "Part": "Single"
+    },
+    "Overall": {
+        "BoardThickness": 1.57,
+        "LayerNumber": 2,
+        "Name": {
+            "ProjectId": "Stepper HBridge XIAO v20"
+        },
+        "Owner": "Jake Read <jakerobertread@gmail.com>",
+        "Size": {
+            "X": 37,
+            "Y": 40
+        }
+    }
+}

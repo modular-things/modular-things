@@ -11,8 +11,8 @@ no warranty is provided, and users accept all liability.
 
 // ---------------------------------------------- serialize, deserialize floats 
 
-import { osap } from "../osapjs/osap"
-import Serializers from "../osapjs/utils/serializers"
+import { osap } from "../../src/lib/osapjs/osap"; 
+import Serializers from "../../src/lib/osapjs/utils/serializers"
 
 export default function stepper(name: string) {
 

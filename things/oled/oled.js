@@ -1,4 +1,4 @@
-import { osap } from "../osapjs/osap";
+import { osap } from "../../src/lib/osapjs/osap"; 
 
 export default function(name) {
   

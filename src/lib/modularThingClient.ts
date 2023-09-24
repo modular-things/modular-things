@@ -1,44 +1,13 @@
 import { osap } from "../lib/osapjs/osap"
 import { COBSWebSerial, COBSWebSerialLink } from "./COBSWebSerial/COBSWebSerial";
 
-import rgbb from "./virtualThings/rgbb";
-import capacitive from "./virtualThings/capacitive";
-import timeOfFlight from "./virtualThings/timeOfFlight";
-import mosfet from "./virtualThings/mosfet";
-import accelerometer from "./virtualThings/accelerometer";
-import oled from "./virtualThings/oled";
-import potentiometer from "./virtualThings/potentiometer";
-import servo from "./virtualThings/servo";
-import stepper from "./virtualThings/stepper";                            // the uncomplicated stepper 
-import maxlStepper from "./virtualThings/maxl-stepper";
-// import maxlAccelerometer from "./virtualThings/maxl-accelerometer";    // as below 
-// import neopixelThing from "./virtualThings/maxl/neopixelThing";        // historical / from MAXL demos 
-// import bedHeater from "./virtualThings/bedHeater";
-// import hotend from "./virtualThings/hotend"
-import haxidrawController from "./virtualThings/haxidrawController";
-
 import { global_state } from "./global_state";
 import { LGatewayTypeKeys } from "./osapjs/utils/keys";
 import { setThingsState } from "./setThingsState";
 import MessageEscapeListener from "./osapjs/port_integrations/messageEscapeListener";
 
-const constructors = {
-  rgbb,                   // looks ok 
-  stepper,                // ?? bad shape 
-  maxlStepper,
-  capacitive,
-  timeOfFlight,
-  mosfet,
-  oled,
-  accelerometer,
-  potentiometer,
-  servo,
-  // maxlAccelerometer,   // in /archival 
-  // neopixelThing,       // in /archival 
-  // bedHeater,
-  // hotend, 
-  haxidrawController
-};
+// bring in the things, 
+import constructors from "../../things/index"
 
 // TODO: cleanup, rm this... 
 export type Thing = {

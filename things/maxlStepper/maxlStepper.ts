@@ -9,8 +9,8 @@ Jake Read at the Center for Bits and Atoms
 
 */
 
-import { osap } from "../osapjs/osap"
-import Serializers from "../osapjs/utils/serializers"
+import { osap } from "../../src/lib/osapjs/osap"; 
+import Serializers from "../../src/lib/osapjs/utils/serializers"
 
 export default function maxlStepper(name: string) {
   // motor specific settings... 
