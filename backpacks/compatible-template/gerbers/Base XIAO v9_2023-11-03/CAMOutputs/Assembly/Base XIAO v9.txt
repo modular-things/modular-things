@@ -1,0 +1,6 @@
+Partlist exported from Team Hub: Jake Read   Project: Clank-ite  Board: Base XIAO v9 at 11/3/2023 7:00 PM
+
+Qty Value        Device                    Package                  Parts Description                                                                                                     
+1                CONN_03LOCK_NO_SILK       1X03_LOCK_NO_SILK        J2    Multi connection point. Often used as Generic Header-pin footprint for 0.1 inch spaced/style header connections 
+1                MOUDLE-SEEEDUINO-XIAO-DIP MOUDLE14P-2.54-21X17.8MM U2                                                                                                                    
+1   CONN_2X4LOCK CONN_2X4LOCK              2X4-LOCK                 J1                                                                                                                    
