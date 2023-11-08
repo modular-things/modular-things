@@ -38,9 +38,9 @@ await Promise.all([
 ])
 ```
 
-| top example | bottom example |
+| Top Example | Bottom Example |
 | --- | --- |
-| ![top](top.svg) | ![bottom](bottom.svg) |
+| <img src="top.svg" width=250px> | <img src="bottom.svg" width=250px> |
 
 ### Automating BOM HTML with InteractiveHTMLBOM
 
