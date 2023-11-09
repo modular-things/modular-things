@@ -2,15 +2,41 @@
 
 ## Project
 
-- bundle modular-things out to standalone library, 
+- bundle modular-things out to standalone library-ish 
+- relocate things, circuits to /things 
 - do `new Thing()` for ease-of-use, 
 
 ## Website 
 
 - list / display from `things/` 
   - we have an example `circuits/stepper-hbridge-xiao`
-  - we should use this as a prototype... need to learn about vite-build, how to scrape folders to build, etc ? 
-  - and i.e. circuits/ and things/ ... the anneal there, that's what's up 
+  - this is astro-build stuff, I think it should be possible... 
+
+I'm convinced now that we can do this pretty easily... the site is built with Astro, we have to do some [dynamic route juju](https://docs.astro.build/en/core-concepts/routing/#dynamic-routes) 
+
+The gist is that we stick something like the below snippet in `src/pages/[thing].astro` - the `[square-braces]` indicate a "generic" site (or something of this nature)... then we implement a `getStaticPaths()` function elsewhere - that'd be our `fs.` scraper, that polls `circuits/` for YAMLs and lists directories, I think. 
+
+Then we just have the work of building the actual page, and the organizing of it all... i.e. maybe we want a flat list of circuits, then tags on each, like "SAMD21" "Output-Devices" ... etc, and to filter with those, you know? 
+
+```
+---
+import { Astro } from 'astro';
+const assetName = Astro.request.params.asset 
+---
+
+<html>
+  <head>
+    <title>{assetName}</title>
+  </head>
+  <body>
+    <h1>{assetName}</h1>
+    <img src={assetPath} alt={assetName} />
+    <!-- Add more details about your asset here -->
+  </body>
+</html>
+```
+
+- have VSCode highlight .astro properly 
 
 ## Web Editor
 
