@@ -48,4 +48,4 @@ This [InteractiveHTMLBOM tool](https://github.com/openscopeproject/InteractiveHt
 
 ![bom](interactive-html-bom-demo.png)
 
-That's simple enough to run, see [their docs here](https://github.com/openscopeproject/InteractiveHtmlBom/wiki/Usage) - note that it is a *KiCAD* native plugin, but works also [for eagle / fusion / .brd](https://github.com/openscopeproject/InteractiveHtmlBom/wiki/Usage#note-for-eaglefusion360-users) files. 
+That's simple enough to run, see [their docs here](https://github.com/openscopeproject/InteractiveHtmlBom/wiki/Usage) and [their demo](https://openscopeproject.org/InteractiveHtmlBomDemo/html/MZMFC_v8.html) - one of ours is also [right here](ibom.html) - note that it is a *KiCAD* native plugin, but works also [for eagle / fusion / .brd](https://github.com/openscopeproject/InteractiveHtmlBom/wiki/Usage#note-for-eaglefusion360-users) files. 
