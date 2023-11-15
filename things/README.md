@@ -1,6 +1,4 @@
-# Modular Circuits 
-
-TODO: circuits should also be published at `${site-url}/circuits` ...
+# Things of Modular-Things 
 
 --- 
 
@@ -20,8 +18,10 @@ TODO: circuits should also be published at `${site-url}/circuits` ...
 │   └─  📁 images/    
 │       ├─  🖼️ routed.jpg         (the board as designed) (jpg or png)
 │       ├─  🖼️ schematic.jpg      (the board's schematic) (jpg or png)
+│       ├─  🖼️ preview.jpg        (pretty-render) (jpg or png)
 │       └─  🖼️ fabbed.jpg         (a picture of the board, real-world) 
-└─ 📄 ibom.html                   (the interactive-bom, optional) 
+├─ 📄 ibom.html                   (the interactive-bom, optional) 
+└─ 📄 README.md                   (optional notes on the thing) 
 ```
 
 ## Example **thing.yaml**
