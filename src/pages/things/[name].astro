@@ -1,0 +1,71 @@
+---
+export async function getStaticPaths() {
+  let things = await Astro.glob(`../../../things/*/*.md`);
+  things = things.filter(t => Object.keys(t.frontmatter).length > 0);
+
+
+  const result = things.map(t => {
+    return {
+      params: { name: t.frontmatter.name }
+    }
+  });
+
+  return result
+}
+
+const { name } = Astro.params;
+
+const glob = await Astro.glob(`../../../things/*/*.md`);
+const target = glob.filter(x => x.frontmatter.name === name)[0];
+
+---
+<head>
+  <meta charset="utf-8">
+</head>
+
+<div>
+  Device can be found <a href={`https://github.com/modular-things/modular-things/tree/main/things/${target.frontmatter.name}`}>here</a>.
+</div>
+
+<div>Name: {target.frontmatter.name}</div>
+
+<h1>README</h1>
+<target.Content />
+
+<h1>Images</h1>
+
+<h2>Schematic</h2>
+<div style={`
+  background-image: url('https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.frontmatter.name}/circuit/images/schematic.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  width: 300px;
+  aspect-ratio: 1;
+`}/>
+
+<h2>Routed</h2>
+<div style={`
+  background-image: url('https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.frontmatter.name}/circuit/images/routed.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  width: 300px;
+  aspect-ratio: 1;
+`}/>
+
+<h2>Fabbed</h2>
+<div style={`
+  background-image: url('https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.frontmatter.name}/circuit/images/fabbed.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  width: 300px;
+  aspect-ratio: 1;
+`}/>
+
+
+
+
+
+

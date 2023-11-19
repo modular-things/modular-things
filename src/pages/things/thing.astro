@@ -1,0 +1,26 @@
+---
+// let things = await Astro.glob(`../../../things/*/*.md`);
+
+// things = things.filter(t => Object.keys(t.frontmatter).length > 0);
+
+
+// export function getStaticPaths() {
+//   let things = await Astro.glob(`../../../things/*/*.md`);
+
+//   things = things.filter(t => Object.keys(t.frontmatter).length > 0);
+
+//   return things.map(t => ({ params: t.frontmatter }) );
+// }
+
+const thingName = Astro.url.searchParams.get('name');
+// const readMe = await Astro.glob(`../../../things/${thingName}/README.md`);
+
+---
+<head>
+  <meta charset="utf-8">
+</head>
+
+<body>
+  test {thingName}
+  <!-- <readMe.Content /> -->
+</body>
