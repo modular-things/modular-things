@@ -1,0 +1,51 @@
+---
+const things = await Astro.glob(`../../../things/*/*.md`);
+
+things.forEach(t => {
+  console.log(t.rawContent());
+}) 
+---
+
+<head>
+  <meta charset="utf-8">
+</head>
+
+<body>
+
+<style>
+  .title {
+    font-size: 2rem;
+  }
+
+  .things-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    width: 100%;
+    padding-top: 2rem;
+  }
+
+  .thing-entry {
+    border: 2px solid black;
+    width: 300px;
+    aspect-ratio: 1;
+  }
+</style>
+
+<div class="title">Check out our collection of modular things!</div>
+
+<div class="things-container">
+  {things.map(t => {
+
+    if (Object.keys(t.frontmatter).length === 0) return "";
+
+    return <div class="thing-entry">
+      <div>Name: {t.frontmatter.name}</div>
+      <div>Author: {t.frontmatter.author}</div>
+      <img src={`https://raw.githubusercontent.com/modular-things/modular-things/main/things/${t.frontmatter.name}/${t.frontmatter.img}`}/>
+      {/*<t.Content />*/}
+    </div>
+  })}
+</div>
+
+</body>
