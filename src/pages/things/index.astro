@@ -68,7 +68,7 @@ things = things.filter(t => Object.keys(t.frontmatter).length > 0);
 <div class="things-container">
   {things.map(t => {
 
-    return <a class="thing-entry" href={`/things/${t.frontmatter.name}`}>
+    return <a class="thing-entry" href={`./${t.frontmatter.name}`}>
       <div class="entry-title">
         <div class="entry-name">{t.frontmatter.name}</div>
         <div class="entry-author">{t.frontmatter.author}</div>
