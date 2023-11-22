@@ -6,37 +6,16 @@
 - relocate things, circuits to /things 
 - do `new Thing()` for ease-of-use, 
 
-## Website 
+## Circuit Docs Website 
 
-- list / display from `things/` 
-  - we have an example `circuits/stepper-hbridge-xiao`
-  - this is astro-build stuff, I think it should be possible... 
+Leo made a prototype of this using astro, see `/src/pages/things/[name].astro` and `index.astro` - pretty quick to get a sense for how this works. Some improvements would be:
 
-I'm convinced now that we can do this pretty easily... the site is built with Astro, we have to do some [dynamic route juju](https://docs.astro.build/en/core-concepts/routing/#dynamic-routes) 
-
-The gist is that we stick something like the below snippet in `src/pages/[thing].astro` - the `[square-braces]` indicate a "generic" site (or something of this nature)... then we implement a `getStaticPaths()` function elsewhere - that'd be our `fs.` scraper, that polls `circuits/` for YAMLs and lists directories, I think. 
-
-Then we just have the work of building the actual page, and the organizing of it all... i.e. maybe we want a flat list of circuits, then tags on each, like "SAMD21" "Output-Devices" ... etc, and to filter with those, you know? 
-
-```
----
-import { Astro } from 'astro';
-const assetName = Astro.request.params.asset 
----
-
-<html>
-  <head>
-    <title>{assetName}</title>
-  </head>
-  <body>
-    <h1>{assetName}</h1>
-    <img src={assetPath} alt={assetName} />
-    <!-- Add more details about your asset here -->
-  </body>
-</html>
-```
-
-- have VSCode highlight .astro properly 
+- pages not styled... 
+- pages should pull .jpg *or* .png for example, we should be able to resolve both within the build script 
+- current system resolves `raw.githubusercontent.com/...` absolute URLs, meaning local dev would bonk, can't we use relative ? 
+- current system can't manage multiple folders of 'things' ... 
+- it would be rad to have 'tags' on circuits... 
+- ibid if we could use a build routine to write `things/index.ts` as well ! 
 
 ## Web Editor
 

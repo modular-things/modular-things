@@ -1,5 +1,5 @@
-import { osap } from "../../src/lib/osapjs/osap"; 
-import Serializers from "../../src/lib/osapjs/utils/serializers"
+import { osap } from "../../../src/lib/osapjs/osap"; 
+import Serializers from "../../../src/lib/osapjs/utils/serializers"
 const writeUint16 = Serializers.writeUint16;
 
 export default function servo(name) {
