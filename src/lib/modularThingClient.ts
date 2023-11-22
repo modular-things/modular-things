@@ -146,7 +146,7 @@ let triggerMapUpdate = async () => {
             }
           } // end check-for-up-pipes       
           // constructor-it, 
-          let thing = constructors[rt.typeName](rt.uniqueName, pipes);
+          let thing = new constructors[rt.typeName](rt.uniqueName, pipes);
           // add the typeName,
           thing.typeName = rt.typeName;
           console.log(`built that, it is this:`, thing)
