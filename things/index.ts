@@ -15,11 +15,11 @@ import stepper from "./stepper-hbridge-xiao/software/stepper";                  
 // import hotend from "./virtualThings/hotend"
 
 export default {
-  stepper,
-  // mosfet,
-  // accelerometer,
-  // servo,
   rgbb,
+  stepper,
+  mosfet,
+  servo,
+  // accelerometer,
   // maxlStepper,
   // capacitive,
   // timeOfFlight,
