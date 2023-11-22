@@ -17,6 +17,12 @@ Leo made a prototype of this using astro, see `/src/pages/things/[name].astro` a
 - it would be rad to have 'tags' on circuits... 
 - ibid if we could use a build routine to write `things/index.ts` as well ! 
 
+## Ergo-Nomics
+
+- there's the notes on better firmware authorship in /notes 
+- there's also the pain of having to return an "API" object for each `thing` we write (in js) - it would be rad if it were possible to automate this somehow... but it's not near the top of the list - check i.e. [TypeDoc](https://typedoc.org/) 
+  - it basically seems like we need to get the AST for type-scripted codes... 
+
 ## Web Editor
 
 - compat warning

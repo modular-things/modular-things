@@ -1,4 +1,4 @@
-// import rgbb from "./rgbb/rgbb.js";
+import rgbb from "./rgbb/software/rgbb";
 // import capacitive from "./capacitive/capacitive.js"
 // import timeOfFlight from "./timeOfFlight/timeOfFlight";
 import mosfet from "./mosfet-xiao/software/mosfet";
@@ -15,18 +15,18 @@ import stepper from "./stepper-hbridge-xiao/software/stepper";                  
 // import hotend from "./virtualThings/hotend"
 
 export default {
-  stepper,                // ?? bad shape 
-  mosfet,
-  accelerometer,
-  servo,
-  // rgbb,                   // looks ok 
+  // stepper,
+  // mosfet,
+  // accelerometer,
+  // servo,
+  rgbb,
   // maxlStepper,
   // capacitive,
   // timeOfFlight,
   // oled,
   // potentiometer,
-  // maxlAccelerometer,   // in /archival 
-  // neopixelThing,       // in /archival 
+  // maxlAccelerometer,  
+  // neopixelThing,       
   // bedHeater,
   // hotend, 
   // haxidrawController

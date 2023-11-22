@@ -1,4 +1,4 @@
-import { osap } from "../../src/lib/osapjs/osap"; 
+import { osap } from "../../../src/lib/osapjs/osap"; 
 
 // the name given to us here is the "uniqueName" of the matched 
 // device, we use this as a kind of address 
@@ -7,7 +7,7 @@ export default function rgbbThing(name: string) {
   return {
     // each of these is basically a little serialization routine
     // but of course you can run arbitrary code in them... 
-    setRGB: async (r, g, b) => {
+    setRGB: async (r: number, g: number, b: number) => {
       let datagram = new Uint8Array(3);
       datagram[0] = 255 - r * 255;
       datagram[1] = 255 - g * 255;

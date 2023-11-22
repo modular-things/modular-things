@@ -102,7 +102,6 @@ export async function runCode(code) {
   const delay = (ms) => {
     return new Promise((resolve, reject) => {
       setTimeout(resolve, ms)
-      // resolve();
     })
   }
 
