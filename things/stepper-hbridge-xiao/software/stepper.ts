@@ -11,64 +11,66 @@ no warranty is provided, and users accept all liability.
 
 // ---------------------------------------------- serialize, deserialize floats 
 
-import { osap } from "../../../src/lib/osapjs/osap"; 
 import Serializers from "../../../src/lib/osapjs/utils/serializers"
+import Thing from "../../../src/lib/thing"
 
-export default function stepper(name: string) {
+export default class Stepper extends Thing {
 
   // -------------------------------------------- Setters
   // how many steps-per-unit,
   // this could be included in a machineSpaceToActuatorSpace transform as well,
-  let spu = 20  
+  private spu = 20
   // each has a max-max velocity and acceleration, which are user settings,
-  // but velocity is also abs-abs-max'd at our tick rate...
-  let absMaxVelocity = 4000 / spu
-  let absMaxAccel = 10000
-  let lastVel = absMaxVelocity
-  let lastAccel = 100             // units / sec
+  // but velocity is also abs-abs-max'd at our tick rate (in hz) 
+  private tickRate = 4000
+  private absMaxVelocity = this.tickRate / this.spu
+  private absMaxAccel = 10000
+  // these are stateful for modal functos 
+  private lastVel = 100               // units / sec 
+  private lastAccel = 100             // units / sec / sec
 
-  let setPosition = async (pos) => {
+  // reset position (not a move command) 
+  async setPosition(pos: number) {
     try {
-      // halt... this also mode-swaps to VEL, so when we set a new posn'
-      // the motor won't slew to it
-      await stop();
+      // stop AFAP 
+      await this.halt();
       // write up a new-position-paquet,
       let datagram = new Uint8Array(4);
       let wptr = 0;
       wptr += Serializers.writeFloat32(datagram, wptr, pos);
-      await osap.send(name, "setPosition", datagram);
+      await this.send("setPosition", datagram);
     } catch (err) {
       console.error(err)
     }
   }
 
-  let setVelocity = async (vel) => {
-    if (vel > absMaxVelocity) vel = absMaxVelocity
-    lastVel = vel
+  setVelocity(vel: number) {
+    if (vel > this.absMaxVelocity) vel = this.absMaxVelocity
+    this.lastVel = vel
   }
 
-  let setAccel = async (accel) => {
-    if (accel > absMaxAccel) accel = absMaxAccel
-    lastAccel = accel
+  setAccel = async (accel: number) => {
+    if (accel > this.absMaxAccel) accel = this.absMaxAccel
+    this.lastAccel = accel
   }
 
-  let setAbsMaxAccel = (maxAccel) => { absMaxAccel = maxAccel }
+  setAbsMaxAccel = (maxAccel: number) => { this.absMaxAccel = maxAccel }
 
-  let setAbsMaxVelocity = (maxVel) => {
+  setAbsMaxVelocity = (maxVel: number) => {
     // not beyond this tick-based limit,
-    if (maxVel > 4000 / spu) {
-      maxVel = 4000 / spu
+    if (maxVel > this.tickRate / this.spu) {
+      maxVel = this.tickRate / this.spu
     }
-    absMaxVelocity = maxVel
+    this.absMaxVelocity = maxVel
   }
 
-  let setCurrentScale = async (cscale) => {
+  async setCurrentScale(cscale: number) {
     try {
       let datagram = new Uint8Array(4)
       let wptr = 0
       wptr += Serializers.writeFloat32(datagram, wptr, cscale)  // it's 0-1, firmware checks
       // and we can shippity ship it,
-      await osap.send(name, "writeSettings", datagram)
+      await this.send("writeSettings", datagram)
     } catch (err) {
       console.error(err)
     }
@@ -76,59 +78,45 @@ export default function stepper(name: string) {
 
   // tell me about your steps-per-unit,
   // note that FW currently does 1/4 stepping: 800 steps / revolution
-  let setStepsPerUnit = (_spu) => {
-    spu = _spu
-    if (absMaxVelocity > 4000 / spu) { absMaxVelocity = 4000 / spu }
-    // we know that we have a maximum steps-per-second of 4000, so we can say
-    console.warn(`w/ spu of ${spu}, this ${name} has a new abs-max velocity ${absMaxVelocity}`)
+  setStepsPerUnit(spu: number) {
+    this.spu = spu
+    if (this.absMaxVelocity > this.tickRate / this.spu) {
+      this.absMaxVelocity = this.tickRate / this.spu
+    }
+    console.warn(`w/ spu of ${spu}, this ${this.getName()} has a new abs-max velocity ${this.absMaxVelocity}`)
   }
 
   // -------------------------------------------- Getters
 
-  // get states
-  let getState = async () => {
+  async getState() {
     try {
-      let data = await osap.send(name, "getMotionStates", new Uint8Array([]))
+      let data = await this.send("getMotionStates", new Uint8Array([]))
       return {
-        pos: Serializers.readFloat32(data, 0) / spu,
-        vel: Serializers.readFloat32(data, 4) / spu,
-        accel: Serializers.readFloat32(data, 8) / spu,
+        pos: Serializers.readFloat32(data, 0) / this.spu,
+        vel: Serializers.readFloat32(data, 4) / this.spu,
+        accel: Serializers.readFloat32(data, 8) / this.spu,
       }
     } catch (err) {
       console.error(err)
     }
   }
 
+  async getPosition() { return (await this.getState()).pos; }
 
-  let getPosition = async () => {
-    try {
-      let state = await getState()
-      return state.pos
-    } catch (err) {
-      console.error(err)
-    }
-  }
+  async getVelocity() { return (await this.getState()).vel; }
 
-  let getVelocity = async () => {
-    try {
-      let state = await getState()
-      return state.vel
-    } catch (err) {
-      console.error(err)
-    }
-  }
+  getAbsMaxVelocity() { return this.absMaxVelocity }
 
-  let getAbsMaxVelocity = () => { return absMaxVelocity }
-  let getAbsMaxAccel = () => { return absMaxAccel }
+  getAbsMaxAccel() { return this.absMaxAccel }
 
   // -------------------------------------------- Operative
 
   // await no motion,
-  let awaitMotionEnd = async () => {
+  async awaitMotionEnd() {
     try {
       return new Promise<void>(async (resolve, reject) => {
         let check = () => {
-          getState().then((states) => {
+          this.getState().then((states) => {
             // console.log(`${name}\t acc ${states.accel.toFixed(4)},\t vel ${states.vel.toFixed(4)},\t pos ${states.pos.toFixed(4)}`)
             if (states.vel < 0.001 && states.vel > -0.001) {
               resolve()
@@ -145,13 +133,13 @@ export default function stepper(name: string) {
   }
 
   // sets the position-target, and delivers rates, accels to use while slewing-to
-  let target = async (pos, vel, accel) => {
+  async target(pos: number, vel?: number, accel?: number) {
     try {
       // modal vel-and-accels, and guards
-      vel ? lastVel = vel : vel = lastVel;
-      accel ? lastAccel = accel : accel = lastAccel;
-      if (accel > absMaxAccel) { accel = absMaxAccel; lastAccel = accel; }
-      if (vel > absMaxVelocity) { vel = absMaxVelocity; lastVel = vel; }
+      vel ? this.lastVel = vel : vel = this.lastVel;
+      accel ? this.lastAccel = accel : accel = this.lastAccel;
+      if (accel > this.absMaxAccel) { accel = this.absMaxAccel; this.lastAccel = accel; }
+      if (vel > this.absMaxVelocity) { vel = this.absMaxVelocity; this.lastVel = vel; }
       // also, warn against zero-or-negative velocities & accelerations
       if (vel <= 0 || accel <= 0) throw new Error(`y'all are trying to go somewhere, but modal velocity or accel are negative, this won't do...`)
       // stuff a packet,
@@ -159,185 +147,135 @@ export default function stepper(name: string) {
       let wptr = 0
       datagram[wptr++] = 0 // MOTION_MODE_POS
       // write pos, vel, accel *every time* and convert-w-spu on the way out,
-      wptr += Serializers.writeFloat32(datagram, wptr, pos * spu)  // write posn
-      wptr += Serializers.writeFloat32(datagram, wptr, vel * spu)  // write max-vel-during
-      wptr += Serializers.writeFloat32(datagram, wptr, accel * spu)  // write max-accel-during
+      wptr += Serializers.writeFloat32(datagram, wptr, pos * this.spu)  // write posn
+      wptr += Serializers.writeFloat32(datagram, wptr, vel * this.spu)  // write max-vel-during
+      wptr += Serializers.writeFloat32(datagram, wptr, accel * this.spu)  // write max-accel-during
       // and we can shippity ship it,
-      await osap.send(name, "setTarget", datagram);
+      await this.send("setTarget", datagram);
     } catch (err) {
       console.error(err)
     }
   }
 
   // goto-this-posn, using optional vel, accel, and wait for machine to get there
-  let absolute = async (pos, vel, accel) => {
+  async absolute(pos: number, vel: number, accel: number) {
     try {
-      // sets motion target,
-      await target(pos, vel, accel)
-      // then we could do... await-move-done ?
-      await awaitMotionEnd()
-      // console.log(`abs move to ${pos} done`)
+      await this.target(pos, vel, accel)
+      await this.awaitMotionEnd()
     } catch (err) {
       console.error(err)
     }
   } // end absolute
 
   // goto-relative, also wait,
-  let relative = async (delta, vel, accel) => {
+  async relative(delta: number, vel: number, accel: number) {
     try {
-      let state = await getState()
+      let state = await this.getState()
       let pos = delta + state.pos
-      // that's it my dudes,
-      await absolute(pos, vel, accel)
+      await this.absolute(pos, vel, accel)
     } catch (err) {
       console.error(err)
     }
   }
 
   // goto-this-speed, using optional accel,
-  let velocity = async (vel, accel ?) => {
+  async velocity(vel: number, accel?: number) {
     try {
       // modal accel, and guards...
-      accel ? lastAccel = accel : accel = lastAccel;
-      if (accel > absMaxAccel) { accel = absMaxAccel; lastAccel = accel; }
-      if (vel > absMaxVelocity) { vel = absMaxVelocity; lastVel = vel; }
+      accel ? this.lastAccel = accel : accel = this.lastAccel;
+      if (accel > this.absMaxAccel) { accel = this.absMaxAccel; this.lastAccel = accel; }
+      if (vel > this.absMaxVelocity) { vel = this.absMaxVelocity; this.lastVel = vel; }
       // note that we are *not* setting last-vel w/r/t this velocity... esp. since we often call this
       // w/ zero-vel, to stop...
       // now write the paquet,
       let datagram = new Uint8Array(9)
       let wptr = 0
       datagram[wptr++] = 1 // MOTION_MODE_VEL
-      wptr += Serializers.writeFloat32(datagram, wptr, vel * spu)  // write max-vel-during
-      wptr += Serializers.writeFloat32(datagram, wptr, accel * spu)  // write max-accel-during
+      wptr += Serializers.writeFloat32(datagram, wptr, vel * this.spu)  // write max-vel-during
+      wptr += Serializers.writeFloat32(datagram, wptr, accel * this.spu)  // write max-accel-during
       // mkheeeey
-      await osap.send(name, "setTarget", datagram);
+      await this.send("setTarget", datagram);
     } catch (err) {
       console.error(err)
     }
   }
 
   // stop !
-  let stop = async () => {
+  async halt() {
     try {
-      await velocity(0)
-      await awaitMotionEnd()
+      await this.velocity(0)
+      await this.awaitMotionEnd()
     } catch (err) {
       console.error(err)
     }
   }
 
   // get limit state 
-  let getLimitState = async () => {
+  async getLimitState() {
     try {
-      let reply = await osap.send(name, "getLimitState", new Uint8Array([0]));
+      let reply = await this.send("getLimitState", new Uint8Array([0]));
       return reply[0] ? true : false;
     } catch (err) {
       console.error(err);
     }
   }
 
-  // we return fns that user can call,
-  return {
-    // operate w/
-    target,           // this is hidden (not in 'api' return), but used by sync 
-    absolute,
-    relative,
-    velocity,
-    stop,
-    awaitMotionEnd,
-    // setters...
-    setPosition,
-    setVelocity,
-    setAccel,
-    setAbsMaxAccel,
-    setAbsMaxVelocity,
-    setCurrentScale,
-    setStepsPerUnit,
-    // inspect...
-    getState,
-    getPosition,
-    getVelocity,
-    getAbsMaxVelocity,
-    getAbsMaxAccel,
-    // switch 
-    getLimitState,
-    updateName: (newName: string) => {
-      name = newName;
-    },
-    getName: () => { return name },
-    api: [
-      {
-        name: "absolute",
-        args: [
-          "pos: number",
-        ]
-      },
-      {
-        name: "relative",
-        args: [
-          "delta: number",
-        ]
-      },
-      {
-        name: "setVelocity",
-        args: [
-          "vel: number",
-        ]
-      },
-      {
-        name: "setAccel",
-        args: [
-          "accel: number",
-        ]
-      },
-      {
-        name: "setPosition",
-        args: [
-          "pos: number"
-        ]
-      },
-      {
-        name: "stop",
-        args: []
-      },
-      {
-        name: "awaitMotionEnd",
-        args: []
-      },
-      {
-        name: "getState",
-        args: [],
-        return: `
+  // the gd API, we should be able to define 'em inline ? 
+  public api = [
+    {
+      name: "setCurrentScale",
+      args: [
+        "cscale: number 0 - 1",
+      ]
+    }, {
+      name: "setStepsPerUnit",
+      args: [
+        "spu: number",
+      ]
+    }, {
+      name: "absolute",
+      args: [
+        "pos: number",
+      ]
+    }, {
+      name: "relative",
+      args: [
+        "delta: number",
+      ]
+    }, {
+      name: "setVelocity",
+      args: [
+        "vel: number",
+      ]
+    }, {
+      name: "setAccel",
+      args: [
+        "accel: number",
+      ]
+    }, {
+      name: "setPosition",
+      args: [
+        "pos: number"
+      ]
+    }, {
+      name: "halt",
+      args: []
+    }, {
+      name: "awaitMotionEnd",
+      args: []
+    }, {
+      name: "getState",
+      args: [],
+      return: `
           {
             pos: number,
             vel: number,
             accel: number
           }
         `
-      },
-      {
-        name: "getAbsMaxVelocity",
-        args: [],
-        return: "number",
-      },
-      {
-        name: "setCurrentScale",
-        args: [
-          "cscale: number 0 - 1",
-        ]
-      },
-      {
-        name: "setStepsPerUnit",
-        args: [
-          "spu: number",
-        ]
-      },
-      {
-        name: "onButtonStateChange",
-        args: [
-          "function: (buttonState) => {}"
-        ]
-      }
-    ]
-  }
+    }, {
+      name: "getLimitState",
+      args: []
+    }
+  ]
 }

@@ -25,6 +25,7 @@ Leo made a prototype of this using astro, see `/src/pages/things/[name].astro` a
 
 ## Web Editor
 
+- collapse docs on objects 
 - compat warning
 - machine set-up/config
 - typescript types

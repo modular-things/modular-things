@@ -15,7 +15,7 @@ import stepper from "./stepper-hbridge-xiao/software/stepper";                  
 // import hotend from "./virtualThings/hotend"
 
 export default {
-  // stepper,
+  stepper,
   // mosfet,
   // accelerometer,
   // servo,
