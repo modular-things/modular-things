@@ -120,14 +120,13 @@ void stepper_init(void){
 
 // ideally it would be uint16_t amplitude, 0-1024 also... implicit fixed-point, 
 // TODO: are currently ignoring the amplitude 
-void stepper_point(uint16_t phaseAngle, float amplitude){
+void stepper_point(uint16_t phaseAngle, uint16_t amplitude){
   // wrap phaseAngle to 2048, and get a / b components 
   uint16_t coilAPhase = phaseAngle & 0b0000011111111111;
   uint16_t coilBPhase = (phaseAngle + LUT_LENGTH / 2) & 0b0000011111111111;
 
   // clamp amplitude, 
-  if(amplitude < 0.0F) amplitude = 0.0F;
-  if(amplitude > 1.0F) amplitude = 1.0F;
+  amplitude = amplitude & 0b0000001111111111;
 
   // a coil dir 
   if (coilAPhase > LUT_LENGTH){
@@ -146,13 +145,20 @@ void stepper_point(uint16_t phaseAngle, float amplitude){
     B_OFF;
   }
 
-  // now we rectify each to the positive half wave
-  uint16_t coilAMag = coilAPhase & 0b0000001111111111;
-  uint16_t coilBMag = coilBPhase & 0b0000001111111111;
+  // now we rectify each to the positive half wave, 
+  coilAPhase = coilAPhase & 0b0000001111111111;
+  coilBPhase = coilBPhase & 0b0000001111111111;
+
+  // expand to 32 for multiply overflow, 
+  // then do fixed-point where 0-1.0 == 0-1024, using 2^10 bit divide 
+  uint32_t coilAMag = (LUT[coilAPhase] * amplitude) >> 10;
+  uint32_t coilBMag = (LUT[coilBPhase] * amplitude) >> 10;
 
   // and set amplitudes...
-  pwm_set_chan_level(sliceNumA, channelA, LUT[coilAMag]);
-  pwm_set_chan_level(sliceNumB, channelB, LUT[coilBMag]);
+  // 800ns call to 'point' with no * amplitude, 3000ns with it, 
+  // ... 
+  pwm_set_chan_level(sliceNumA, channelA, coilAMag);
+  pwm_set_chan_level(sliceNumB, channelB, coilBMag);
 }
 
 // void stepper_publishCurrents(void){

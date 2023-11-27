@@ -1,12 +1,12 @@
 import Thing from '../../../src/lib/thing'
-import Serializers from "../../../src/lib/osapjs/utils/serializers"
+import Serializers from '../../../src/lib/osapjs/utils/serializers'
 
 export default class servo extends Thing {
 
   // calibrated-angle-bounds, 
   private pulseBounds = [1000, 2000] // pulse-width bounds
   private angleBounds = [0, 180]  // angular bounds 
-  
+
 
   async writeMicroseconds(us: number){
     try {

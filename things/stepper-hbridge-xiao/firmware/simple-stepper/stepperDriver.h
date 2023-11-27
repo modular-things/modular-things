@@ -22,7 +22,7 @@ is; no warranty is provided, and users accept all liability.
 
 void stepper_init(void);
 // void stepper_step(uint8_t microSteps, boolean dir);
-void stepper_point(uint16_t phaseAngle, float amplitude);
+void stepper_point(uint16_t phaseAngle, uint16_t amplitude);
 // void stepper_setCScale(float scale);
 
 #endif 

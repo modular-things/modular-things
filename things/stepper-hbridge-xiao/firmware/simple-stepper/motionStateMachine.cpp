@@ -70,7 +70,7 @@ void alarm_dt_Handler(void){
   // we do a debug step 
   point ++;
   if(point >= 2048) point = 0;
-  stepper_point(point, 1.0F);
+  stepper_point(point, 50);
   // motion_integrate(); 
   sio_hw->gpio_clr = (uint32_t)(1 << PIN_DEBUG);
 }
