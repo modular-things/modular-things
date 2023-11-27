@@ -6,6 +6,7 @@ export default class servo extends Thing {
   // calibrated-angle-bounds, 
   private pulseBounds = [1000, 2000] // pulse-width bounds
   private angleBounds = [0, 180]  // angular bounds 
+  
 
   async writeMicroseconds(us: number){
     try {
@@ -17,6 +18,7 @@ export default class servo extends Thing {
       throw err
     }
   }
+
 
   async writeAngle(angle: number){
     try {
@@ -33,6 +35,7 @@ export default class servo extends Thing {
     }
   }
 
+
   setCalibration(_pulseBounds, _angleBounds){
     if (!Array.isArray(_pulseBounds) || !Array.isArray(_angleBounds)) {
       throw new Error(`input args for setCalibration are both arrays`)
@@ -40,6 +43,7 @@ export default class servo extends Thing {
     this.pulseBounds = _pulseBounds
     this.angleBounds = _angleBounds
   }
+
 
   public api = [
     {
