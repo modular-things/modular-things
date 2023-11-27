@@ -22,6 +22,8 @@
 		"acorn": "^8.8.2",
 		"astro": "^2.0.0",
 		"codemirror": "^6.0.1",
-		"preact": "^10.6.5"
+		"fs": "^0.0.1-security",
+		"preact": "^10.6.5",
+		"process": "^0.11.10"
 	}
 }

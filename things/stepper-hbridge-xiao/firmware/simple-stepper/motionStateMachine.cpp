@@ -59,17 +59,19 @@ void motion_init(uint16_t microsecondsPerIntegration){
   pinMode(PIN_DEBUG, OUTPUT);
 }
 
-int val = 0;
+uint16_t point = 0;
 
 void alarm_dt_Handler(void){
   // setup next call right away
   hw_clear_bits(&timer_hw->intr, 1u << ALARM_DT_NUM);
   timer_hw->alarm[ALARM_DT_NUM] = (uint32_t) (timer_hw->timerawl + delT_us);
-  // we do a debug step 
-  stepper_step(1, true);
   // do the motion system integration, 
   sio_hw->gpio_set = (uint32_t)(1 << PIN_DEBUG);
-  motion_integrate(); 
+  // we do a debug step 
+  point ++;
+  if(point >= 2048) point = 0;
+  stepper_point(point, 1.0F);
+  // motion_integrate(); 
   sio_hw->gpio_clr = (uint32_t)(1 << PIN_DEBUG);
 }
 
@@ -126,10 +128,10 @@ void motion_integrate(void){
   // and check in on our step modulo, 
   stepModulo += delta;
   if(stepModulo >= 1.0F){
-    stepper_step(microsteps, true);
+    // stepper_step(microsteps, true);
     stepModulo -= 1.0F;
   } else if (stepModulo <= -1.0F){
-    stepper_step(microsteps, false);
+    // stepper_step(microsteps, false);
     stepModulo += 1.0F;
   }
 } // end integrator 

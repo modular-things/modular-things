@@ -2,6 +2,8 @@
 #include "stepperDriver.h"
 #include <osap.h>
 
+// using the RP2040 at 200MHz 
+
 #define PIN_LIMIT 26 
 
 OSAP_Runtime osap;
@@ -81,7 +83,7 @@ void writeSettings(uint8_t* data, size_t len){
   // it's just <cscale> for the time being,
   uint16_t rptr = 0;
   float cscale = ts_readFloat32(data, &rptr);
-  stepper_setCScale(cscale);
+  // stepper_setCScale(cscale);
 }
 
 OSAP_Port_Named writeSettings_port("writeSettings", writeSettings);
@@ -114,7 +116,7 @@ void setup() {
   // in the motion system, so it aught to be initialized first !
   stepper_init();
   // to debug
-  stepper_setCScale(0.75F);
+  // stepper_setCScale(0.75F);
   // another note on the motion system:
   // at the moment, we have a relatively small absolute-maximum speed: say the integrator interval is 250us,
   // we have 0.00025 seconds between ticks, for a max of 4000 steps / second...
