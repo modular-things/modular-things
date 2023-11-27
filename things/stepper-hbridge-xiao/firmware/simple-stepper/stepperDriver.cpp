@@ -1,7 +1,8 @@
 /*
 stepperDriver.cpp
 
-stepper code for two A4950s w/ VREF via TC -> RC Filters 
+stepper code for two A4950s or TB67... w/ VREF via TC -> RC Filters 
+for the RP2040 XIAO ! 
 
 Jake Read at the Center for Bits and Atoms
 (c) Massachusetts Institute of Technology 2022
