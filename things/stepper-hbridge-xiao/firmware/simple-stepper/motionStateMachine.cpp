@@ -9,10 +9,11 @@
 #define VEL_EPSILON 1.0F
 #define TICK_INTERVAL 1000.0F
 
-#define PIN_DEBUG_CLK 26
-
 #define ALARM_DT_NUM 1
 #define ALARM_DT_IRQ TIMER_IRQ_1
+
+// we can take some pin over to do debuggen... 
+#define PIN_DEBUG 26 
 
 // delT is re-calculated when we init w/ a new microsecondsPerIntegration 
 float delT = 0.001F;
@@ -50,12 +51,12 @@ void motion_init(uint16_t microsecondsPerIntegration){
   absMaxVelocity = 1.0F / delT; 
   maxVel = absMaxVelocity; // start here, 
 
-  pinMode(PIN_DEBUG_CLK, OUTPUT);
-
   hw_set_bits(&timer_hw->inte, 1u << ALARM_DT_NUM);
   irq_set_exclusive_handler(ALARM_DT_IRQ, alarm_dt_Handler);
   irq_set_enabled(ALARM_DT_IRQ, true);
   timer_hw->alarm[ALARM_DT_NUM] = (uint32_t) (timer_hw->timerawl + delT_us);
+
+  pinMode(PIN_DEBUG, OUTPUT);
 }
 
 int val = 0;
@@ -64,17 +65,15 @@ void alarm_dt_Handler(void){
   // setup next call right away
   hw_clear_bits(&timer_hw->intr, 1u << ALARM_DT_NUM);
   timer_hw->alarm[ALARM_DT_NUM] = (uint32_t) (timer_hw->timerawl + delT_us);
-  if (val) {
-    sio_hw->gpio_clr = (uint32_t)(1 << PIN_DEBUG_CLK);
-  } else {
-    sio_hw->gpio_set = (uint32_t)(1 << PIN_DEBUG_CLK);
-  }
-  val = !val;
-  motion_integrate(); // do the motion system integration, 
+  // we do a debug step 
+  stepper_step(1, true);
+  // do the motion system integration, 
+  sio_hw->gpio_set = (uint32_t)(1 << PIN_DEBUG);
+  motion_integrate(); 
+  sio_hw->gpio_clr = (uint32_t)(1 << PIN_DEBUG);
 }
 
 void motion_integrate(void){
-  // digitalWrite(PIN_TICK, HIGH);
   // set our accel based on modal requests, 
   switch(mode){
     case MOTION_MODE_POS:
@@ -133,7 +132,6 @@ void motion_integrate(void){
     stepper_step(microsteps, false);
     stepModulo += 1.0F;
   }
-  // digitalWrite(PIN_TICK, LOW);
 } // end integrator 
 
 void motion_setPositionTarget(float _targ, float _maxVel, float _maxAccel){

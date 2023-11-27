@@ -15,27 +15,12 @@ is; no warranty is provided, and users accept all liability.
 
 #include "stepperDriver.h"
 
-#define RPSTEPPER_IS_NEWSHIT
-
-#ifdef RPSTEPPER_IS_NEWSHIT
-
 #define AIN1_PIN 6
 #define AIN2_PIN 7
 #define BIN1_PIN 28
 #define BIN2_PIN 4
 #define APWM_PIN 27
 #define BPWM_PIN 29
-
-#else 
-
-// #define AIN1_PIN 0
-// #define AIN2_PIN 7
-// #define BIN1_PIN 2
-// #define BIN2_PIN 4
-// #define APWM_PIN 6
-// #define BPWM_PIN 1
-
-#endif 
 
 #define APWM_BM (uint32_t)(1 << APWM_PIN)
 #define BPWM_BM (uint32_t)(1 << BPWM_PIN) 

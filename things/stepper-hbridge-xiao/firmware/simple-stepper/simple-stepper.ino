@@ -1,14 +1,8 @@
-// NOTE:
-/*
-this is the "standalone motor" firmware, that we can subsequently "sync" 
-and it's developed for the XIAO stepper h-bridge board, but doesn't properly 
-differentiate build for the D21 pin-nums or the RP2040 pin-nums, though it should do 
-and could do perhaps just using arduino pin numbers, why not ? 
-*/
-
 #include "motionStateMachine.h"
 #include "stepperDriver.h"
 #include <osap.h>
+
+#define PIN_LIMIT 26 
 
 OSAP_Runtime osap;
 OSAP_Gateway_USBSerial serLink(&Serial);
@@ -104,10 +98,23 @@ size_t getLimitState(uint8_t* data, size_t len, uint8_t* reply){
 
 OSAP_Port_Named getLimitState_port("getLimitState", getLimitState);
 
+// OK
+/*
+- we do the 1024-step 4-full-step / one-elec-phase LUT, 
+  - watch one set of sinusoids on the scope 
+- we rebase the core integrator to fixed point ? 
+  - deal with big positions, figure what abs-max-rates-are 
+- fixed-interval or variable interval ?
+- position targets... 
+- halting / homing on-board ? 
+*/
+
 void setup() {
   // ~ important: the stepper code initializes GCLK4, which we use as timer-interrupt
   // in the motion system, so it aught to be initialized first !
   stepper_init();
+  // to debug
+  stepper_setCScale(0.75F);
   // another note on the motion system:
   // at the moment, we have a relatively small absolute-maximum speed: say the integrator interval is 250us,
   // we have 0.00025 seconds between ticks, for a max of 4000 steps / second...
@@ -116,11 +123,11 @@ void setup() {
   // with i.e. a 20-tooth GT2 belt, we have 40mm of travel per revolution, making only 200mm/sec maximum traverse
   // this is not pitiful, but not too rad, and more importantly is that we will want to communicate these limits
   // to users of the motor - so we should outfit a sort of settings-grab function, or something ?
-  motion_init(250);
+  motion_init(100);
   // uuuh...
   osap.begin();
   // and our limit pin 
-  pinMode(PIN_LIMIT, INPUT_PULLDOWN);
+  // pinMode(PIN_LIMIT, INPUT_PULLDOWN);
 }
 
 uint32_t debounceDelay = 1;
@@ -128,12 +135,15 @@ uint32_t lastButtonCheck = 0;
 
 void loop() {
   // do graph stuff
+
   osap.loop();
   // if(lastIntegration + integratorInterval < micros()){
   //   // stepper_step(1, true);
   //   lastIntegration = micros();
   //   motion_integrate();
   // }
+
+  /*
   // debounce and set button states,
   if(lastButtonCheck + debounceDelay < millis()){
     lastButtonCheck = millis();
@@ -142,4 +152,5 @@ void loop() {
       lastButtonState = newState;
     }
   }
+  */
 }
