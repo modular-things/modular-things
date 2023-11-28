@@ -20,9 +20,15 @@ is; no warranty is provided, and users accept all liability.
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 
+// startup stepper hardware 
 void stepper_init(void);
-// void stepper_step(uint8_t microSteps, boolean dir);
+
+// mapping 0-2PI is 0-2048 and 0-1 is 0-1024 
 void stepper_point(uint16_t phaseAngle, uint16_t amplitude);
-// void stepper_setCScale(float scale);
+
+// or, omitting amplitude... 
+void stepper_point(uint16_t phaseAngle);
+
+void stepper_setAmplitude(uint16_t amplitude);
 
 #endif 

@@ -6,6 +6,8 @@
 
 #define PIN_LIMIT 26 
 
+/*
+
 OSAP_Runtime osap;
 OSAP_Gateway_USBSerial serLink(&Serial);
 OSAP_Port_DeviceNames namePort("stepper");
@@ -99,51 +101,60 @@ size_t getLimitState(uint8_t* data, size_t len, uint8_t* reply){
 }
 
 OSAP_Port_Named getLimitState_port("getLimitState", getLimitState);
-
-// OK
-/*
-- we do the 1024-step 4-full-step / one-elec-phase LUT, 
-  - watch one set of sinusoids on the scope 
-- we rebase the core integrator to fixed point ? 
-  - deal with big positions, figure what abs-max-rates-are 
-- fixed-interval or variable interval ?
-- position targets... 
-- halting / homing on-board ? 
 */
 
 void setup() {
-  // ~ important: the stepper code initializes GCLK4, which we use as timer-interrupt
-  // in the motion system, so it aught to be initialized first !
+  // DEBUG 
+  Serial.begin();
+  // startup the stepper hardware 
   stepper_init();
-  // to debug
-  // stepper_setCScale(0.75F);
-  // another note on the motion system:
-  // at the moment, we have a relatively small absolute-maximum speed: say the integrator interval is 250us,
-  // we have 0.00025 seconds between ticks, for a max of 4000 steps / second...
-  // we are then microstepping at 1/4th steps, for 800 steps per motor revolution, (from a base of 200)
-  // meaning we can make only 5 revs / sec, or 300 rippums (RPM),
-  // with i.e. a 20-tooth GT2 belt, we have 40mm of travel per revolution, making only 200mm/sec maximum traverse
-  // this is not pitiful, but not too rad, and more importantly is that we will want to communicate these limits
-  // to users of the motor - so we should outfit a sort of settings-grab function, or something ?
-  motion_init(100);
-  // uuuh...
-  osap.begin();
+  // setup motion, pick an integration interval (us) 
+  motion_init(50);
+  // startup the network transporter 
+  // osap.begin();
   // and our limit pin 
   // pinMode(PIN_LIMIT, INPUT_PULLDOWN);
+  // DEBUG:
+  stepper_setAmplitude(256);
 }
 
 uint32_t debounceDelay = 1;
 uint32_t lastButtonCheck = 0;
 
-void loop() {
-  // do graph stuff
+uint32_t flipInterval = 5000;
+uint32_t lastFlip = 0;
 
-  osap.loop();
-  // if(lastIntegration + integratorInterval < micros()){
-  //   // stepper_step(1, true);
-  //   lastIntegration = micros();
-  //   motion_integrate();
-  // }
+uint32_t debugInterval = 250;
+uint32_t lastDebug = 0;
+
+// TODO: our 15.17 fixed-point also caps us to 
+// 32k ticks / second... is that reasonable ?  
+float sampleVel = 1250.0F;
+
+motionState_t states;
+
+void loop() {
+  // do transport stuff 
+  // osap.loop();
+
+  // debug
+  if(lastDebug + debugInterval < millis()){
+    motion_debug();
+    lastDebug = millis();
+    // motion_getCurrentStates(&states);
+    // Serial.println(String(millis()) 
+    //   + "\tpos: \t" + String(states.pos, 4) 
+    //   + "\tvel: \t" + String(states.vel, 4) 
+    //   + "\tacc: \t" + String(states.accel, 4)
+    // );
+  }
+
+  // set / res velocities, 
+  if(lastFlip + flipInterval < millis()){
+    lastFlip = millis();
+    motion_setVelocityTarget(sampleVel, 5000.0F);
+    sampleVel = - sampleVel;
+  }
 
   /*
   // debounce and set button states,

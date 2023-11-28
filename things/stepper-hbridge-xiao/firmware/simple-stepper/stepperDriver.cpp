@@ -90,7 +90,6 @@ void stepper_init(void){
   pwm_set_enabled(sliceNumB, true);
 }
 
-// mapping 0-2PI is 0-2048 and 0-1 is 0-1024 
 void stepper_point(uint16_t phaseAngle, uint16_t amplitude){
   // wrap phaseAngle to 2048, and get a / b components 
   uint16_t coilAPhase = phaseAngle                    & 0b0000011111111111;
@@ -128,4 +127,14 @@ void stepper_point(uint16_t phaseAngle, uint16_t amplitude){
   // and set amplitudes...
   pwm_set_chan_level(sliceNumA, channelA, coilAMag);
   pwm_set_chan_level(sliceNumB, channelB, coilBMag);
+}
+
+uint16_t _amplitude = 0;
+
+void stepper_point(uint16_t phaseAngle){
+  stepper_point(phaseAngle, _amplitude);
+}
+
+void stepper_setAmplitude(uint16_t amplitude){
+  _amplitude = amplitude;
 }

@@ -1,3 +1,6 @@
+#ifndef STEPPER_LUT_H_
+#define STEPPER_LUT_H_
+
 #include <Arduino.h>
 
 #define LUT_LENGTH 1024 
@@ -69,3 +72,5 @@ const uint16_t LUT[LUT_LENGTH] = {
   195, 188, 182, 176, 170, 163, 157, 151, 145, 138, 132, 126, 119, 113, 107, 101, 
   94, 88, 82, 75, 69, 63, 57, 50, 44, 38, 31, 25, 19, 13, 6, 0, 
 };
+
+#endif 

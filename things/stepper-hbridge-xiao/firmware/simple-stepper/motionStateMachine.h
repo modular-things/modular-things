@@ -1,4 +1,3 @@
-// ---------------------------------------------- Application State 
 #ifndef MOTION_STATE_MACHINE_H_
 #define MOTION_STATE_MACHINE_H_
 
@@ -9,14 +8,13 @@
 #define MOTION_MODE_POS 0
 #define MOTION_MODE_VEL 1
 
-// struct for a handoff, 
 typedef struct motionState_t {
   float pos;
   float vel;
   float accel;
 } motionState_t;
 
-void motion_init(uint16_t microsecondsPerIntegration);
+void motion_init(uint32_t microsecondsPerIntegration);
 
 void motion_integrate(void);
 void alarm_dt_Handler(void);
@@ -26,5 +24,7 @@ void motion_setVelocityTarget(float _targ, float _maxAccel);
 void motion_setPosition(float _pos);
 
 void motion_getCurrentStates(motionState_t* statePtr);
+
+void motion_debug(void);
 
 #endif 

@@ -15,7 +15,8 @@ function generateSinusoid(length, amplitude) {
 // Main function to create the lookup table
 function createLookupTable(length, amplitude) {
   const values = generateSinusoid(length, amplitude);
-  let lutString = `#include <Arduino.h>\n\n`;
+  let lutString = `#ifndef STEPPER_LUT_H_\n#define STEPPER_LUT_H_\n\n`
+  lutString += `#include <Arduino.h>\n\n`;
   lutString += `#define LUT_LENGTH ${length} \n`;
   lutString += `#define PWM_PERIOD ${amplitude}\n\n`;
   lutString += `const uint16_t LUT[LUT_LENGTH] = {\n`;
@@ -31,7 +32,8 @@ function createLookupTable(length, amplitude) {
     lutString += `\n`;
   }
   // lutString += values.join(',') + ',\n';
-  lutString += '};\n';
+  lutString += '};\n\n';
+  lutString += `#endif\n`
   return lutString;
 }
 
