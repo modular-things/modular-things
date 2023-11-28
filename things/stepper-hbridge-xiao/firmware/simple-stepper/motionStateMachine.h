@@ -5,8 +5,9 @@
 #include <hardware/timer.h>
 #include <hardware/irq.h>
 
-#define MOTION_MODE_POS 0
-#define MOTION_MODE_VEL 1
+#define MOTION_MODE_POS           0
+#define MOTION_MODE_VEL           1
+#define MOTION_MODE_RECALCULATING 2
 
 typedef struct motionState_t {
   float pos;

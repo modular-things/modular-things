@@ -16,6 +16,10 @@ volatile uint8_t    _mode = MOTION_MODE_POS;    // operative _mode
 volatile fpint64_t  _pos = 0;                   // current position (big 64)
 volatile fpint32_t  _vel = 0;                   // current velocity 
 volatile fpint32_t  _accel = 0;                 // current acceleration 
+volatile fpint32_t  _velSqrd = 0;
+volatile fpint64_t  _posTarget = 0;             // for position control, 
+volatile fpint64_t  _dist = 0;                  // for position control, 
+volatile fpint64_t  _stopDistance = 0;          // for position control, 
 // and settings 
 fpint32_t           _maxAccel = 0;              // maximum acceleration
 fpint32_t           _maxVelocity = 0;
@@ -49,37 +53,47 @@ void alarm_dt_Handler(void){
   timer_hw->alarm[ALARM_DT_NUM] = (uint32_t) (timer_hw->timerawl + _delT_us);
   // do the motion system integration, 
   sio_hw->gpio_set = (uint32_t)(1 << PIN_DEBUG);
-  motion_integrate(); 
+  if(_mode != MOTION_MODE_RECALCULATING) motion_integrate(); 
   sio_hw->gpio_clr = (uint32_t)(1 << PIN_DEBUG);
 }
 
 void motion_debug(void){
+  // ... we could / should snapshot, if this is chunky ? 
+  noInterrupts();
   Serial.println(String(millis())
       // + "\t_delT: \t" + String(fp_fixed32ToFloat(_delT), 6)
-      + "\tpos: \t" + String(fp_fixed64ToFloat(_pos), 4)
-      + "\tvel: \t" + String(fp_fixed32ToFloat(_vel), 4)
-      + "\tvtrg: \t" + String(fp_fixed32ToFloat(_maxVelocity), 4)
-      + "\tacc: \t" + String(fp_fixed32ToFloat(_accel), 3)
+      + "\ttrg: " + String(fp_fixed64ToFloat(_posTarget), 1)
+      + "\tpos: " + String(fp_fixed64ToFloat(_pos), 1)
+      + "\tdst: " + String(fp_fixed64ToFloat(_dist), 1)
+      + "\tstp: " + String(fp_fixed64ToFloat(_stopDistance), 1)
+      + "\tacc: " + String(fp_fixed32ToFloat(_accel), 1)
+      + "\tvel: " + String(fp_fixed32ToFloat(_vel), 1)
+      // + "\tvtrg: \t" + String(fp_fixed32ToFloat(_maxVelocity), 4)
     );
+  interrupts();
 }
 
-void motion_integrate(void){
-  // set our _accel based on modal requests, 
-  switch(_mode){
-    case MOTION_MODE_POS:
-      break;
-    case MOTION_MODE_VEL:
-      if(_vel < _maxVelocity){
-        _accel = _maxAccel; 
-      } else if (_vel > _maxVelocity){
-        _accel = -_maxAccel;
-      }
-      break;
+// ------------------------------------ integrator codes 
+
+// we're gunsta overflow with the vel sqrd, 
+// TODO: should be in fixedpoint utes, since they know what base it is 
+fpint64_t calcStopDistance(fpint32_t vel, fpint32_t accel){
+  // our num / denum, 
+  fpint64_t velSqrd = ((fpint64_t)(vel) * (fpint64_t)(vel)) >> 16;
+  fpint64_t twoAccel = ((fpint64_t)(fp_int32ToFixed32(2)) * (fpint64_t)(accel)) >> 16;
+  // now we div that out, 
+  return (velSqrd << 16) / twoAccel;
+}
+
+void motion_calc_mode_velocity(void){
+  // go fast, or go slo; 
+  if(_vel < _maxVelocity){
+    _accel = _maxAccel; 
+  } else if (_vel > _maxVelocity){
+    _accel = -_maxAccel;
   }
-  // using our chosen accel, integrate velocity from previous: 
-  _vel += fp_mult32x32(_accel, _delT); // _accel * _delT;
-  // cap our _vel based on maximum rates: 
-  // we have to be careful with signs ! 
+
+  // and check against targets 
   if(_vel > 0 && _maxVelocity > 0 && _vel > _maxVelocity){
     _accel = 0;
     _vel = _maxVelocity;
@@ -87,15 +101,55 @@ void motion_integrate(void){
     _accel = 0;
     _vel = _maxVelocity;
   }
-  // what's a position _delta ? 
-  _delta = fp_mult32x32(_vel, _delT); // _vel * _delT;
-  // integrate posn with _delta 
-  _pos += _delta;
+}
 
-  // OK so, we are down here in hi-perfland, 
-  // and everything comes to us steps-wise, full-steps wise ? 
-  // and a full step for us is 512, 2^9, we should be able 
-  // to just take a bitmask of the position, right?
+void motion_calc_mode_position(void){
+  // TODO: use base 64-bit overflow-enabled funcs ? 
+  _stopDistance = calcStopDistance(_vel, _maxAccel);
+  _dist = _posTarget - _pos;
+
+  // now we do a buncha cheques 
+  if(_stopDistance >= abs(_dist)){  // we're going to overshoot, 
+    if(_vel <= 0){                  // when -ve vel, 
+      _accel = _maxAccel;           // do +ve accel 
+    } else {                        // when +ve vel, 
+      _accel = -_maxAccel;          // do -ve accel 
+    }
+  } else {                          // we're not overshooting, 
+    if(_dist > 0){                  // if delta is positive,
+      _accel = _maxAccel;           // go forwards, 
+    } else {                        // if it's negative 
+      _accel = -_maxAccel;          // go backwards... 
+    }
+  }
+
+  // using our chosen accel, integrate velocity from previous: 
+  _vel += fp_mult32x32(_accel, _delT); 
+
+  // cap our _vel based on maximum rates: 
+  if(_vel >= _maxVelocity){
+    _accel = 0;
+    _vel = _maxVelocity;
+  } else if (_vel <= -_maxVelocity){
+    _accel = 0;
+    _vel = -_maxVelocity;
+  }
+}
+
+void motion_integrate(void){
+  // set our _accel based on modal requests, 
+  switch(_mode){
+    case MOTION_MODE_POS:
+      motion_calc_mode_position();
+      break;
+    case MOTION_MODE_VEL:
+      motion_calc_mode_velocity();
+      break;
+  }
+
+  // grab a delta and integrate, 
+  _delta = fp_mult32x32(_vel, _delT);
+  _pos += _delta;
 
   // position is base 16, we can just shift our way to relative electrical phase 
   // 0-2048 (11 bits) per electrical phase, is
@@ -105,7 +159,9 @@ void motion_integrate(void){
   //                  FS.MicroStep
   uint16_t phaseAngle = (_pos >> 7) & 0b11111111111;
   stepper_point(phaseAngle);
-} // end integrator 
+} 
+
+// ------------------------------------ end integrator 
 
 void motion_setVelocityTarget(float target, float maxAccel){
   noInterrupts();
@@ -130,17 +186,38 @@ void motion_getCurrentStates(motionState_t* statePtr){
 
 void motion_setPositionTarget(float target, float maxVel, float maxAccel){
   noInterrupts();
+  _mode = MOTION_MODE_RECALCULATING;
+  interrupts();
   // let's collect the current states as floats, initial position and velocity, 
-  float xi = fp_fixed64ToFloat(_pos);
-  float vi = fp_fixed32ToFloat(_vel);
+  // float xi = fp_fixed64ToFloat(_pos);
+  // float vi = fp_fixed32ToFloat(_vel);
   // also the accel / vel we're going to use, 
-  float vel = abs(maxVel);
-  float accel = abs(maxAccel);
+  // float vel = abs(maxVel);
+  // float accel = abs(maxAccel);
   // we'd like a total length of the move, 
-  float dx = target - xi;
-  // given those states, 
+  // float dx = target - xi;
 
+  // we can calculate a maximum stopping distance, 
+  // as we're going to be coming to a full stop, this is:
+  // float dStop = (vel * vel) / (2.0F * accel);
+
+  // then just stash these, let's see: 
+  _posTarget = fp_floatToFixed64(target);
+  // _stopDistance = fp_floatToFixed64(dStop);
+
+  _maxVelocity = fp_floatToFixed32(abs(maxVel));
+  _maxAccel = fp_floatToFixed32(abs(maxAccel));
+
+  // // given those states... 
+  // float viMax = sqrtf(vi * vi + 2 * accel * dx);
+  // float vfMax = sqrtf(vf * vf + 2 * accel * dx);
+
+  // maybe this is simpler: we need to calculate a stopping distance (?) 
+  // and we have the trouble of initial velocities in opposite directions, 
+  // I think we should consult the old controller, 
+  
   // set our _mode, 
+  noInterrupts();
   _mode = MOTION_MODE_POS;
   interrupts();
 }

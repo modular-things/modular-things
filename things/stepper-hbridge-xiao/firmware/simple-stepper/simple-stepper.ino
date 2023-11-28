@@ -103,6 +103,8 @@ size_t getLimitState(uint8_t* data, size_t len, uint8_t* reply){
 OSAP_Port_Named getLimitState_port("getLimitState", getLimitState);
 */
 
+float sampleVal = 1000.0F;
+
 void setup() {
   // DEBUG 
   Serial.begin();
@@ -116,18 +118,18 @@ void setup() {
   // pinMode(PIN_LIMIT, INPUT_PULLDOWN);
   // DEBUG:
   stepper_setAmplitude(256);
+  motion_setPositionTarget(sampleVal, 1000.0F, 1000.0F);
 }
 
 uint32_t debounceDelay = 1;
 uint32_t lastButtonCheck = 0;
 
-uint32_t flipInterval = 2500;
+uint32_t flipInterval = 4000;
 uint32_t lastFlip = 0;
 
-uint32_t debugInterval = 250;
+uint32_t debugInterval = 200;
 uint32_t lastDebug = 0;
 
-float sampleVel = 1000.0F;
 
 // TODO:
 /*
@@ -155,8 +157,9 @@ void loop() {
   // set / res velocities, 
   if(lastFlip + flipInterval < millis()){
     lastFlip = millis();
-    motion_setVelocityTarget(sampleVel, 5000.0F);
-    sampleVel = - sampleVel;
+    sampleVal = - sampleVal;
+    // motion_setVelocityTarget(sampleVal, 5000.0F);
+    motion_setPositionTarget(sampleVal, 1000.0F, 1000.0F);
   }
 
   /*
@@ -170,3 +173,9 @@ void loop() {
   }
   */
 }
+
+/*
+- test with randy values into position, or velocity targs, 
+- code cleanup, 
+- re-instrument via interface, get on with the single-axis example, yer done ? 
+*/
