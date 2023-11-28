@@ -19,9 +19,9 @@ void motion_init(uint32_t microsecondsPerIntegration);
 void motion_integrate(void);
 void alarm_dt_Handler(void);
 
-void motion_setPositionTarget(float _targ, float _maxVel, float _maxAccel);
-void motion_setVelocityTarget(float _targ, float _maxAccel);
-void motion_setPosition(float _pos);
+void motion_setPositionTarget(float target, float maxVel, float maxAccel);
+void motion_setVelocityTarget(float target, float maxAccel);
+void motion_setPosition(float pos);
 
 void motion_getCurrentStates(motionState_t* statePtr);
 
