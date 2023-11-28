@@ -18,10 +18,18 @@ float fp_fixed32ToFloat(fpint32_t fixed){
   return ((float)fixed / (float)(1 << fp_scale));
 }
 
+float fp_fixed64ToFloat(fpint64_t fixed){
+  return ((float)fixed / (float)(1 << fp_scale));
+}
+
 // actually this is unclear to me... https://www.youtube.com/watch?v=S12qx1DwjVk& at 16:57
 fpint32_t fp_floatToFixed32(float flt){
   if(flt > fp_float_max) flt = fp_float_max;
   if(flt < fp_float_min) flt = fp_float_min;
+  return (flt * (float)(1 << fp_scale));
+}
+
+fpint64_t fp_floatToFixed64(float flt){
   return (flt * (float)(1 << fp_scale));
 }
 

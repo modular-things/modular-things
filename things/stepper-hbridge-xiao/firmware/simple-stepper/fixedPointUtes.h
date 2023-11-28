@@ -7,12 +7,15 @@
 
 // we get explicit about fixed point 
 typedef int32_t fpint32_t;
+typedef int64_t fpint64_t;
 
 // ---------------------------------------------- fixedp conversions  
 
 float fp_fixed32ToFloat(fpint32_t fixed);
+float fp_fixed64ToFloat(fpint64_t fixed);
 
 fpint32_t fp_floatToFixed32(float flt);
+fpint64_t fp_floatToFixed64(float flt);
 
 int32_t fp_fixed32ToInt32(fpint32_t fixed);
 

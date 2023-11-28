@@ -13,7 +13,7 @@ fpint32_t delT = 0;
 uint32_t delT_us = 0;
 // core states (units are steps, 1=1 ?) 
 volatile uint8_t mode = MOTION_MODE_POS;      // operative mode 
-volatile fpint32_t pos = 0;                   // current position 
+volatile fpint64_t pos = 0;                   // current position (big 64)
 volatile fpint32_t vel = 0;                   // current velocity 
 volatile fpint32_t accel = 0;                 // current acceleration 
 // and settings 
@@ -58,7 +58,7 @@ void alarm_dt_Handler(void){
 void motion_debug(void){
   Serial.println(String(millis())
       // + "\tdelT: \t" + String(fp_fixed32ToFloat(delT), 6)
-      + "\tpos: \t" + String(fp_fixed32ToFloat(pos), 4)
+      + "\tpos: \t" + String(fp_fixed64ToFloat(pos), 4)
       + "\tvel: \t" + String(fp_fixed32ToFloat(vel), 4)
       + "\tvtrg: \t" + String(fp_fixed32ToFloat(velTarget), 4)
       + "\tacc: \t" + String(fp_fixed32ToFloat(accel), 3)
@@ -131,12 +131,12 @@ void motion_setVelocityTarget(float _targ, float _maxAccel){
 void motion_setPosition(float _pos){
   // not too introspective here,
   // TODO: we should halt ahead of this, non? could fk shit up bigtime 
-  pos = fp_floatToFixed32(_pos);
+  pos = fp_floatToFixed64(_pos);
 }
 
 void motion_getCurrentStates(motionState_t* statePtr){
   noInterrupts();
-  statePtr->pos = fp_fixed32ToFloat(pos);
+  statePtr->pos = fp_fixed64ToFloat(pos);
   statePtr->vel = fp_fixed32ToFloat(vel);
   statePtr->accel = fp_fixed32ToFloat(accel);
   interrupts();

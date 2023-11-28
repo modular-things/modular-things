@@ -131,9 +131,6 @@ float sampleVel = 1000.0F;
 
 // TODO:
 /*
-- guards on all fp maths, 
-- wrap position reckoning, or pick i.e. 64-bit base ? 
-- (commit)
 - do position-target-ingest and trajectory-authorship... 
 */
 
