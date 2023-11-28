@@ -109,7 +109,7 @@ void setup() {
   // startup the stepper hardware 
   stepper_init();
   // setup motion, pick an integration interval (us) 
-  motion_init(50);
+  motion_init(64);
   // startup the network transporter 
   // osap.begin();
   // and our limit pin 
@@ -121,15 +121,21 @@ void setup() {
 uint32_t debounceDelay = 1;
 uint32_t lastButtonCheck = 0;
 
-uint32_t flipInterval = 5000;
+uint32_t flipInterval = 2500;
 uint32_t lastFlip = 0;
 
 uint32_t debugInterval = 250;
 uint32_t lastDebug = 0;
 
-// TODO: our 15.17 fixed-point also caps us to 
-// 32k ticks / second... is that reasonable ?  
-float sampleVel = 1250.0F;
+float sampleVel = 1000.0F;
+
+// TODO:
+/*
+- guards on all fp maths, 
+- wrap position reckoning, or pick i.e. 64-bit base ? 
+- (commit)
+- do position-target-ingest and trajectory-authorship... 
+*/
 
 motionState_t states;
 

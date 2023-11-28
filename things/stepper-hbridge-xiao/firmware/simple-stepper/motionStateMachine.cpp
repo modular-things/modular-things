@@ -99,13 +99,13 @@ void motion_integrate(void){
   // and a full step for us is 512, 2^9, we should be able 
   // to just take a bitmask of the position, right?
 
-  // position is base 17, we can just shift our way to relative electrical phase 
+  // position is base 16, we can just shift our way to relative electrical phase 
   // 0-2048 (11 bits) per electrical phase, is
   // 0-512 (9 bits) per step, 
-  // 0b XXXXXXXXXXXXXXX.XXXXXXXXXXXXXXXXX
-  // 0b              XX.XXXXXXXXX
-  //                 FS.MicroStep
-  uint16_t phaseAngle = (pos >> 8) & 0b11111111111;
+  // 0b XXXXXXXXXXXXXXXX.XXXXXXXXXXXXXXXX
+  // 0b               XX.XXXXXXXXX
+  //                  FS.MicroStep
+  uint16_t phaseAngle = (pos >> 7) & 0b11111111111;
   stepper_point(phaseAngle);
 } // end integrator 
 
@@ -141,3 +141,18 @@ void motion_getCurrentStates(motionState_t* statePtr){
   statePtr->accel = fp_fixed32ToFloat(accel);
   interrupts();
 }
+
+// some notes on fixed-points,
+/*
+
+we have FP 15.17, so we have 32k ticks ahead of the dot and 131k behind. 
+signed-ness means we have actually only 16k ticks ahead, so an effective 
+max rate of 16k full-steps per second, which is 80 revs / second or only 4800RPM
+that's... not really enough, 
+
+FP 16.16 gets us to 9800 RPM, where a stepper will never go, but BLDCs might 
+(though if we do any real-units alignment that's 32k of whatever unit: rads/sec, is enough)
+
+So we'll pick FP 16.16 
+
+*/

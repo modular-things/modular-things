@@ -2,12 +2,16 @@
 
 // ---------------------------------------------- Fixed Point Maths  
 
-// TODO is it ?? 
-// trying this out with 15.17 floating points: 
-// 32768 ticks ahead of the dot, 
-// 131072 ticks behind it... 
-// also it's signed, 
-const int32_t fp_scale = 17;
+// FP 16.16 puts 65k ticks in front and in behind, 
+// for i.e. max rate of 32k 'units' (it's signed) 
+// which correlates to 9830 RPM for a 200-full-step stepper 
+const int32_t   fp_scale = 16;
+const float     fp_float_max =  32768.0F;
+const float     fp_float_min = -32768.0F;
+const int32_t   fp_int_max =    32768;
+const int32_t   fp_int_min =   -32768;
+const int64_t   fp_32b_max =    2147483648;
+const int64_t   fp_32b_min =   -2147483648;
 
 // hmmm https://www.youtube.com/watch?v=S12qx1DwjVk& at ~ 18:00 
 float fp_fixed32ToFloat(fpint32_t fixed){
@@ -15,8 +19,9 @@ float fp_fixed32ToFloat(fpint32_t fixed){
 }
 
 // actually this is unclear to me... https://www.youtube.com/watch?v=S12qx1DwjVk& at 16:57
-// TODO: guard against big entrance floats (bigger than 32k) 
 fpint32_t fp_floatToFixed32(float flt){
+  if(flt > fp_float_max) flt = fp_float_max;
+  if(flt < fp_float_min) flt = fp_float_min;
   return (flt * (float)(1 << fp_scale));
 }
 
@@ -24,27 +29,28 @@ int32_t fp_fixed32ToInt32(fpint32_t fixed){
   return (fixed >> fp_scale);
 }
 
-// TODO: if int32 is > 32K !! 
 fpint32_t fp_int32ToFixed32(int32_t inty){
+  if(inty > fp_int_max) inty = fp_int_max;
+  if(inty < fp_int_min) inty = fp_int_min;
   return (inty << fp_scale); 
 }
 
-// w/ fixed point mult, we have some out-of-ranging trouble, 
-// we can maybe do this w/ 64-bit ints, but it's going to suck a little bit of time
-// though still better than the floating point libs, 
-// TODO: guard overflow when we cast back to fpint32_t ! 
 fpint32_t fp_mult32x32(fpint32_t a, fpint32_t b){
-  return ((int64_t)(a) * (int64_t)(b)) >> fp_scale;
+  // the result of this mult can be > our max possible 32b-wide fixedp, 
+  int64_t res = ((int64_t)(a) * (int64_t)(b)) >> fp_scale;
+  // so we guard against that, since it is cast back to 32b on exit, 
+  if(res > fp_32b_max) res = fp_32b_max;
+  if(res < fp_32b_min) res = fp_32b_min;
+  return res;
 }
 
-// we can instead do it w/ some fancy shifting, but I'm not going to get into this yet: 
-// leaving it as a potential speedup... 
+// we could instead do mult w/ some fancy shifting, for speed (no 64b at all)
+// but it also makes for tricky overflow / etc; I'm not going to get into this yet
 // https://www.youtube.com/watch?v=npQF28g6s_k& 7:40 
 // fp_int32_t fp_mult(fpint32_t a, fpint32_t b){
 //   return ((a >> 6) * (b >> 6)) >> 4;
 // }
 
-// division...
 fpint32_t fp_div32x32(fpint32_t num, fpint32_t denum){
   return ((int64_t)(num) << fp_scale) / denum;
 }
