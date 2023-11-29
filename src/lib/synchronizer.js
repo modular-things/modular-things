@@ -13,44 +13,16 @@ no warranty is provided, and users accept all liability.
 */
 
 /*
-const machine = createSynchronizer(
-  [motor1, motor2, motor3],
-  (targetCoordinates) => { return transformedCoords },
-  (motorCoordinates) => { return targetCoordinates }
-)
-
-machine.setMaxAccel(accel)
-machine.setMaxVelocity(rate)
-machine.absolute([x,y,z], rate = last, accel = last)
-machine.relative([x,y,z], rate = last, accel = last)
-machine.setPosition([x,y,z])
-machine.stop()
-
-// my thoughts / modifications:
-- am I doing the factory correctly here? I would return an object, rather than the machine.fn everywhere...
-- we can do without .setMaxAccel and .setMaxVelocity, those are user-impositions,
-  - rather use .absolute and .relative to have (..., rate, accel) arguments
-  - and let those args be modal: if they aren't supplied, use the most-recently-used,
-- how do we throw / catch errors, since machines call motors ?
-  - can we do a higher-level wrap so that we can throw 'em always all the way up to user code ?
-- also... .setPosition / etc, is a function of the transform, innit ?
-- transforms for *position* are not identical to *velocity* transforms,
-  - if the transform is linear, we should be able to just use a delta transform...
-  - nonlinear (i.e. angular) transforms leave us fully beached for velocities, etc (?)
-- this is complex in surprising ways...
+TODO:
+a typescript implementation would be rad for standalones, using typescript motors... 
+can we have that and also have it live within the browser-env ? 
 */
 
-// addition...
 let vectorAddition = (A, B) => {
   return A.map((a, i) => { return A[i] + B[i] })
 }
 
-// distances from a-to-b,
-let vectorDeltas = (A, B) => {
-  return A.map((a, i) => { return A[i] - B[i] })
-}
 
-// between A and B
 let distance = (A, B) => {
   let numDof = A.length
   let sum = 0
@@ -60,7 +32,7 @@ let distance = (A, B) => {
   return Math.sqrt(sum)
 }
 
-// from A to B
+
 let unitVector = (A, B) => {
   let numDof = A.length
   let dist = distance(A, B)
@@ -71,7 +43,11 @@ let unitVector = (A, B) => {
   return unit
 }
 
+
 export default function createSynchronizer(actuators) {
+  // it's true, 
+  console.warn(`WARNING: Sync is untested since (small) motor API changes...`)
+
   if (!Array.isArray(actuators)) throw new Error(`pls, an array of actuators`)
   // some state... our most-recently used accel & velocity,
   // there's going to be a little bit of trouble w/r/t motor absolute-max-velocities
@@ -130,13 +106,12 @@ export default function createSynchronizer(actuators) {
     }
   }
 
-  // todo... just aim at it, don't await end,
   let target = async (pos, vels, accels) => {
     try {
       // set all downstream...
-      // we can't really do 'sync' stuff for a target, since we are asking each motor to slew from wherever it is to this new posn,
-      // but we could optionally pass in arrays of vels / accels for the motors to use,
-      await Promise.all(actuators.map((actu, i) => { return actu.target(pos[i], vels ? vels[i] : undefined, accels ? accels[i] : undefined) }))
+      await Promise.all(actuators.map((actu, i) => { 
+        return actu.target(pos[i], vels ? vels[i] : undefined, accels ? accels[i] : undefined) 
+      }))
       // can't know this anymore,
       lastAbsolute = null
     } catch (err) {
@@ -155,8 +130,8 @@ export default function createSynchronizer(actuators) {
       // where we're going...
       let nextAbsolute = pos
       // we're also going to need to know about each motor's abs-max velocities:
-      let absMaxVelocities = actuators.map(actu => actu.getAbsMaxVelocity())
-      let absMaxAccels = actuators.map(actu => actu.getAbsMaxAccel())
+      let absMaxVelocities = actuators.map(actu => actu.getMaxVelocity())
+      let absMaxAccels = actuators.map(actu => actu.getMaxAccel())
       // and a unit vector... I know this should be explicit unitize-an-existing-vector, alas,
       let unit = unitVector(lastAbsolute, nextAbsolute)
       // these are our candidate vels & accels for the move,
@@ -208,7 +183,7 @@ export default function createSynchronizer(actuators) {
       if (!Array.isArray(vels)) throw new Error(`pls, a velocity vector here`)
       accel ? lastAccel = accel : accel = lastAccel;
       // so we need to collect the motors' absolute max accels,
-      let absMaxAccels = actuators.map(actu => actu.getAbsMaxAccel())
+      let absMaxAccels = actuators.map(actu => actu.getMaxAccel())
       // get a unito,
       let unit = unitVector(vels)
       // as above, so here (below), we need to check accels, vels, against possible...

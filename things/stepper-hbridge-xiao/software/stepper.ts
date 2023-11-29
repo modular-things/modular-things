@@ -24,6 +24,22 @@ export default class Stepper extends Thing {
   // and we have an artificial current scaling, 
   private currentMax = 0.33;
 
+  // we have getters and setters for these abs-max terms, 
+  // which are also required by the coordinator, 
+  private maxAccel = 1000;
+  private maxVel = 1000;
+
+  getMaxAccel(){ return this.maxAccel; }
+  getMaxVelocity(){ return this.maxVel; }
+
+  setMaxAccel(val: number){
+    this.maxAccel = val;
+  }
+
+  setMaxVelocity(val: number){
+    this.maxVel = val; 
+  }
+
 
   // reset position (not a move command) 
   async setPosition(pos: number) {
@@ -42,6 +58,8 @@ export default class Stepper extends Thing {
 
 
   setAccel(accel: number) {
+    accel = Math.abs(accel);
+    if(accel > this.maxAccel) this.maxAccel = accel;
     this.lastAccel = accel;
   }
 
@@ -87,9 +105,7 @@ export default class Stepper extends Thing {
     }
   }
 
-
   async getPosition() { return (await this.getState()).pos; }
-
 
   async getVelocity() { return (await this.getState()).vel; }
 
@@ -122,8 +138,12 @@ export default class Stepper extends Thing {
   // sets the position-target, and delivers rates, accels to use while slewing-to
   async target(pos: number, vel?: number, accel?: number) {
     try {
+      // vel, accel are +ve always 
+      vel = Math.abs(vel);
+      accel = Math.abs(accel);
       // modal vel-and-accels, and guards
       vel ? this.lastVel = vel : vel = this.lastVel;
+      if(vel > this.maxVel) this.maxVel = vel;
       accel ? this.lastAccel = accel : accel = this.lastAccel;
       // also, warn against zero-or-negative velocities & accelerations
       if (vel <= 0 || accel <= 0) throw new Error(`y'all are trying to go somewhere, but modal velocity or accel are negative, this won't do...`)
@@ -169,8 +189,10 @@ export default class Stepper extends Thing {
   // goto-this-speed, using optional accel,
   async velocity(vel: number, accel?: number) {
     try {
+      accel = Math.abs(accel);
       // modal accel, and guards...
       accel ? this.lastAccel = accel : accel = this.lastAccel;
+      if(Math.abs(vel) > this.maxVel) this.maxVel = Math.abs(vel);
       // note that we are *not* setting last-vel w/r/t this velocity... esp. since we often call this
       // w/ zero-vel, to stop...
       // now write the paquet,
@@ -242,6 +264,16 @@ export default class Stepper extends Thing {
       name: "setPosition",
       args: [
         "pos: number"
+      ]
+    }, {
+      name: "setMaxAccel",
+      args: [
+        "maxAccel: number"
+      ]
+    }, {
+      name: "setMaxVelocity",
+      args: [
+        "maxVelocity: number"
       ]
     }, {
       name: "stop",

@@ -57,3 +57,7 @@ console.log(`jogging around`)
 await motor.setPosition(0);
 await motor.absolute(extent, joggingRate);
 await motor.absolute(0, joggingRate);
+
+
+console.log(`powering down`)
+await motor.setCurrent(0)
