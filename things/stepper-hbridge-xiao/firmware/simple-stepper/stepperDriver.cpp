@@ -23,31 +23,32 @@ is; no warranty is provided, and users accept all liability.
 #define APWM_PIN 27     // on D1
 #define BPWM_PIN 29     // on D3 
 
-#define APWM_BM (uint32_t)(1 << APWM_PIN)
-#define BPWM_BM (uint32_t)(1 << BPWM_PIN) 
+// macros to set h-bridge dir pins 
 
-#define AIN1_BM (uint32_t)(1 << AIN1_PIN)
-#define AIN2_BM (uint32_t)(1 << AIN2_PIN)
-#define BIN1_BM (uint32_t)(1 << BIN1_PIN)
-#define BIN2_BM (uint32_t)(1 << BIN2_PIN)
+#define AIN1_HI sio_hw->gpio_set = (uint32_t)(1 << AIN1_PIN)
+#define AIN1_LO sio_hw->gpio_clr = (uint32_t)(1 << AIN1_PIN)
 
-#define AIN1_HI sio_hw->gpio_set = AIN1_BM
-#define AIN1_LO sio_hw->gpio_clr = AIN1_BM
-#define AIN2_HI sio_hw->gpio_set = AIN2_BM
-#define AIN2_LO sio_hw->gpio_clr = AIN2_BM
-#define BIN1_HI sio_hw->gpio_set = BIN1_BM
-#define BIN1_LO sio_hw->gpio_clr = BIN1_BM
-#define BIN2_HI sio_hw->gpio_set = BIN2_BM
-#define BIN2_LO sio_hw->gpio_clr = BIN2_BM
+#define AIN2_HI sio_hw->gpio_set = (uint32_t)(1 << AIN2_PIN)
+#define AIN2_LO sio_hw->gpio_clr = (uint32_t)(1 << AIN2_PIN)
 
-// set a phase up or down direction
-// transition low first, avoid brake condition for however many ns 
-#define A_UP AIN2_LO; AIN1_HI
-#define A_OFF AIN2_LO; AIN1_LO
-#define A_DOWN AIN1_LO; AIN2_HI
-#define B_UP BIN2_LO; BIN1_HI 
-#define B_OFF BIN2_LO; BIN1_LO
-#define B_DOWN BIN1_LO; BIN2_HI
+#define BIN1_HI sio_hw->gpio_set = (uint32_t)(1 << BIN1_PIN)
+#define BIN1_LO sio_hw->gpio_clr = (uint32_t)(1 << BIN1_PIN)
+
+#define BIN2_HI sio_hw->gpio_set = (uint32_t)(1 << BIN2_PIN)
+#define BIN2_LO sio_hw->gpio_clr = (uint32_t)(1 << BIN2_PIN)
+
+// macros to set h-bridge dir states 
+
+#define A_UP    AIN2_LO; AIN1_HI
+#define B_UP    BIN2_LO; BIN1_HI 
+
+#define A_OFF   AIN2_LO; AIN1_LO
+#define B_OFF   BIN2_LO; BIN1_LO
+
+#define A_DOWN  AIN1_LO; AIN2_HI
+#define B_DOWN  BIN1_LO; BIN2_HI
+
+// hardware pwm vals 
 
 uint16_t sliceNumA;
 uint16_t sliceNumB;

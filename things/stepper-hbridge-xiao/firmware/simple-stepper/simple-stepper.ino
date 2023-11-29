@@ -111,8 +111,11 @@ void setup() {
   motion_init(64);
   // startup the network transporter 
   osap.begin();
-  // and our limit pin 
-  pinMode(PIN_LIMIT, INPUT_PULLDOWN);
+  // and our limit pin, is wired (to spec)
+  // to a normally-closed switch, from SIG to GND, 
+  // meaning that when the switch is "clicked" - it will open, 
+  // and the pullup will win, we will have logic high 
+  pinMode(PIN_LIMIT, INPUT_PULLUP);
 }
 
 uint32_t debounceDelay = 1;

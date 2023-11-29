@@ -90,6 +90,14 @@ void motion_calc_mode_position(void){
   _stopDistance = motion_calc_stopping_distance(_vel, _maxAccel);
   _dist = _posTarget - _pos;
 
+  // check if we're about to make it... bonk if so, 
+  // units are steps, so epsilon is tiny ! 
+  if(abs(_dist - _delta) < fp_floatToFixed32(0.001F)){
+    _vel = 0;
+    _accel = 0;
+    return;
+  }
+
   // now we do a buncha cheques 
   if(_stopDistance >= abs(_dist)){  // we're going to overshoot, 
     if(_vel <= 0){                  // when -ve vel, 

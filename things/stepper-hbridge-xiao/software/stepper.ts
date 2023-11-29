@@ -15,78 +15,64 @@ import Serializers from "../../../src/lib/osapjs/utils/serializers"
 import Thing from "../../../src/lib/thing"
 
 export default class Stepper extends Thing {
-
-  // -------------------------------------------- Setters
   // how many steps-per-unit,
   // this could be included in a machineSpaceToActuatorSpace transform as well,
-  private spu = 20
-  // each has a max-max velocity and acceleration, which are user settings,
-  // but velocity is also abs-abs-max'd at our tick rate (in hz) 
-  private tickRate = 4000
-  private absMaxVelocity = this.tickRate / this.spu
-  private absMaxAccel = 10000
+  private spu = 1;
   // these are stateful for modal functos 
-  private lastVel = 100               // units / sec 
-  private lastAccel = 100             // units / sec / sec
+  private lastVel = 100;               // units / sec 
+  private lastAccel = 100;             // units / sec / sec
+  // and we have an artificial current scaling, 
+  private currentMax = 0.33;
+
 
   // reset position (not a move command) 
   async setPosition(pos: number) {
     try {
       // stop AFAP 
-      await this.halt();
+      await this.stop();
       // write up a new-position-paquet,
       let datagram = new Uint8Array(4);
       let wptr = 0;
       wptr += Serializers.writeFloat32(datagram, wptr, pos);
       await this.send("setPosition", datagram);
     } catch (err) {
-      console.error(err)
+      console.error(err);
     }
   }
 
-  setVelocity(vel: number) {
-    if (vel > this.absMaxVelocity) vel = this.absMaxVelocity
-    this.lastVel = vel
+
+  setAccel(accel: number) {
+    this.lastAccel = accel;
   }
 
-  setAccel = async (accel: number) => {
-    if (accel > this.absMaxAccel) accel = this.absMaxAccel
-    this.lastAccel = accel
+  // hidden func for higher power sys, 
+  setCurrentMaximum(cmax: number) {
+    this.currentMax = cmax;
   }
 
-  setAbsMaxAccel = (maxAccel: number) => { this.absMaxAccel = maxAccel }
 
-  setAbsMaxVelocity = (maxVel: number) => {
-    // not beyond this tick-based limit,
-    if (maxVel > this.tickRate / this.spu) {
-      maxVel = this.tickRate / this.spu
-    }
-    this.absMaxVelocity = maxVel
-  }
-
-  async setCurrentScale(cscale: number) {
+  async setCurrent(cscale: number) {
     try {
-      let datagram = new Uint8Array(4)
-      let wptr = 0
-      wptr += Serializers.writeFloat32(datagram, wptr, cscale)  // it's 0-1, firmware checks
+      cscale = cscale * this.currentMax;
+      let datagram = new Uint8Array(4);
+      let wptr = 0;
+      wptr += Serializers.writeFloat32(datagram, wptr, cscale);  // it's 0-1, the firmware checks
       // and we can shippity ship it,
-      await this.send("writeSettings", datagram)
+      await this.send("writeSettings", datagram);
     } catch (err) {
-      console.error(err)
+      console.error(err);
     }
   }
+
 
   // tell me about your steps-per-unit,
   // note that FW currently does 1/4 stepping: 800 steps / revolution
   setStepsPerUnit(spu: number) {
-    this.spu = spu
-    if (this.absMaxVelocity > this.tickRate / this.spu) {
-      this.absMaxVelocity = this.tickRate / this.spu
-    }
-    console.warn(`w/ spu of ${spu}, this ${this.getName()} has a new abs-max velocity ${this.absMaxVelocity}`)
+    this.spu = spu;
   }
 
   // -------------------------------------------- Getters
+
 
   async getState() {
     try {
@@ -101,15 +87,15 @@ export default class Stepper extends Thing {
     }
   }
 
+
   async getPosition() { return (await this.getState()).pos; }
+
 
   async getVelocity() { return (await this.getState()).vel; }
 
-  getAbsMaxVelocity() { return this.absMaxVelocity }
-
-  getAbsMaxAccel() { return this.absMaxAccel }
 
   // -------------------------------------------- Operative
+
 
   // await no motion,
   async awaitMotionEnd() {
@@ -117,8 +103,8 @@ export default class Stepper extends Thing {
       return new Promise<void>(async (resolve, reject) => {
         let check = () => {
           this.getState().then((states) => {
-            // console.log(`${name}\t acc ${states.accel.toFixed(4)},\t vel ${states.vel.toFixed(4)},\t pos ${states.pos.toFixed(4)}`)
-            if (states.vel < 0.001 && states.vel > -0.001) {
+            // console.log(`${this.name}\t acc ${states.accel.toFixed(4)},\t vel ${states.vel.toFixed(4)},\t pos ${states.pos.toFixed(4)}`)
+            if (states.vel < 0.1 && states.vel > -0.1) {
               resolve()
             } else {
               setTimeout(check, 10)
@@ -132,14 +118,13 @@ export default class Stepper extends Thing {
     }
   }
 
+
   // sets the position-target, and delivers rates, accels to use while slewing-to
   async target(pos: number, vel?: number, accel?: number) {
     try {
       // modal vel-and-accels, and guards
       vel ? this.lastVel = vel : vel = this.lastVel;
       accel ? this.lastAccel = accel : accel = this.lastAccel;
-      if (accel > this.absMaxAccel) { accel = this.absMaxAccel; this.lastAccel = accel; }
-      if (vel > this.absMaxVelocity) { vel = this.absMaxVelocity; this.lastVel = vel; }
       // also, warn against zero-or-negative velocities & accelerations
       if (vel <= 0 || accel <= 0) throw new Error(`y'all are trying to go somewhere, but modal velocity or accel are negative, this won't do...`)
       // stuff a packet,
@@ -157,6 +142,7 @@ export default class Stepper extends Thing {
     }
   }
 
+
   // goto-this-posn, using optional vel, accel, and wait for machine to get there
   async absolute(pos: number, vel: number, accel: number) {
     try {
@@ -166,6 +152,7 @@ export default class Stepper extends Thing {
       console.error(err)
     }
   } // end absolute
+
 
   // goto-relative, also wait,
   async relative(delta: number, vel: number, accel: number) {
@@ -178,13 +165,12 @@ export default class Stepper extends Thing {
     }
   }
 
+
   // goto-this-speed, using optional accel,
   async velocity(vel: number, accel?: number) {
     try {
       // modal accel, and guards...
       accel ? this.lastAccel = accel : accel = this.lastAccel;
-      if (accel > this.absMaxAccel) { accel = this.absMaxAccel; this.lastAccel = accel; }
-      if (vel > this.absMaxVelocity) { vel = this.absMaxVelocity; this.lastVel = vel; }
       // note that we are *not* setting last-vel w/r/t this velocity... esp. since we often call this
       // w/ zero-vel, to stop...
       // now write the paquet,
@@ -200,8 +186,8 @@ export default class Stepper extends Thing {
     }
   }
 
-  // stop !
-  async halt() {
+
+  async stop() {
     try {
       await this.velocity(0)
       await this.awaitMotionEnd()
@@ -210,7 +196,7 @@ export default class Stepper extends Thing {
     }
   }
 
-  // get limit state 
+
   async getLimitState() {
     try {
       let reply = await this.send("getLimitState", new Uint8Array([0]));
@@ -223,16 +209,6 @@ export default class Stepper extends Thing {
   // the gd API, we should be able to define 'em inline ? 
   public api = [
     {
-      name: "setCurrentScale",
-      args: [
-        "cscale: number 0 - 1",
-      ]
-    }, {
-      name: "setStepsPerUnit",
-      args: [
-        "spu: number",
-      ]
-    }, {
       name: "absolute",
       args: [
         "pos: number",
@@ -243,9 +219,19 @@ export default class Stepper extends Thing {
         "delta: number",
       ]
     }, {
-      name: "setVelocity",
+      name: "velocity",
       args: [
         "vel: number",
+      ]
+    }, {
+      name: "setCurrent",
+      args: [
+        "cscale: number 0 - 1",
+      ]
+    }, {
+      name: "setStepsPerUnit",
+      args: [
+        "spu: number",
       ]
     }, {
       name: "setAccel",
@@ -258,7 +244,7 @@ export default class Stepper extends Thing {
         "pos: number"
       ]
     }, {
-      name: "halt",
+      name: "stop",
       args: []
     }, {
       name: "awaitMotionEnd",
