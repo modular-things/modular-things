@@ -63,6 +63,14 @@ fpint32_t fp_div32x32(fpint32_t num, fpint32_t denum){
   return ((int64_t)(num) << fp_scale) / denum;
 }
 
+fpint64_t fp_mult32x32_64(fpint32_t a, fpint32_t b){
+  return ((fpint64_t)(a) * (fpint64_t)(b)) >> fp_scale;
+}
+
+fpint64_t fp_div64x64(fpint64_t num, fpint64_t denum){
+  return (num << 16) / denum;
+}
+
 // // big-div, 
 // fpint64_t fp_calcStopDistance(fpint32_t _vel, fpint32_t _maxAccel){
 //   // return 0;

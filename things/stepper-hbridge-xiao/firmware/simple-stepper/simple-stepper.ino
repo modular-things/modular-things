@@ -142,19 +142,7 @@ void loop() {
   // do transport stuff 
   // osap.loop();
 
-  // debug
-  if(lastDebug + debugInterval < millis()){
-    motion_debug();
-    lastDebug = millis();
-    // motion_getCurrentStates(&states);
-    // Serial.println(String(millis()) 
-    //   + "\tpos: \t" + String(states.pos, 4) 
-    //   + "\tvel: \t" + String(states.vel, 4) 
-    //   + "\tacc: \t" + String(states.accel, 4)
-    // );
-  }
-
-  // set / res velocities, 
+  // test randy set / res velocities, 
   if(lastFlip + flipInterval < millis()){
     lastFlip = millis();
     // pick a new flip interval, 
@@ -170,20 +158,12 @@ void loop() {
     }
   }
 
-  /*
   // debounce and set button states,
-  if(lastButtonCheck + debounceDelay < millis()){
-    lastButtonCheck = millis();
-    boolean newState = digitalRead(PIN_LIMIT);
-    if(newState != lastButtonState){
-      lastButtonState = newState;
-    }
-  }
-  */
+  // if(lastButtonCheck + debounceDelay < millis()){
+  //   lastButtonCheck = millis();
+  //   boolean newState = digitalRead(PIN_LIMIT);
+  //   if(newState != lastButtonState){
+  //     lastButtonState = newState;
+  //   }
+  // }
 }
-
-/*
-- test with randy values into position, or velocity targs, 
-- code cleanup, test again ! 
-- re-instrument via interface, get on with the single-axis example, yer done ? 
-*/

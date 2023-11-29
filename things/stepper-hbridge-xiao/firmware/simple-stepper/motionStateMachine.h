@@ -7,7 +7,6 @@
 
 #define MOTION_MODE_POS           0
 #define MOTION_MODE_VEL           1
-#define MOTION_MODE_RECALCULATING 2
 
 typedef struct motionState_t {
   float pos;
@@ -18,14 +17,12 @@ typedef struct motionState_t {
 void motion_init(uint32_t microsecondsPerIntegration);
 
 void motion_integrate(void);
-void alarm_dt_Handler(void);
+void alarm_dt_handler(void);
 
 void motion_setPositionTarget(float target, float maxVel, float maxAccel);
 void motion_setVelocityTarget(float target, float maxAccel);
 void motion_setPosition(float pos);
 
 void motion_getCurrentStates(motionState_t* statePtr);
-
-void motion_debug(void);
 
 #endif 

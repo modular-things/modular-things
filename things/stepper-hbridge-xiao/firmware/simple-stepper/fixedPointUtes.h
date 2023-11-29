@@ -29,4 +29,8 @@ fpint32_t fp_div32x32(fpint32_t num, fpint32_t denum);
 
 // ---------------------------------------------- overflow fixedp maths 
 
+fpint64_t fp_mult32x32_64(fpint32_t a, fpint32_t b);
+
+fpint64_t fp_div64x64(fpint64_t num, fpint64_t denum);
+
 #endif 
