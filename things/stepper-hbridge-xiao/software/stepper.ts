@@ -234,11 +234,15 @@ export default class Stepper extends Thing {
       name: "absolute",
       args: [
         "pos: number",
+        "vel?: number",
+        "accel?: number"
       ]
     }, {
       name: "relative",
       args: [
         "delta: number",
+        "vel?: number",
+        "accel?: number"
       ]
     }, {
       name: "velocity",
