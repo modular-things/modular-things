@@ -41,7 +41,7 @@ void motion_init(uint32_t microsecondsPerIntegration){
   timer_hw->alarm[ALARM_DT_NUM] = (uint32_t) (timer_hw->timerawl + _delT_us);
 
   // (optionally) use a debug pin to perf test 
-  pinMode(PIN_DEBUG, OUTPUT);
+  // pinMode(PIN_DEBUG, OUTPUT);
 }
 
 void alarm_dt_handler(void){
@@ -49,9 +49,9 @@ void alarm_dt_handler(void){
   hw_clear_bits(&timer_hw->intr, 1u << ALARM_DT_NUM);
   timer_hw->alarm[ALARM_DT_NUM] = (uint32_t) (timer_hw->timerawl + _delT_us);
   // do the motion system integration, 
-  sio_hw->gpio_set = (uint32_t)(1 << PIN_DEBUG);
+  // sio_hw->gpio_set = (uint32_t)(1 << PIN_DEBUG);
   motion_integrate(); 
-  sio_hw->gpio_clr = (uint32_t)(1 << PIN_DEBUG);
+  // sio_hw->gpio_clr = (uint32_t)(1 << PIN_DEBUG);
 }
 
 // ------------------------------------ integrator codes 

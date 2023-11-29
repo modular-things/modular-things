@@ -6,8 +6,7 @@
 
 #define PIN_LIMIT 26 
 
-/*
-
+// transport layer 
 OSAP_Runtime osap;
 OSAP_Gateway_USBSerial serLink(&Serial);
 OSAP_Port_DeviceNames namePort("stepper");
@@ -85,7 +84,10 @@ void writeSettings(uint8_t* data, size_t len){
   // it's just <cscale> for the time being,
   uint16_t rptr = 0;
   float cscale = ts_readFloat32(data, &rptr);
-  // stepper_setCScale(cscale);
+  // we get that as a floating p, 0-1, 
+  // driver wants integers 0-1024: 
+  uint32_t amp = cscale * 1024;
+  stepper_setAmplitude(amp);
 }
 
 OSAP_Port_Named writeSettings_port("writeSettings", writeSettings);
@@ -101,69 +103,49 @@ size_t getLimitState(uint8_t* data, size_t len, uint8_t* reply){
 }
 
 OSAP_Port_Named getLimitState_port("getLimitState", getLimitState);
-*/
-
-float sampleVal = 1000.0F;
 
 void setup() {
-  // DEBUG 
-  Serial.begin();
   // startup the stepper hardware 
   stepper_init();
   // setup motion, pick an integration interval (us) 
   motion_init(64);
   // startup the network transporter 
-  // osap.begin();
+  osap.begin();
   // and our limit pin 
-  // pinMode(PIN_LIMIT, INPUT_PULLDOWN);
-  // DEBUG:
-  stepper_setAmplitude(256);
-  motion_setPositionTarget(sampleVal, 1000.0F, 1000.0F);
+  pinMode(PIN_LIMIT, INPUT_PULLDOWN);
 }
 
 uint32_t debounceDelay = 1;
 uint32_t lastButtonCheck = 0;
 
-uint32_t flipInterval = 4000;
-uint32_t lastFlip = 0;
-
-uint32_t debugInterval = 200;
-uint32_t lastDebug = 0;
-
-
-// TODO:
-/*
-- do position-target-ingest and trajectory-authorship... 
-*/
-
 motionState_t states;
 
 void loop() {
   // do transport stuff 
-  // osap.loop();
-
-  // test randy set / res velocities, 
-  if(lastFlip + flipInterval < millis()){
-    lastFlip = millis();
-    // pick a new flip interval, 
-    flipInterval = random(1000);
-    // and val, 
-    sampleVal = random(-1000, 1000);
-    // and coin-toss for vel or posn, 
-    uint32_t flip = random(0, 2);
-    if(flip == 1){
-      motion_setPositionTarget(sampleVal, 1000.0F, 4000.0F);
-    } else {
-      motion_setVelocityTarget(sampleVal, 5000.0F);
-    }
-  }
+  osap.loop();
 
   // debounce and set button states,
-  // if(lastButtonCheck + debounceDelay < millis()){
-  //   lastButtonCheck = millis();
-  //   boolean newState = digitalRead(PIN_LIMIT);
-  //   if(newState != lastButtonState){
-  //     lastButtonState = newState;
-  //   }
-  // }
+  if(lastButtonCheck + debounceDelay < millis()){
+    lastButtonCheck = millis();
+    boolean newState = digitalRead(PIN_LIMIT);
+    if(newState != lastButtonState){
+      lastButtonState = newState;
+    }
+  }
 }
+
+// test randy set / res velocities, 
+// if(lastFlip + flipInterval < millis()){
+//   lastFlip = millis();
+//   // pick a new flip interval, 
+//   flipInterval = random(1000);
+//   // and val, 
+//   sampleVal = random(-1000, 1000);
+//   // and coin-toss for vel or posn, 
+//   uint32_t flip = random(0, 2);
+//   if(flip == 1){
+//     motion_setPositionTarget(sampleVal, 1000.0F, 4000.0F);
+//   } else {
+//     motion_setVelocityTarget(sampleVal, 5000.0F);
+//   }
+// }

@@ -136,5 +136,7 @@ void stepper_point(uint16_t phaseAngle){
 }
 
 void stepper_setAmplitude(uint16_t amplitude){
+  if(amplitude > 1024) amplitude = 1024;
+  if(amplitude < 0) amplitude = 0;
   _amplitude = amplitude;
 }
