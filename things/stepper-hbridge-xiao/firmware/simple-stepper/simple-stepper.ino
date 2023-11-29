@@ -157,9 +157,17 @@ void loop() {
   // set / res velocities, 
   if(lastFlip + flipInterval < millis()){
     lastFlip = millis();
-    sampleVal = - sampleVal;
-    // motion_setVelocityTarget(sampleVal, 5000.0F);
-    motion_setPositionTarget(sampleVal, 1000.0F, 1000.0F);
+    // pick a new flip interval, 
+    flipInterval = random(1000);
+    // and val, 
+    sampleVal = random(-1000, 1000);
+    // and coin-toss for vel or posn, 
+    uint32_t flip = random(0, 2);
+    if(flip == 1){
+      motion_setPositionTarget(sampleVal, 1000.0F, 4000.0F);
+    } else {
+      motion_setVelocityTarget(sampleVal, 5000.0F);
+    }
   }
 
   /*
@@ -176,6 +184,6 @@ void loop() {
 
 /*
 - test with randy values into position, or velocity targs, 
-- code cleanup, 
+- code cleanup, test again ! 
 - re-instrument via interface, get on with the single-axis example, yer done ? 
 */

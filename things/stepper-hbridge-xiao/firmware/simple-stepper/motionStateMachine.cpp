@@ -62,7 +62,9 @@ void motion_debug(void){
   noInterrupts();
   Serial.println(String(millis())
       // + "\t_delT: \t" + String(fp_fixed32ToFloat(_delT), 6)
-      + "\ttrg: " + String(fp_fixed64ToFloat(_posTarget), 1)
+      + "\tm: " + String(_mode) 
+      + "\tptrg: " + String(fp_fixed64ToFloat(_posTarget), 1)
+      + "\tvtrg: " + String(fp_fixed64ToFloat(_maxVelocity), 1)
       + "\tpos: " + String(fp_fixed64ToFloat(_pos), 1)
       + "\tdst: " + String(fp_fixed64ToFloat(_dist), 1)
       + "\tstp: " + String(fp_fixed64ToFloat(_stopDistance), 1)
@@ -92,6 +94,9 @@ void motion_calc_mode_velocity(void){
   } else if (_vel > _maxVelocity){
     _accel = -_maxAccel;
   }
+
+  // using our chosen accel, integrate velocity from previous: 
+  _vel += fp_mult32x32(_accel, _delT); 
 
   // and check against targets 
   if(_vel > 0 && _maxVelocity > 0 && _vel > _maxVelocity){
