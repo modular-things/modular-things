@@ -3,5 +3,6 @@ node_modules
 .vite
 .vscode
 *.vscode
-*build 
-*dist 
+*build
+*dist
+yarn.lock

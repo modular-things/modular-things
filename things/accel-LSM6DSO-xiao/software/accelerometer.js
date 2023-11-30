@@ -1,0 +1,48 @@
+import { osap } from "../../../src/lib/osapjs/osap";
+import Serializers from "../../../src/lib/osapjs/utils/serializers"
+const readUint16 = Serializers.readUint16;
+
+export default function(name) {
+  return {
+      async setRGB(r: number, g: number, b: number) {
+       let datagram = new Uint8Array(3);
+       datagram[0] = 255 - r * 255;
+       datagram[1] = 255 - g * 255;
+       datagram[2] = 255 - (b * 255) / 2;
+       // to send data, we use
+       // `osap.send(name: string, targetPort: string, data: Uint8Array)`
+       // ... and please use 'async' funcs with 'await' in front of
+       // network calls
+       // ... as you have probably figured out, "setRGB" here routes to
+       // the function defined around line 43 in the arduino example
+       await this.send("setRGB", datagram);
+     }
+    readAccGyro: async () => {
+      try {
+
+        const data = await osap.send(name, "readAccGyro");
+
+        const x = readUint16(data, 0);
+        const y = readUint16(data, 2);
+        const z = readUint16(data, 4);
+        const xTheta = readUint16(data, 6);
+        const yTheta = readUint16(data, 8);
+        const zTheta = readUint16(data, 10);
+
+        return [x, y, z, xTheta, yTheta, zTheta];
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    updateName: (newName) => {
+      name = newName;
+    },
+    api: [
+      {
+        name: "readAccGyro",
+        args: [],
+        return: "[x, y, z, xTheta, yTheta, zTheta]"
+      }
+    ]
+  }
+}
