@@ -2,6 +2,7 @@
   {
     "author": "Quentin Bolsee",
     "name": "accel-bno085-xiao",
+    "software": "software/accelerometer.js",
     "images": [
       { 
         "name": "layout", 
@@ -20,6 +21,8 @@
   {
     "author": "Quentin Bolsee",
     "name": "servo-xiao",
+    "firmware": "firmware/servo-thing/servo-thing.ino",
+    "software": "software/servo.ts",
     "images": [
       { 
         "name": "layout", 
@@ -38,6 +41,8 @@
   {
     "author": "Jake Read",
     "name": "mosfet-xiao",
+    "firmware": "firmware/mosfet-thing/mosfet-thing.ino",
+    "software": "software/mosfet.ts",
     "images": [
       { 
         "name": "layout", 
@@ -52,6 +57,8 @@
   {
     "author": "Jake Read",
     "name": "rgbb",
+    "firmware": "firmware/rgbb-thing/rgbb-thing.ino",
+    "software": "software/rgbb.ts",
     "images": [
       { 
         "name": "layout", 
@@ -66,6 +73,7 @@
   {
     "author": "Jake Read",
     "name": "stepper-hbridge-xiao",
+    "software": "software/stepper.ts",
     "images": [
       { 
         "name": "layout", 
