@@ -1,0 +1,107 @@
+---
+export async function getStaticPaths() {
+  let things = await Astro.glob(`../../../things/_things.json`);
+
+  const result = things[0].default.map(t => {
+    return {
+      params: { name: t.name }
+    }
+  });
+
+  return result
+}
+
+const { name } = Astro.params;
+
+let things = await Astro.glob(`../../../things/_things.json`);
+
+things = things[0].default;
+
+const target = things.filter(x => x.name === name)[0];
+
+const glob = await Astro.glob(`../../../things/*/*.md`);
+const md = glob.filter(x => x.file.includes(name))[0];
+
+---
+<head>
+  <meta charset="utf-8">
+</head>
+
+<style>
+  body {
+    padding: 0px;
+    margin: 0px;
+    font-family: Helvetica,Arial,Sans-Serif;
+    background: #eeeeee;
+  }
+
+  .header {
+    background: #33e;
+    color: white;
+    padding: .6rem 2rem;
+  }
+
+  .content {
+    width: 60%;
+    margin: auto;
+    padding-bottom: 1rem;
+  }
+</style>
+
+<div class="header">
+
+  <div style="font-size: 2rem">The {target.name} "thing".</div>
+
+  <div style="font-size: 1rem; padding-top: .3rem;">
+    Device can be found <a style="color: white" href={`https://github.com/modular-things/modular-things/tree/main/things/${target.name}`}>on GitHub here</a>.
+  </div>
+
+  
+
+</div>
+
+<div class="content">
+
+  <div style="display: flex; flex-direction: row; width: 100%;">
+    {
+      target.images.map(x => {
+        return <div style="display: flex; flex-direction: column; flex: 1; padding: .6rem;">
+          <div style={`
+            background-image: url('https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.name}/${x.src}');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: .3rem;
+            border: 1px solid black;
+          `}/>
+          <div style="width: 100%; text-align: center; padding-top: .5rem;">{x.name}</div>
+        </div>
+      })
+    }
+  </div>
+
+  <h1>README</h1>
+  <md.Content />
+
+  
+
+  
+
+
+ 
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+

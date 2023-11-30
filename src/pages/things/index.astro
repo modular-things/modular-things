@@ -1,12 +1,7 @@
 ---
-let things = await Astro.glob(`../../../things/*/*.md`);
+let things = await Astro.glob(`../../../things/_things.json`);
 
-// let thingsYAML = await Astro.glob(`../../../things/*/*.yaml`);
-
-things = things.filter(t => Object.keys(t.frontmatter).length > 0);
-
-
-console.log(things);
+things = things[0].default;
 ---
 
 <head>
@@ -19,11 +14,17 @@ console.log(things);
 <style>
 
   body {
+    margin: 0px;
+    padding: 0px;
     background: #eeeeee;
+    font-family: Helvetica,Arial,Sans-Serif;
   }
 
   .title {
+    padding: .6rem 2rem;
     font-size: 2rem;
+    background: #33e;
+    color: white;
   }
 
   .things-container {
@@ -71,16 +72,15 @@ console.log(things);
 <div class="title">Check out our collection of modular things!</div>
 
 <div class="things-container">
-  {false && things.map(t => {
+  {things.map(t => {
 
-    console.log(t);
-
-    return <a class="thing-entry" href={`${t.frontmatter.name}`}>
+    return <a class="thing-entry" href={`${t.name}`}>
       <div class="entry-title">
-        <div class="entry-name">{t.frontmatter.name}</div>
-        <div class="entry-author">{t.frontmatter.author}</div>
+        <div class="entry-name">{t.name}</div>
+        <div class="entry-author">{t.author}</div>
       </div>
       <div style={`
+        background-image: url("https://raw.githubusercontent.com/modular-things/modular-things/main/things/${t.name}/${t.images[0].src}");
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;

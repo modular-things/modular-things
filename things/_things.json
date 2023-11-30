@@ -1,0 +1,84 @@
+[
+  {
+    "author": "Quentin Bolsee",
+    "name": "accel-bno085-xiao",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.png"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.png"
+      },
+      { 
+        "name": "preview", 
+        "src": "circuit/images/preview.png"
+      }
+    ]
+  },
+  {
+    "author": "Quentin Bolsee",
+    "name": "servo-xiao",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.png"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.png"
+      },
+      { 
+        "name": "preview", 
+        "src": "circuit/images/preview.png"
+      }
+    ]
+  },
+  {
+    "author": "Jake Read",
+    "name": "mosfet-xiao",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.jpg"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.jpg"
+      }
+    ]
+  },
+  {
+    "author": "Jake Read",
+    "name": "rgbb",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.jpg"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.jpg"
+      }
+    ]
+  },
+  {
+    "author": "Jake Read",
+    "name": "stepper-hbridge-xiao",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.jpg"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.jpg"
+      },
+      { 
+        "name": "fabbed", 
+        "src": "circuit/images/fabbed.jpg"
+      }
+    ]
+  }
+]
