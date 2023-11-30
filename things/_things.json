@@ -19,7 +19,7 @@
     ]
   },
   {
-    "author": "N/A",
+    "author": "CBA",
     "name": "button-xiao",
     "software": "software/button.ts",
     "images": [
@@ -38,7 +38,7 @@
     ]
   },
   {
-    "author": "N/A",
+    "author": "CBA",
     "name": "display-OLED-xiao",
     "software": "software/display.js",
     "images": [
@@ -57,7 +57,7 @@
     ]
   },
   {
-    "author": "N/A",
+    "author": "CBA",
     "name": "distance-VL531-xiao",
     "software": "software/distance.js",
     "images": [
@@ -76,7 +76,7 @@
     ]
   },
   {
-    "author": "N/A",
+    "author": "CBA",
     "name": "potentiometer-xiao",
     "firmware": "firmware/potentiometer-thing/potentiometer-thing.ino",
     "software": "software/potentiometer.js",
