@@ -3,7 +3,6 @@ export async function getStaticPaths() {
   let things = await Astro.glob(`../../../things/*/*.md`);
   things = things.filter(t => Object.keys(t.frontmatter).length > 0);
 
-
   const result = things.map(t => {
     return {
       params: { name: t.frontmatter.name }
@@ -36,7 +35,7 @@ const target = glob.filter(x => x.frontmatter.name === name)[0];
 
 <h2>Schematic</h2>
 <div style={`
-  background-image: url('https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.frontmatter.name}/circuit/images/schematic.jpg');
+  background-image: url('https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.frontmatter.name}/${target.frontmatter.schematic}');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -46,7 +45,7 @@ const target = glob.filter(x => x.frontmatter.name === name)[0];
 
 <h2>Routed</h2>
 <div style={`
-  background-image: url('https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.frontmatter.name}/circuit/images/routed.jpg');
+  background-image: url('https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.frontmatter.name}/${target.frontmatter.layout}');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -54,15 +53,10 @@ const target = glob.filter(x => x.frontmatter.name === name)[0];
   aspect-ratio: 1;
 `}/>
 
-<h2>Fabbed</h2>
-<div style={`
-  background-image: url('https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.frontmatter.name}/circuit/images/fabbed.jpg');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  width: 300px;
-  aspect-ratio: 1;
-`}/>
+
+
+
+
 
 
 

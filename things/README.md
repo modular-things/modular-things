@@ -16,7 +16,7 @@
 │   ├─  📁 design/                (design files, .brd and .sch for eagle, or kicad-files)
 │   ├─  📁 gerbers/               (gerbers, as fabricated)
 │   └─  📁 images/    
-│       ├─  🖼️ routed.jpg         (the board as designed) (jpg or png)
+│       ├─  🖼️ layout.jpg         (the board as designed) (jpg or png)
 │       ├─  🖼️ schematic.jpg      (the board's schematic) (jpg or png)
 │       ├─  🖼️ preview.jpg        (pretty-render) (jpg or png)
 │       └─  🖼️ fabbed.jpg         (a picture of the board, real-world) 

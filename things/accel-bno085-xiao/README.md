@@ -1,5 +1,8 @@
 ---
 author: Quentin Bolsee
 name: accel-bno085-xiao
-img: circuit/images/board.png
+schematic: circuit/images/schematic.png
+layout: circuit/images/layout.png
+preview: circuit/images/preview.png
+# fabbed: 
 ---

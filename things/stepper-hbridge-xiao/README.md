@@ -1,6 +1,9 @@
 ---
 author: Jake Read
 name: stepper-hbridge-xiao
-img: circuit/images/board.jpg
+schematic: circuit/images/schematic.png
+layout: circuit/images/layout.png
+preview: circuit/images/preview.png
+# fabbed: 
 ---
 ## H-Bridge Stepper 

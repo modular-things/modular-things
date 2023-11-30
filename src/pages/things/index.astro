@@ -4,6 +4,9 @@ let things = await Astro.glob(`../../../things/*/*.md`);
 // let thingsYAML = await Astro.glob(`../../../things/*/*.yaml`);
 
 things = things.filter(t => Object.keys(t.frontmatter).length > 0);
+
+
+console.log(things);
 ---
 
 <head>
@@ -68,7 +71,9 @@ things = things.filter(t => Object.keys(t.frontmatter).length > 0);
 <div class="title">Check out our collection of modular things!</div>
 
 <div class="things-container">
-  {things.map(t => {
+  {false && things.map(t => {
+
+    console.log(t);
 
     return <a class="thing-entry" href={`${t.frontmatter.name}`}>
       <div class="entry-title">
@@ -76,7 +81,6 @@ things = things.filter(t => Object.keys(t.frontmatter).length > 0);
         <div class="entry-author">{t.frontmatter.author}</div>
       </div>
       <div style={`
-        background-image: url('https://raw.githubusercontent.com/modular-things/modular-things/main/things/${t.frontmatter.name}/${t.frontmatter.img}');
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;

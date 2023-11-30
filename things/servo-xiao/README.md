@@ -1,7 +1,10 @@
 ---
 author: Quentin Bolsee
 name: servo-xiao
-img: circuit/images/board.png
+schematic: circuit/images/schematic.png
+layout: circuit/images/layout.png
+preview: circuit/images/preview.png
+# fabbed: 
 ---
 ## Servo Thing
 
