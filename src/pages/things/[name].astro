@@ -24,20 +24,30 @@ const md = glob.filter(x => x.file.includes(name))[0];
 
 let software = "";
 if (target.software) {
-  const url = `https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.name}/${target.software}`;
-  const res = await fetch(url);
-  const text = await res.text();
+  try {
+    const url = `https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.name}/${target.software}`;
+    const res = await fetch(url);
+    const text = await res.text();
 
-  software = text;
+    software = text;
+  } catch (err) {
+
+  }
+
 }
 
 let firmware = "";
 if (target.firmware) {
-  const url = `https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.name}/${target.firmware}`;
-  const res = await fetch(url);
-  const text = await res.text();
+  try {
+    const url = `https://raw.githubusercontent.com/modular-things/modular-things/main/things/${target.name}/${target.firmware}`;
+    const res = await fetch(url);
+    const text = await res.text();
 
-  firmware = text;
+    firmware = text;
+  } catch (err) {
+
+  }
+
 }
 
 

@@ -58,7 +58,7 @@
   },
   {
     "author": "CBA",
-    "name": "distance-VL531-xiao",
+    "name": "distance-VL53L1-xiao",
     "software": "software/distance.js",
     "images": [
       { 
@@ -78,16 +78,16 @@
   {
     "author": "CBA",
     "name": "potentiometer-xiao",
-    "firmware": "firmware/potentiometer-thing/potentiometer-thing.ino",
+    "firmware": "firmware/potentiometer-xiao/potentiometer-thing.ino",
     "software": "software/potentiometer.js",
     "images": [
       { 
         "name": "layout", 
-        "src": "circuit/images/layout.jpg"
+        "src": "circuit/images/layout.png"
       },
       { 
         "name": "schematic", 
-        "src": "circuit/images/schematic.jpg"
+        "src": "circuit/images/schematic.png"
       }
     ]
   },
@@ -96,22 +96,6 @@
     "name": "mosfet-xiao",
     "firmware": "firmware/mosfet-thing/mosfet-thing.ino",
     "software": "software/mosfet.ts",
-    "images": [
-      { 
-        "name": "layout", 
-        "src": "circuit/images/layout.jpg"
-      },
-      { 
-        "name": "schematic", 
-        "src": "circuit/images/schematic.jpg"
-      }
-    ]
-  },
-  {
-    "author": "Jake Read",
-    "name": "rgbb",
-    "firmware": "firmware/rgbb-thing/rgbb-thing.ino",
-    "software": "software/rgbb.ts",
     "images": [
       { 
         "name": "layout", 
