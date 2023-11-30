@@ -1,7 +1,7 @@
 [
   {
     "author": "Quentin Bolsee",
-    "name": "accel-bno085-xiao",
+    "name": "accel-LSM6DSO-xiao",
     "software": "software/accelerometer.js",
     "images": [
       { 
@@ -19,10 +19,9 @@
     ]
   },
   {
-    "author": "Quentin Bolsee",
-    "name": "servo-xiao",
-    "firmware": "firmware/servo-thing/servo-thing.ino",
-    "software": "software/servo.ts",
+    "author": "N/A",
+    "name": "button-xiao",
+    "software": "software/button.ts",
     "images": [
       { 
         "name": "layout", 
@@ -35,6 +34,60 @@
       { 
         "name": "preview", 
         "src": "circuit/images/preview.png"
+      }
+    ]
+  },
+  {
+    "author": "N/A",
+    "name": "display-OLED-xiao",
+    "software": "software/display.js",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.png"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.png"
+      },
+      { 
+        "name": "preview", 
+        "src": "circuit/images/preview.png"
+      }
+    ]
+  },
+  {
+    "author": "N/A",
+    "name": "distance-VL531-xiao",
+    "software": "software/distance.js",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.png"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.png"
+      },
+      { 
+        "name": "preview", 
+        "src": "circuit/images/preview.png"
+      }
+    ]
+  },
+  {
+    "author": "N/A",
+    "name": "potentiometer-xiao",
+    "firmware": "firmware/potentiometer-thing/potentiometer-thing.ino",
+    "software": "software/potentiometer.js",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.jpg"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.jpg"
       }
     ]
   },
