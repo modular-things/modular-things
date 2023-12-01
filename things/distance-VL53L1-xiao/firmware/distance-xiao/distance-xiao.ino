@@ -1,10 +1,6 @@
 #include <osap.h>
 #include <VL53L1X.h> // https://www.arduino.cc/reference/en/libraries/vl53l1x/ (pololu version)
 
-#define PIN_LED_R 17
-#define PIN_LED_G 16
-#define PIN_LED_B 25
-
 #define PIN_XSHUT 29
 
 VL53L1X sensor;
@@ -58,38 +54,31 @@ void onLEDPacket(uint8_t* data, size_t len){
   updateRGB();
 }
 
-OSAP_Port_Named getDistance("getDistance", onDistanceReq);
 OSAP_Port_Named setRGB("setRGB", onRGBPacket);
 OSAP_Port_Named setLED("setLED", onLEDPacket);
+OSAP_Port_Named getDistance("getDistance", onDistanceReq);
 
 void setup() {
-  // startup the OSAP runtime,
   osap.begin();
-  // setup our hardware...
+  analogWriteResolution(8);
+  pinMode(PIN_LED_R, OUTPUT);
+  pinMode(PIN_LED_G, OUTPUT);
+  pinMode(PIN_LED_B, OUTPUT);
+  updateRGB();
   pinMode(PIN_XSHUT, OUTPUT);
   digitalWrite(PIN_XSHUT, HIGH);
-  Serial.begin(0);
   Wire.begin();
   Wire.setClock(400000); // use 400 kHz I2C
 
   sensor.setTimeout(500);
-  if (!sensor.init())
-  {
+  if (!sensor.init()) {
     Serial.println("Failed to detect and initialize sensor!");
     while (1);
   }
 
-  // Use long distance mode and allow up to 50000 us (50 ms) for a measurement.
-  // You can change these settings to adjust the performance of the sensor, but
-  // the minimum timing budget is 20 ms for short distance mode and 33 ms for
-  // medium and long distance modes. See the VL53L1X datasheet for more
-  // information on range and timing limits.
   sensor.setDistanceMode(VL53L1X::Long);
   sensor.setMeasurementTimingBudget(50000);
 
-  // Start continuous readings at a rate of one measurement every 50 ms (the
-  // inter-measurement period). This period should be at least as long as the
-  // timing budget.
   sensor.startContinuous(50);
 }
 

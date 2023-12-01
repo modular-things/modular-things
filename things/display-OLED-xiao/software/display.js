@@ -1,36 +1,45 @@
-import { osap } from "../../../src/lib/osapjs/osap"; 
-import Serializers from "../../../src/lib/osapjs/utils/serializers"
-const readUint16 = Serializers.readUint16;
+import Thing from "../../../src/lib/thing";
 
-export default function(name) {
-
-  return {
-    readAccGyro: async () => {
-      try {
-
-        const data = await osap.send(name, "readAccGyro");
-
-        const x = readUint16(data, 0);
-        const y = readUint16(data, 2);
-        const z = readUint16(data, 4);
-        const xTheta = readUint16(data, 6);
-        const yTheta = readUint16(data, 8);
-        const zTheta = readUint16(data, 10);
-
-        return [x, y, z, xTheta, yTheta, zTheta];
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    updateName: (newName) => {
-      name = newName;
-    },
-    api: [
-      {
-        name: "readAccGyro",
-        args: [],
-        return: "[x, y, z, xTheta, yTheta, zTheta]"
-      }
-    ]
+// the name given to us here is the "uniqueName" of the matched
+// device, we use this as a kind of address
+export default class display extends Thing {
+  // we can define methods that interact with the device,
+  // using the 'send' primitive, which writes data (bytes) and gets data (bytes)
+  async setRGB(r, g, b) {
+    let datagram = new Uint8Array(3);
+    datagram[0] = r * 255;
+    datagram[1] = g * 255;
+    datagram[2] = b * 255;
+    await this.send("setRGB", datagram);
   }
+
+  async setLED(state) {
+    let datagram = new Uint8Array([state > 0]);
+    await this.send("setLED", datagram);
+  }
+
+  async setText(text, textSize=2) {
+    try {
+      const utf8Encode = new TextEncoder();
+      const datagram_txt = utf8Encode.encode(text);
+      const datagram = new Uint8Array(datagram_txt.length+1);
+      datagram[0] = textSize;
+      for (let i=0; i < datagram_txt.length; i++) {
+        datagram[i+1] = datagram_txt[i];
+      }
+      await this.send("setText", datagram);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  api = [
+    {
+      name: "setText",
+      args: [
+      "text: string",
+      "textSize=2: 1 to 16"
+      ]
+    }
+  ]
 }
