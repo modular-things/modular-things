@@ -1,22 +1,24 @@
 #include <osap.h>
-#include <Servo.h>
-
-#define PIN_SERVO 29
-
-Servo servo;
+#include <Arduino_LSM6DSOX.h>
 
 OSAP_Runtime osap;
 OSAP_Gateway_USBSerial serLink(&Serial);
-OSAP_Port_DeviceNames namePort("servo");
+OSAP_Port_DeviceNames namePort("accelerometer");
 
 uint8_t rgb[3] = {0, 0, 255};
 boolean ledState = false;
 
-void writeMicroseconds(uint8_t* data, size_t len) {
-  uint16_t pulse_us = data[0] << 8 + data[1];
+typedef union {
+  float floats[6];
+  uint8_t bytes[24];
+} FLOATUNION_t;
 
-  servo.writeMicroseconds(pulse_us);
-}
+float x=0;
+float y=0;
+float z=0;
+float rx=0;
+float ry=0;
+float rz=0;
 
 void updateRGB() {
   if (ledState) {
@@ -43,9 +45,23 @@ void onLEDPacket(uint8_t* data, size_t len){
   updateRGB();
 }
 
+size_t readAccGyro(uint8_t* data, size_t len, uint8_t* reply) {
+  FLOATUNION_t values;
+  values.floats[0] = x;
+  values.floats[1] = y;
+  values.floats[2] = z;
+  values.floats[3] = rx;
+  values.floats[4] = ry;
+  values.floats[5] = rz;
+
+  memcpy(reply, values.bytes, sizeof(values.bytes));
+
+  return sizeof(values.bytes);
+}
+
 OSAP_Port_Named setRGB("setRGB", onRGBPacket);
 OSAP_Port_Named setLED("setLED", onLEDPacket);
-OSAP_Port_Named writeMicroseconds_port("writeMicroseconds", writeMicroseconds);
+OSAP_Port_Named readAccGyro_port("readAccGyro", readAccGyro);
 
 void setup() {
   osap.begin();
@@ -55,9 +71,15 @@ void setup() {
   pinMode(PIN_LED_B, OUTPUT);
   updateRGB();
 
-  servo.attach(PIN_SERVO);
+  IMU.begin();
 }
 
 void loop() {
+  if (IMU.accelerationAvailable()) {
+    IMU.readAcceleration(x, y, z);
+  }
+  if (IMU.gyroscopeAvailable()) {
+    IMU.readGyroscope(rx, ry, rz);
+  }
   osap.loop();
 }

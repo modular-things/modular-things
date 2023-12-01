@@ -1,26 +1,11 @@
 #include <osap.h>
 
-// -------------------------- Define Pins for R,G and B LEDs, and two buttons
-#define PIN_LED_R 17
-#define PIN_LED_G 16
-#define PIN_LED_B 25
-
 #define PIN_A 29
 #define PIN_B 6
 
-// -------------------------- Instantiate the OSAP Runtime, 
-
 OSAP_Runtime osap;
 
-// -------------------------- Instantiate a link layer, 
-// handing OSAP the built-in Serial object to send packetized 
-// data around the network 
-
 OSAP_Gateway_USBSerial serLink(&Serial);
-
-// -------------------------- Adding this software-defined port 
-// allows remote services to find the type-name of this device (here "rgbb")
-// and to give it a unique name, that will be stored after reset 
 
 OSAP_Port_DeviceNames namePort("button");
 
@@ -69,34 +54,23 @@ OSAP_Port_Named getButtonStateB("getButtonB", onButtonBReq);
 OSAP_Port_Named setRGB("setRGB", onRGBPacket);
 OSAP_Port_Named setLED("setLED", onLEDPacket);
 
-// -------------------------- Arduino Setup
-
 void setup() {
-  // startup the OSAP runtime,
   osap.begin();
-  // setup our hardware... 
   analogWriteResolution(8);
   pinMode(PIN_LED_R, OUTPUT);
   pinMode(PIN_LED_G, OUTPUT);
   pinMode(PIN_LED_B, OUTPUT);
   updateRGB();
-  
+
   pinMode(PIN_A, INPUT_PULLUP);
   pinMode(PIN_B, INPUT_PULLUP);
 }
 
-// we debounce the button somewhat 
-
 uint32_t debounceDelay = 5;
 uint32_t lastButtonCheck = 0;
 
-// -------------------------- Arduino Loop
-
 void loop() {
-  // as often as possible, we want to operate the OSAP runtime, 
-  // this loop listens for messages on link-layers, and handles packets... 
   osap.loop();
-  // debounce and set button states, 
   if (millis() > lastButtonCheck + debounceDelay) {
     lastButtonCheck = millis();
     buttonStateA = !digitalRead(PIN_A);

@@ -1,21 +1,32 @@
 #include <osap.h>
-#include <Servo.h>
+#include <VL53L1X.h> // https://www.arduino.cc/reference/en/libraries/vl53l1x/ (pololu version)
 
-#define PIN_SERVO 29
+#define PIN_XSHUT 29
 
-Servo servo;
+VL53L1X sensor;
 
 OSAP_Runtime osap;
+
 OSAP_Gateway_USBSerial serLink(&Serial);
-OSAP_Port_DeviceNames namePort("servo");
+
+OSAP_Port_DeviceNames namePort("distance");
 
 uint8_t rgb[3] = {0, 0, 255};
 boolean ledState = false;
 
-void writeMicroseconds(uint8_t* data, size_t len) {
-  uint16_t pulse_us = data[0] << 8 + data[1];
+uint16_t value = 0;
 
-  servo.writeMicroseconds(pulse_us);
+size_t onDistanceReq(uint8_t* data, size_t len, uint8_t* reply){
+  if (sensor.timeoutOccurred()) {
+    reply[0] = 0;
+  } else {
+    sensor.read();
+    uint16_t value = sensor.ranging_data.range_mm;
+    reply[0] = 1;
+    reply[1] = value & 0xFF;
+    reply[2] = value >> 8 & 0xFF;
+  }
+  return 3;
 }
 
 void updateRGB() {
@@ -45,7 +56,7 @@ void onLEDPacket(uint8_t* data, size_t len){
 
 OSAP_Port_Named setRGB("setRGB", onRGBPacket);
 OSAP_Port_Named setLED("setLED", onLEDPacket);
-OSAP_Port_Named writeMicroseconds_port("writeMicroseconds", writeMicroseconds);
+OSAP_Port_Named getDistance("getDistance", onDistanceReq);
 
 void setup() {
   osap.begin();
@@ -54,8 +65,21 @@ void setup() {
   pinMode(PIN_LED_G, OUTPUT);
   pinMode(PIN_LED_B, OUTPUT);
   updateRGB();
+  pinMode(PIN_XSHUT, OUTPUT);
+  digitalWrite(PIN_XSHUT, HIGH);
+  Wire.begin();
+  Wire.setClock(400000); // use 400 kHz I2C
 
-  servo.attach(PIN_SERVO);
+  sensor.setTimeout(500);
+  if (!sensor.init()) {
+    Serial.println("Failed to detect and initialize sensor!");
+    while (1);
+  }
+
+  sensor.setDistanceMode(VL53L1X::Long);
+  sensor.setMeasurementTimingBudget(50000);
+
+  sensor.startContinuous(50);
 }
 
 void loop() {

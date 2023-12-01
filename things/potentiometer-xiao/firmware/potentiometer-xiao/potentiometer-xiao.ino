@@ -1,25 +1,10 @@
 #include <osap.h>
 
-// -------------------------- Define Pins for R,G and B LEDs, and two buttons
-#define PIN_LED_R 17
-#define PIN_LED_G 16
-#define PIN_LED_B 25
-
 #define PIN_POT 26
-
-// -------------------------- Instantiate the OSAP Runtime, 
 
 OSAP_Runtime osap;
 
-// -------------------------- Instantiate a link layer, 
-// handing OSAP the built-in Serial object to send packetized 
-// data around the network 
-
 OSAP_Gateway_USBSerial serLink(&Serial);
-
-// -------------------------- Adding this software-defined port 
-// allows remote services to find the type-name of this device (here "rgbb")
-// and to give it a unique name, that will be stored after reset 
 
 OSAP_Port_DeviceNames namePort("potentiometer");
 
@@ -63,31 +48,22 @@ OSAP_Port_Named getPotentiometerState("getPotentiometerState", onPotentiometerRe
 OSAP_Port_Named setRGB("setRGB", onRGBPacket);
 OSAP_Port_Named setLED("setLED", onLEDPacket);
 
-// -------------------------- Arduino Setup
-
 void setup() {
-  // startup the OSAP runtime,
   osap.begin();
-  // setup our hardware... 
   analogWriteResolution(8);
   pinMode(PIN_LED_R, OUTPUT);
   pinMode(PIN_LED_G, OUTPUT);
   pinMode(PIN_LED_B, OUTPUT);
   updateRGB();
-  
+
   pinMode(PIN_POT, INPUT);
 }
 
-  uint32_t debounceDelay = 5;
+uint32_t debounceDelay = 5;
 uint32_t lastValueCheck = 0;
 
-// -------------------------- Arduino Loop
-
 void loop() {
-  // as often as possible, we want to operate the OSAP runtime, 
-  // this loop listens for messages on link-layers, and handles packets... 
   osap.loop();
-  // debounce and set button states, 
   if (millis() > lastValueCheck + debounceDelay) {
     value = analogRead(PIN_POT);
     lastValueCheck = millis();
