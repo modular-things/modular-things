@@ -1,34 +1,34 @@
 # Modular Things TODO
 
-## Project
+## Things Management 
+
+- `_things.json` and `index.ts` should merge 
+- would like to manage i.e. multiple firmwares per circuit, and versioning
+  - circuit date-codes, serialization, UUID's ? 
+
+## Better Auto Building
+
+- there's a meta abt site build systems, etc; it would be preferrable to scrape /things to rollup resources. 
+
+## Examples and Example Management 
+
+- consider examples: how do we specify which-things should be present, in which config, etc ? ffs ? 
+
+## Standalones 
 
 - how 2 bundle modular-things out as a library ? 
-  - do `new Thing()` for ease-of-use, 
-- relocate things, circuits to /things 
-- consider examples: how do we specify which-things should be present, in which config, etc ? ffs ? this is the issue... 
+- do `let device = await new <Device>()` to get a module, throws error if thing ain't available 
 
-## Odds / Ends
+## API Odds / Ends
 
-- headless / standalone things proto ? xylophone ? 
-- update your-own node to hot-new-shit lol 
-- repo should note ?file=... 
-- arduino codes should have i.e. links to earle, etc 
 - motor... velocity API: set-max / use-max ?
   - better API would be .setUnitsPerRevolution() (we can have both) 
-- tell people they can cut lengths 
-- tell people to not plug motors in b4 loading firmware onto motors 
 - unfk /things some more, or comprehend / sort it for all of the stable circuits... 
 
-## Circuit Docs Website 
+## API Questions
 
-Leo made a prototype of this using astro, see `/src/pages/things/[name].astro` and `index.astro` - pretty quick to get a sense for how this works. Some improvements would be:
-
-- pages not styled... 
-- pages should pull .jpg *or* .png for example, we should be able to resolve both within the build script 
-- current system resolves `raw.githubusercontent.com/...` absolute URLs, meaning local dev would bonk, can't we use relative ? 
-- current system can't manage multiple folders of 'things' ... 
-- it would be rad to have 'tags' on circuits... 
-- ibid if we could use a build routine to write `things/index.ts` as well ! 
+- APIs could be natively blocking with optional 'await' semantics, 
+  - 'await' is useful i.e. when we want to sync a bunch'a motors, but is mostly confusing for beginners 
 
 ## Ergo-Nomics
 
@@ -40,7 +40,6 @@ Leo made a prototype of this using astro, see `/src/pages/things/[name].astro` a
 
 - collapse docs on objects 
 - compat warning
-- machine set-up/config
 - typescript types
 - error messages
 - console tab
@@ -51,15 +50,6 @@ Leo made a prototype of this using astro, see `/src/pages/things/[name].astro` a
   - program scope available
 - create graph/node editor
 - visualize osap graph
-- event handler for when modules are added
-- be able to access list of 
-- [x] deploy
-- [x] view window
-- [x] run programs with imports
-
-## Firmwares
-
-- sequential motion control
 
 ## Hardware
 
@@ -69,6 +59,8 @@ Leo made a prototype of this using astro, see `/src/pages/things/[name].astro` a
 
 - nice machine interface
 - computer vision integration
+
+## On the Meta 
 
 Pairing virtual objects with hardware devices leads to versioning issues. This makes a strong case for self-describing devices.
 
