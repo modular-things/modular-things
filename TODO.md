@@ -1,10 +1,10 @@
-# TODO
+# Modular Things TODO
 
 ## Project
 
-- bundle modular-things out to standalone library-ish 
+- how 2 bundle modular-things out as a library ? 
+  - do `new Thing()` for ease-of-use, 
 - relocate things, circuits to /things 
-- do `new Thing()` for ease-of-use, 
 - consider examples: how do we specify which-things should be present, in which config, etc ? ffs ? this is the issue... 
 
 ## Odds / Ends
