@@ -5,90 +5,132 @@ things = things[0].default;
 ---
 
 <head>
-  <meta charset="utf-8">
-  <base href="/modular-things/things/">
+  <meta charset="utf-8" />
+  <base href="/modular-things/things/" />
 </head>
 
 <body>
+  <style>
+    body {
+      margin: 0px;
+      padding: 0px;
+      background: #eeeeee;
+      font-family: Helvetica, Arial, Sans-Serif;
+    }
 
-<style>
+    .top-menu {
+      cursor: default;
+      display: flex;
+      align-items: center;
+      background: #33e;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+      border-bottom: solid 0.3px black;
+      font-size: 0.95em;
+      position: relative;
+    }
 
-  body {
-    margin: 0px;
-    padding: 0px;
-    background: #eeeeee;
-    font-family: Helvetica,Arial,Sans-Serif;
-  }
+    .menu-item {
+      color: white;
+      padding-left: 16px;
+      padding-right: 16px;
+      padding-top: 8px;
+      padding-bottom: 8px;
+      border-radius: 5px;
+    }
 
-  .title {
-    padding: .6rem 2rem;
-    font-size: 2rem;
-    background: #33e;
-    color: white;
-  }
+    .menu-item a {
+      color: white;
+      text-decoration: none;
+    }
 
-  .things-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    width: 100%;
-    padding-top: 2rem;
-  }
+    .menu-item:hover {
+      background: #4848f1; /* very similar to opacity 0.9 */
+    }
 
-  .thing-entry {
-    color: inherit;
-    text-decoration: none;
-    font-weigth: normal;
+    .menu-title {
+      font-size: 1.1em;
+      font-weight: bold;
+      padding-left: 10px;
+      padding-right: 10px;
+      color: white;
+    }
 
-    border: 2px solid black;
-    width: 300px;
-    aspect-ratio: 1;
-    border-radius: .5rem;
-    cursor: pointer;
-    background: white;
-    margin: 1rem;
-  }
+    .things-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      width: 100%;
+      padding-top: 2rem;
+    }
 
-  .thing-entry:hover {
-    background: #ffad0a8f;
-  }
+    .thing-entry {
+      color: inherit;
+      text-decoration: none;
+      font-weigth: normal;
+      border: 2px solid black;
+      width: 300px;
+      aspect-ratio: 1;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      background: white;
+      margin: 1rem;
+    }
 
-  .entry-title {
-    padding: .5rem;
-  }
+    .thing-entry:hover {
+      background: #ffad0a8f;
+    }
 
-  .entry-name {
-    font-size: 1.5rem;
-    text-align: center;
-  }
+    .entry-title {
+      padding: 0.5rem;
+    }
 
-  .entry-author {
-    font-size: .9rem;
-    color: #908686;
-    text-align: center;
-  }
-</style>
+    .entry-name {
+      font-size: 1.5rem;
+      text-align: center;
+    }
 
-<div class="title">Check out our collection of modular things!</div>
+    .entry-author {
+      font-size: 0.9rem;
+      color: #908686;
+      text-align: center;
+    }
+  </style>
 
-<div class="things-container">
-  {things.map(t => {
-
-    return <a class="thing-entry" href={`${t.name}`}>
-      <div class="entry-title">
-        <div class="entry-name">{t.name}</div>
-        <div class="entry-author">{t.author}</div>
+  <div class="top-menu">
+    <div class="menu-title">Modular Things / things</div>
+    <div class="menu-item"><a href="../">editor</a></div>
+    <div class="menu-item" style="position: absolute; right: 10px;">
+      <a target="new" href={`https://github.com/modular-things/modular-things/tree/main/things/`}>
+        /things on GitHub
+      </a>
       </div>
-      <div style={`
-        background-image: url("https://raw.githubusercontent.com/modular-things/modular-things/main/things/${t.name}/${t.images[0].src}");
-        background-size: cover;
-        background-position: center center;
-        background-repeat: no-repeat;
-        width: 100%;
-        aspect-ratio: 1;
-      `}/>
-    </a>
-  })}
-</div>
+  </div>
 
+  <div class="things-container">
+    {
+      things.map((t) => {
+        return (
+          <a class="thing-entry" href={`${t.name}`}>
+            <div class="entry-title">
+              <div class="entry-name">{t.name}</div>
+              <div class="entry-author">{t.author}</div>
+            </div>
+            <div
+              style={`
+                      background-image: url("https://raw.githubusercontent.com/modular-things/modular-things/main/things/${t.name}/${t.images[0].src}");
+                      background-size: cover;
+                      background-position: center center;
+                      background-repeat: no-repeat;
+                      width: 100%;
+                      aspect-ratio: 1;
+                    `}
+            />
+          </a>
+        );
+      })
+    }
+  </div>
 </body>

@@ -25,6 +25,7 @@
 
 .menu-item:hover {
   background: var(--light-blue);
+  cursor: pointer;
 }
 
 .menu-title {

@@ -28,6 +28,10 @@ export function init(state) {
     download("anon.js", str);
   });
 
+  bodyListener("click", ".things-button", () => {
+    window.location.href = "/modular-things/things"
+  })
+
   // bodyListener("click", ".scan-button-trigger", () => { });
 
   bodyListener("click", ".pair-button-trigger", async () => {

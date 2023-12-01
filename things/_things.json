@@ -2,7 +2,8 @@
   {
     "author": "Quentin Bolsee",
     "name": "accel-LSM6DSO-xiao",
-    "software": "software/accelerometer.js",
+    "software": "software/accelerometer.ts",
+    "firmware": "firmware/accelerometer-xiao/accelerometer-xiao.ino",
     "images": [
       { 
         "name": "layout", 
@@ -22,6 +23,7 @@
     "author": "Quentin Bolsee",
     "name": "button-xiao",
     "software": "software/button.ts",
+    "firmware": "firmware/button-xiao/button-xiao.ino",
     "images": [
       { 
         "name": "layout", 
@@ -41,6 +43,7 @@
     "author": "Quentin Bolsee",
     "name": "display-OLED-xiao",
     "software": "software/display.js",
+    "firmware": "firmware/display-xiao/display-xiao.ino",
     "images": [
       { 
         "name": "layout", 
@@ -60,6 +63,7 @@
     "author": "Quentin Bolsee",
     "name": "distance-VL53L1-xiao",
     "software": "software/distance.js",
+    "firmware": "firmware/distance-xiao/distance-xiao.ino",
     "images": [
       { 
         "name": "layout", 
@@ -94,7 +98,7 @@
   {
     "author": "Quentin Bolsee",
     "name": "potentiometer-xiao",
-    "firmware": "firmware/potentiometer-xiao/potentiometer-thing.ino",
+    "firmware": "firmware/potentiometer-xiao/potentiometer-xiao.ino",
     "software": "software/potentiometer.js",
     "images": [
       { 
@@ -127,6 +131,7 @@
     "author": "Jake Read",
     "name": "stepper-hbridge-xiao",
     "software": "software/stepper.ts",
+    "firmware": "firmware/simple-stepper/simple-stepper.ino",
     "images": [
       { 
         "name": "layout", 

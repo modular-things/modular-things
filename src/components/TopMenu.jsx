@@ -34,7 +34,8 @@ export default function TopMenu() {
         </div>
       </div>
       <div class={[styles["menu-item"], "download-button"].join(" ")}>download</div>
-      <a style={githubLogoStyle} href="https://github.com/modular-things/modular-things">
+      <div class={[styles["menu-item"], "things-button"].join(" ")}>things</div>
+      <a style={githubLogoStyle} target="new" href="https://github.com/modular-things/modular-things">
         <i class="fa fa-github" style="font-size:24px"></i>
       </a>
     </div>
