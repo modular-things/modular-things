@@ -84,7 +84,6 @@ export default class Stepper extends Thing {
 
 
   // tell me about your steps-per-unit,
-  // note that FW currently does 1/4 stepping: 800 steps / revolution
   setStepsPerUnit(spu: number) {
     this.spu = spu;
   }

@@ -3,41 +3,63 @@
 // MIT license 2022
 
 // let's calculate the steps-per-unit,
-let circ = 64.5;
+let circ = 40;
 
-// with 800 steps per revolution,
-let spu = 800 / circ;
+// with 200 steps per revolution,
+let spu = [200 / circ, -200 / circ];
 
 // in mm
 let noteInterval = 23.925;
 
 // offset of 1st note from origin, mm
-let noteOffset = [20.0, 38.0];
+let noteOffset = [0.0, 0.0];
+
+// things
+let motors = [topMotor, bottomMotor];
+let mallets = [topFet, bottomFet];
+
+// in ms
+let noteDuration = 250;
+
+// in ms, 
+let notePulseTime = 20;
+
+// in 0-1, effort 
+let notePulseDuty = 1;
+
+// in units / sec
+let noteJogRate = 250;
 
 // padding at the beginning
 // should give enough time for to reach 1st note
 function pad_song(song, n_pad) {
-  for (let i=0; i < n_pad; i++) {
+  for (let i = 0; i < n_pad; i++) {
     song.unshift([0, 0]);
   }
+}
+
+let sleep = (ms) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, ms);
+  })
 }
 
 function assign_moves(song, moves1, moves2, thwaps1, thwaps2) {
   var n1, n2, pos1, pos2, i_last1, i_last2;
   var m1, m2;
-  pos1=0;
-  pos2=0;
-  i_last1=0;
-  i_last2=0;
+  pos1 = 0;
+  pos2 = 0;
+  i_last1 = 0;
+  i_last2 = 0;
 
-  for (let i=0; i < song.length; i++) {
+  for (let i = 0; i < song.length; i++) {
     n1 = song[i][0];
     n2 = song[i][1];
     if (n1 == 0 && n2 == 0)
       continue;
     if (n1 != 0 && n2 != 0) {
-      let max_dist = Math.max(Math.abs(n1-pos1), Math.abs(n2-pos2));
-      let max_dist_alt = Math.max(Math.abs(n2-pos1), Math.abs(n1-pos2));
+      let max_dist = Math.max(Math.abs(n1 - pos1), Math.abs(n2 - pos2));
+      let max_dist_alt = Math.max(Math.abs(n2 - pos1), Math.abs(n1 - pos2));
       if (max_dist_alt < max_dist) {
         moves1[i_last1] = n2;
         moves2[i_last2] = n1;
@@ -81,12 +103,8 @@ function assign_moves(song, moves1, moves2, thwaps1, thwaps2) {
 
 let thwap = async (m = 0, op = true) => {
   try {
-    if (!op)
-      return;
-    await mallets[m].setGate(1);
-    setTimeout(async () => {
-      await mallets[m].setGate(0);
-    }, 5)
+    if (!op){ return; }
+    await mallets[m].pulseGate(notePulseDuty, notePulseTime);
   } catch (err) {
     console.error(err);
   }
@@ -172,8 +190,8 @@ const whack2 = el.querySelector(".whack2");
 
 const { width, height } = whack1.getBoundingClientRect();
 
-const cellWidth = width/32;
-const cellHeight = height/14;
+const cellWidth = width / 32;
+const cellHeight = height / 14;
 
 const whack1Music = {};
 const whack2Music = {};
@@ -187,8 +205,8 @@ for (let x = 0; x < 32; x++) {
     whackIndicator1.classList.add("whack-indicator");
     whackIndicator1.classList.add(`whack-x${x}-y${y}`);
     whackIndicator1.classList.add(`whack-off`);
-    whackIndicator1.style.left = `${x*cellWidth}px`;
-    whackIndicator1.style.top = `${y*cellHeight}px`;
+    whackIndicator1.style.left = `${x * cellWidth}px`;
+    whackIndicator1.style.top = `${y * cellHeight}px`;
     whackIndicator1.style.width = `${cellWidth}px`;
     whackIndicator1.style.height = `${cellHeight}px`;
     whack1.append(whackIndicator1);
@@ -197,8 +215,8 @@ for (let x = 0; x < 32; x++) {
     whackIndicator2.classList.add("whack-indicator");
     whackIndicator2.classList.add(`whack-x${x}-y${y}`);
     whackIndicator2.classList.add(`whack-off`);
-    whackIndicator2.style.left = `${x*cellWidth}px`;
-    whackIndicator2.style.top = `${y*cellHeight}px`;
+    whackIndicator2.style.left = `${x * cellWidth}px`;
+    whackIndicator2.style.top = `${y * cellHeight}px`;
     whackIndicator2.style.width = `${cellWidth}px`;
     whackIndicator2.style.height = `${cellHeight}px`;
     whack2.append(whackIndicator2);
@@ -208,12 +226,12 @@ for (let x = 0; x < 32; x++) {
 for (let i = 0; i < 32; i++) {
   const el1 = document.createElement("div");
   el1.classList.add("vertical-bar");
-  el1.style.left = `${cellWidth*i}px`;
+  el1.style.left = `${cellWidth * i}px`;
   whack1.append(el1);
 
   const el2 = document.createElement("div");
   el2.classList.add("vertical-bar");
-  el2.style.left = `${cellWidth*i}px`;
+  el2.style.left = `${cellWidth * i}px`;
   whack2.append(el2);
 }
 
@@ -221,12 +239,12 @@ for (let i = 0; i < 32; i++) {
 for (let i = 0; i < 14; i++) {
   const el1 = document.createElement("div");
   el1.classList.add("horizontal-bar");
-  el1.style.top = `${cellHeight*i}px`;
+  el1.style.top = `${cellHeight * i}px`;
   whack1.append(el1);
 
   const el2 = document.createElement("div");
   el2.classList.add("horizontal-bar");
-  el2.style.top = `${cellHeight*i}px`;
+  el2.style.top = `${cellHeight * i}px`;
   whack2.append(el2);
 }
 
@@ -239,10 +257,10 @@ function getMouse(e, el) {
 
 
 whack1.addEventListener("click", (e) => {
-  const [xpx, ypx ] = getMouse(e, whack1);
+  const [xpx, ypx] = getMouse(e, whack1);
 
-  const x = Math.floor(xpx/width*32);
-  const y = Math.floor(ypx/height*14)-1;
+  const x = Math.floor(xpx / width * 32);
+  const y = Math.floor(ypx / height * 14) - 1;
   const key = `${x}_${y}`;
   const og = whack1Music[key];
 
@@ -261,10 +279,10 @@ whack1.addEventListener("click", (e) => {
 })
 
 whack2.addEventListener("click", (e) => {
-  const [ xpx, ypx ] = getMouse(e, whack2);
+  const [xpx, ypx] = getMouse(e, whack2);
 
-  const x = Math.floor(xpx/width*32);
-  const y = Math.floor(ypx/height*14)-1;
+  const x = Math.floor(xpx / width * 32);
+  const y = Math.floor(ypx / height * 14) - 1;
   const key = `${x}_${y}`;
   const og = whack2Music[key];
 
@@ -284,7 +302,6 @@ whack2.addEventListener("click", (e) => {
 
 function getSong() {
   const song = [];
-
 
   for (let x = 0; x < 32; x++) {
 
@@ -324,19 +341,14 @@ el.querySelector("button").addEventListener("click", () => {
   console.log(whack1Music, whack2Music);
 })
 
-// things
-let motors = [aMotor, bMotor];
-let mallets = [aMallet, bMallet];
-
 
 async function play_song(song) {
   // config
-  for (let m of motors) {
-    await m.setPosition(0);
-    await m.setStepsPerUnit(spu);
-    await m.setCurrentScale(0.8);
-    await m.setAccel(10000);
-    await m.setVelocity(400);
+  for (let m = 0; m < motors.length; m++) {
+    await motors[m].setPosition(0);
+    await motors[m].setStepsPerUnit(spu[m]);
+    await motors[m].setCurrent(1.0);
+    await motors[m].setAccel(1000);
   }
 
   pad_song(song, 1);
@@ -357,7 +369,7 @@ async function play_song(song) {
   // first note
   for (let m = 0; m < 2; m++) {
     if (moves[m][0] > 0)
-      motors[m].absolute(note_to_pos(moves[m][0], m));
+      motors[m].absolute(note_to_pos(moves[m][0], m), noteJogRate);
   }
   for (let m = 0; m < 2; m++) {
     await motors[m].awaitMotionEnd();
@@ -367,14 +379,14 @@ async function play_song(song) {
   for (let s = 1; s < song.length; s++) {
     try {
       console.warn(s);
-      for (let m = 0; m < 2; m++){
+      for (let m = 0; m < 2; m++) {
         // thwap if needed
         if (thwaps[m][s])
           // true
           await thwap(m);
         // move if needed
         if (moves[m][s] > 0)
-          motors[m].absolute(note_to_pos(moves[m][s], m));
+          motors[m].absolute(note_to_pos(moves[m][s], m), noteJogRate);
       }
       await sleep(noteDuration);
     } catch (err) {
@@ -385,10 +397,10 @@ async function play_song(song) {
 
   // well that was fun, now back to origin
   for (let m = 0; m < 2; m++) {
-    await motors[m].absolute(0);
+    await motors[m].absolute(0, noteJogRate);
   }
   for (let m = 0; m < 2; m++) {
     await motors[m].awaitMotionEnd();
-    await motors[m].setCurrentScale(0);
+    await motors[m].setCurrent(0);
   }
 }

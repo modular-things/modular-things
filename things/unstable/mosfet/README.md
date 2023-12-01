@@ -1,4 +1,6 @@
-## Low-Side MOSFET
-
-![board](circuit/routed.jpg)
-![schem](circuit/schematic.jpg)
+---
+author: Jake Read
+name: low-fet
+schematic: circuit/schematic.jpg
+layout: circuit/board.jpg
+---

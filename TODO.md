@@ -5,6 +5,19 @@
 - bundle modular-things out to standalone library-ish 
 - relocate things, circuits to /things 
 - do `new Thing()` for ease-of-use, 
+- consider examples: how do we specify which-things should be present, in which config, etc ? ffs ? this is the issue... 
+
+## Odds / Ends
+
+- headless / standalone things proto ? xylophone ? 
+- update your-own node to hot-new-shit lol 
+- repo should note ?file=... 
+- arduino codes should have i.e. links to earle, etc 
+- motor... velocity API: set-max / use-max ?
+  - better API would be .setUnitsPerRevolution() (we can have both) 
+- tell people they can cut lengths 
+- tell people to not plug motors in b4 loading firmware onto motors 
+- unfk /things some more, or comprehend / sort it for all of the stable circuits... 
 
 ## Circuit Docs Website 
 
