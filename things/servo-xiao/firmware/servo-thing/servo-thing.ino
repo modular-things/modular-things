@@ -1,7 +1,7 @@
 #include <osap.h>
 #include <Servo.h>
 
-#define PIN_SERVO 8
+#define PIN_SERVO 29
 
 Servo servo;
 

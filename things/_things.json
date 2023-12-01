@@ -1,0 +1,129 @@
+[
+  {
+    "author": "Quentin Bolsee",
+    "name": "accel-LSM6DSO-xiao",
+    "software": "software/accelerometer.js",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.png"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.png"
+      },
+      { 
+        "name": "preview", 
+        "src": "circuit/images/preview.png"
+      }
+    ]
+  },
+  {
+    "author": "CBA",
+    "name": "button-xiao",
+    "software": "software/button.ts",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.png"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.png"
+      },
+      { 
+        "name": "preview", 
+        "src": "circuit/images/preview.png"
+      }
+    ]
+  },
+  {
+    "author": "CBA",
+    "name": "display-OLED-xiao",
+    "software": "software/display.js",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.png"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.png"
+      },
+      { 
+        "name": "preview", 
+        "src": "circuit/images/preview.png"
+      }
+    ]
+  },
+  {
+    "author": "CBA",
+    "name": "distance-VL53L1-xiao",
+    "software": "software/distance.js",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.png"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.png"
+      },
+      { 
+        "name": "preview", 
+        "src": "circuit/images/preview.png"
+      }
+    ]
+  },
+  {
+    "author": "CBA",
+    "name": "potentiometer-xiao",
+    "firmware": "firmware/potentiometer-xiao/potentiometer-thing.ino",
+    "software": "software/potentiometer.js",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.png"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.png"
+      }
+    ]
+  },
+  {
+    "author": "Jake Read",
+    "name": "mosfet-xiao",
+    "firmware": "firmware/mosfet-thing/mosfet-thing.ino",
+    "software": "software/mosfet.ts",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.jpg"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.jpg"
+      }
+    ]
+  },
+  {
+    "author": "Jake Read",
+    "name": "stepper-hbridge-xiao",
+    "software": "software/stepper.ts",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.jpg"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.jpg"
+      },
+      { 
+        "name": "fabbed", 
+        "src": "circuit/images/fabbed.jpg"
+      }
+    ]
+  }
+]

@@ -1,33 +1,19 @@
-import rgbb from "./rgbb/software/rgbb";
-// import capacitive from "./capacitive/capacitive.js"
-// import timeOfFlight from "./timeOfFlight/timeOfFlight";
 import mosfet from "./mosfet-xiao/software/mosfet";
-import accelerometer from "./accel-bno085-xiao/software/accelerometer";
-// import oled from "./oled/oled";
-// import potentiometer from "./potentiometer/potentiometer";
-import servo from "./servo-xiao/software/servo";
-import stepper from "./stepper-hbridge-xiao/software/stepper";                                  // the uncomplicated stepper 
-// import maxlStepper from "./maxlStepper/maxlStepper";                      // maxl stepper
-// import haxidrawController from "./haxidrawController/haxidrawController";
-// import maxlAccelerometer from "./virtualThings/maxl-accelerometer";    // as below 
-// import neopixelThing from "./virtualThings/maxl/neopixelThing";        // historical / from MAXL demos 
-// import bedHeater from "./virtualThings/bedHeater";
-// import hotend from "./virtualThings/hotend"
+import stepper from "./stepper-hbridge-xiao/software/stepper";                                  // the uncomplicated stepper
+// import accelerometer from "./accel-LSM6DSO-xiao/software/accelerometer";
+import button from "./button-xiao/software/button";
+// import display from "./display-OLED-xiao/software/display";
+// import distance from "./distance-VL53L1-xiao/software/distance";
+import potentiometer from "./potentiometer-xiao/software/potentiometer";
+// import servo from "./servo-xiao/software/servo";
 
 export default {
-  rgbb,
-  stepper,
   mosfet,
-  servo,
+  stepper,
   // accelerometer,
-  // maxlStepper,
-  // capacitive,
-  // timeOfFlight,
-  // oled,
-  // potentiometer,
-  // maxlAccelerometer,  
-  // neopixelThing,       
-  // bedHeater,
-  // hotend, 
-  // haxidrawController
+  button,
+  // display,
+  // distance,
+  potentiometer,
+  // servo,
 };
