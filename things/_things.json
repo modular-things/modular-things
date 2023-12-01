@@ -19,7 +19,7 @@
     ]
   },
   {
-    "author": "CBA",
+    "author": "Quentin Bolsee",
     "name": "button-xiao",
     "software": "software/button.ts",
     "images": [
@@ -38,7 +38,7 @@
     ]
   },
   {
-    "author": "CBA",
+    "author": "Quentin Bolsee",
     "name": "display-OLED-xiao",
     "software": "software/display.js",
     "images": [
@@ -57,7 +57,7 @@
     ]
   },
   {
-    "author": "CBA",
+    "author": "Quentin Bolsee",
     "name": "distance-VL53L1-xiao",
     "software": "software/distance.js",
     "images": [
@@ -76,7 +76,23 @@
     ]
   },
   {
-    "author": "CBA",
+    "author": "Jake Read",
+    "name": "mosfet-xiao",
+    "firmware": "firmware/mosfet-thing/mosfet-thing.ino",
+    "software": "software/mosfet.ts",
+    "images": [
+      { 
+        "name": "layout", 
+        "src": "circuit/images/layout.jpg"
+      },
+      { 
+        "name": "schematic", 
+        "src": "circuit/images/schematic.jpg"
+      }
+    ]
+  },
+  {
+    "author": "Quentin Bolsee",
     "name": "potentiometer-xiao",
     "firmware": "firmware/potentiometer-xiao/potentiometer-thing.ino",
     "software": "software/potentiometer.js",
@@ -92,18 +108,18 @@
     ]
   },
   {
-    "author": "Jake Read",
-    "name": "mosfet-xiao",
-    "firmware": "firmware/mosfet-thing/mosfet-thing.ino",
-    "software": "software/mosfet.ts",
+    "author": "Quentin Bolsee",
+    "name": "servo-xiao",
+    "firmware": "firmware/servo-thing/servo-thing.ino",
+    "software": "software/servo.ts",
     "images": [
       { 
         "name": "layout", 
-        "src": "circuit/images/layout.jpg"
+        "src": "circuit/images/layout.png"
       },
       { 
         "name": "schematic", 
-        "src": "circuit/images/schematic.jpg"
+        "src": "circuit/images/schematic.png"
       }
     ]
   },

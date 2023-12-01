@@ -12,6 +12,7 @@
 
 ## Examples and Example Management 
 
+- `/examples` is not what shows up in the menu, that's `src/lib/SAMPLES.js` ?
 - consider examples: how do we specify which-things should be present, in which config, etc ? ffs ? 
 
 ## Standalones 
