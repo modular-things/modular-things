@@ -10,10 +10,9 @@ OSAP_Gateway_USBSerial serLink(&Serial);
 OSAP_Port_DeviceNames namePort("servo");
 
 void writeMicroseconds(uint8_t* data, size_t len) {
-  uint16_t pulse_us = data[0] * 256 + data[1];
+  uint16_t pulse_us = data[0] << 8 + data[1];
 
   servo.writeMicroseconds(pulse_us);
-
 }
 
 OSAP_Port_Named writeMicroseconds_port("writeMicroseconds", writeMicroseconds);
