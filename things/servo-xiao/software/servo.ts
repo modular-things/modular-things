@@ -4,7 +4,7 @@ import Serializers from '../../../src/lib/osapjs/utils/serializers'
 export default class servo extends Thing {
 
   // calibrated-angle-bounds,
-  private pulseBounds = [1000, 2000] // pulse-width bounds
+  private pulseBounds = [500, 2500] // pulse-width bounds
   private angleBounds = [0, 180]  // angular bounds
 
   async setRGB(r, g, b) {

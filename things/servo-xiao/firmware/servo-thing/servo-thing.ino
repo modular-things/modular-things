@@ -13,7 +13,7 @@ uint8_t rgb[3] = {0, 0, 255};
 boolean ledState = false;
 
 void writeMicroseconds(uint8_t* data, size_t len) {
-  uint16_t pulse_us = data[0] << 8 + data[1];
+  uint16_t pulse_us = data[1] * 256 + data[0];
 
   servo.writeMicroseconds(pulse_us);
 }
@@ -55,7 +55,7 @@ void setup() {
   pinMode(PIN_LED_B, OUTPUT);
   updateRGB();
 
-  servo.attach(PIN_SERVO);
+  servo.attach(PIN_SERVO, 500, 2500);
 }
 
 void loop() {
