@@ -13,7 +13,7 @@ let stepsPerUnit = 1250 / 360
 let motorCurrent = 1.0  
 
 // acceleration to use, units/sec/sec 
-let accel = 3600
+let accel = 1800
 
 // homing settings 
 let backoffSize = 30
@@ -21,7 +21,7 @@ let backoffRate = 360
 let homeRate = 180
 
 // a speed to jog around at 
-let joggingRate = 360
+let joggingRate = 180
 
 
 let setup = async () => {
@@ -52,12 +52,16 @@ let home = async () => {
 await setup();
 await home();
 
+while(true){
+  console.log(await motor.getState());
+  await delay(100);
+}
 
-console.log(`jogging around`)
-await motor.setPosition(0);
-await motor.absolute(extent, joggingRate);
-await motor.absolute(0, joggingRate);
+// console.log(`jogging around`)
+// await motor.setPosition(0);
+// await motor.absolute(extent, joggingRate);
+// await motor.absolute(0, joggingRate);
 
 
-console.log(`powering down`)
-await motor.setCurrent(0)
+// console.log(`powering down`)
+// await motor.setCurrent(0)

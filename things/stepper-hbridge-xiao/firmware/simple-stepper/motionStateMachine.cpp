@@ -28,6 +28,9 @@ volatile fpint64_t  _stopDistance = 0;          // for position control,
 fpint32_t           _maxAccel = 0;              // maximum acceleration
 fpint32_t           _maxVelocity = 0;
 
+// nasty ! 
+fpint32_t           _velEpsilon = 0; 
+
 void motion_init(uint32_t microsecondsPerIntegration){
   // here's our delta-tee for each integration step 
   _delT = fp_floatToFixed32((float)(microsecondsPerIntegration) / 1000000.0F);
@@ -42,6 +45,7 @@ void motion_init(uint32_t microsecondsPerIntegration){
 
   // (optionally) use a debug pin to perf test 
   // pinMode(PIN_DEBUG, OUTPUT);
+  _velEpsilon = fp_floatToFixed32(1.0F);
 }
 
 void alarm_dt_handler(void){
@@ -71,12 +75,20 @@ void motion_calc_mode_velocity(void){
   } else if (_vel > _maxVelocity){
     _accel = -_maxAccel;
   }
-
+  
   // using our chosen accel, integrate velocity from previous: 
   _vel += fp_mult32x32(_accel, _delT); 
 
   // and check against targets 
-  if(_vel > 0 && _maxVelocity > 0 && _vel > _maxVelocity){
+  // TODO: hack-ey velocity-at-target thing (1st if here)
+  // should dead-reckon step intervals, checking a delta, 
+  // but requires that we check which direction we are going (towards velocity) 
+  if( _maxVelocity < _velEpsilon && _maxVelocity > -_velEpsilon &&   // if we are near-zero target velocity, 
+      _vel < _velEpsilon && _vel > -_velEpsilon                     // and we are also ... near that velocity, 
+      ){
+    _accel = 0;
+    _vel = 0;
+  } else if(_vel > 0 && _maxVelocity > 0 && _vel > _maxVelocity){
     _accel = 0;
     _vel = _maxVelocity;
   } else if(_vel < 0 && _maxVelocity < 0 && _vel < _maxVelocity){
