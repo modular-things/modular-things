@@ -30,6 +30,10 @@ You can use the latest modular-things by navigating to [https://modular-things.g
 * run `npm install` within this repo
 * run `npm run dev` to startup a local server !
 
+### Loading Local Files
+
+...modular-things/?file=yourFile.js&panel=devices&panelWidth=70
+
 --- 
 
 # Writing New Modular-Things
