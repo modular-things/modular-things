@@ -14,6 +14,7 @@
 
 - `/examples` is not what shows up in the menu, that's `src/lib/SAMPLES.js` ?
 - consider examples: how do we specify which-things should be present, in which config, etc ? ffs ? 
+- we should have a corexy example with the epsilon-planner... 
 
 ## Standalones 
 
@@ -55,6 +56,7 @@
 ## Hardware
 
 - mcu <-> mcu link layer
+- add svavar's BLDC thing ! 
 
 ## Examples
 
