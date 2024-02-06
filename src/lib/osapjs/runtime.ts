@@ -23,7 +23,7 @@ export default class Runtime {
   constructor() { };
 
   // version... 
-  private version = "0.4.0"
+  private version = "0.5.0"
 
   // stack of runtime's own msgs, 
   stack: Packet[] = [];

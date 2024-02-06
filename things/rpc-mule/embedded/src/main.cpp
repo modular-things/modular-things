@@ -11,6 +11,21 @@
 #define SCREEN_ADDRESS 0x3C
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT);
 
+// we setup osap 
+
+OSAP_Runtime osap;
+
+OSAP_Gateway_USBSerial serLink(&Serial);
+
+OSAP_Port_DeviceNames namePort("rpc-mule");
+
+// TODO
+/*
+ - can it work with void return or void args ?
+ - can it compile on teensy, d51, d21, d11 ... 
+ - is there a simple soln' for no-fancy-compiler 
+*/
+
 // (3) we test a few, 
 
 float oneTwo(bool state, int num){
@@ -42,6 +57,7 @@ OSAP_Port_RPC<decltype(&oneTwo)> rpcOneTwo(&oneTwo, "oneTwo", "state, num");
 void printToScreen(String msg);
 
 void setup() {
+  osap.begin();
   // display setup 
   display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
 
@@ -61,11 +77,13 @@ void setup() {
 }
 
 uint32_t lastBlink = 0;
-uint32_t intervalBlink = 500;
+uint32_t intervalBlink = 100;
 
 uint8_t sigDump[256];
 
 void loop() {
+  osap.loop();
+  
   if(lastBlink + intervalBlink < millis()){
     digitalWrite(PIN_LED_G, !digitalRead(PIN_LED_G));
     lastBlink = millis();

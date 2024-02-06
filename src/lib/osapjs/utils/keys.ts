@@ -61,6 +61,8 @@ let PortTypeKeys = {
   MessageEscapeListener: 8,
   OnePipe: 9, 
   OnePipeListener: 10,
+  AutoRPCImplementer: 11,
+  AutoRPCCaller: 12,
 }
 
 // encodes gateway-type into LGateInfo packets

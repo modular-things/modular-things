@@ -164,8 +164,24 @@ let triggerMapUpdate = async () => {
           // that should be it, whatever else happens after ".things.value" is updated ? 
           // console.log(thing)
           // let res = await thing.setRGB(0.0, 0.0, 0.25);
+        } else if(rt.ports.some((el) => { return el.typeName == "AutoRPCImplementer"})){
+          // at least one port here has the auto RPC,
+          // and we seem already to be assuming everything has some rt.typename, 
+          // so we can rollup a thing, but we can just test this first, one caller for each... 
+          let thing = {
+            callers: []
+          };
+          // and we'll add them up... 
+          for(let p = 0; p < rt.ports.length; p ++){
+            if(rt.ports[p].typeName == "AutoRPCImplementer"){
+              let caller = osap.autoRPCCaller(rt.route, p);
+              await caller.setup();
+              thing.callers.push(caller);
+            }
+          }
+          console.log(rt);
         } else {
-          console.warn(`couldn't find a constructor for a "${rt.typeName}" thing...`)
+          console.warn(`couldn't find a constructor or any auto-rpc calls for this "${rt.typeName}" thing...`)
         }
       }
     } // end add-step, 

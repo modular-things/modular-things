@@ -7,6 +7,7 @@ import Route from "./packets/routes"
 import NamedPortDispatcher from "./port_integrations/namedPortDispatcher";
 import MessageEscapeListener from "./port_integrations/messageEscapeListener";
 import OnePipeListener from "./port_integrations/onePipeListener";
+import AutoRPCCaller from "./port_integrations/autoRPCCaller";
 
 // largely a bundling class, 
 class OSAP {
@@ -25,6 +26,10 @@ class OSAP {
 
   onePipeListener = () => {
     return new OnePipeListener(this.rt);
+  }
+
+  autoRPCCaller = (routeToImplementer: Route, implementerPort: number) => {
+    return new AutoRPCCaller(this.rt, routeToImplementer, implementerPort);
   }
 
   // and search algos... 

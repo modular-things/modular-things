@@ -54,6 +54,9 @@ class OSAP_Port_RPC<Ret(*)(Args...)> : public VPort {
       Ret(*funcPtr)(Args...), const char* functionName, const char* argNames
     ) : VPort(OSAP_Runtime::getInstance())
     {
+      // upd8 our type key,
+      typeKey = PTYPEKEY_AUTO_RPC_IMPLEMENTER;
+      // stash names and the functo 
       _funcPtr = funcPtr;
       strncpy(_functionName, functionName, PRPC_FUNCNAME_MAX_CHAR);
       // count args using ... pattern; this is odd to me:
@@ -95,26 +98,15 @@ class OSAP_Port_RPC<Ret(*)(Args...)> : public VPort {
             size_t wptr = 0;
             _payload[wptr ++] = PRPC_KEY_FUNCRETURN;
             _payload[wptr ++] = data[1];
-            // HERE: instantiate one of each Args... and call the function:
+            // now we deserialize the args into a tuple, 
             size_t rptr = 2;
-            // again, lol 
-            // make the ... tuple ? 
             auto argsTuple = deserializeArgs<Args...>(data, &rptr);
-            // Call the function with deserialized arguments
+            // and call the function using std::apply... 
             Ret result = std::apply(_funcPtr, argsTuple);
-            // we make a tuple w/ them args 
-            // std::tuple<Args...> args;
-            // // DESERIALIZE
-            // Ret result = std::apply(_funcPtr, args);
-            // Ret result = CallHelper<sizeof...(Args), Ret(*)(Args...), Ret>::callFunc(_funcPtr, data, len);
-            // "args..."
-            // bool arg1 = deserialize(data, &rptr);
-            // int arg2 = deserialize(data, &rptr);
-            // float returnVar = _funcPtr(arg1, arg2);
-            // Ret result = callFunc(_funcPtr, data, &rptr);
-            // Ret result = callFunc<sizeof...(Args), Ret, Ret(*)(Args...)>(_funcPtr, data + 2);
-            // Ret result = _funcPtr();
-            // Ret result = callFunc<sizeof...(Args), Ret(*)(Args...), Ret>(_funcPtr, data, len);
+            // and we can serialize the result into the pckt 
+            serialize<Ret>(result, _payload, &wptr);
+            // that'd be it, we can sendy:
+            send(_payload, wptr, sourceRoute, sourcePort);
           }
         default:
           OSAP_Runtime::error("bad onPacket key to PRPC");
