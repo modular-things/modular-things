@@ -28,13 +28,13 @@ OSAP_Port_DeviceNames namePort("rpc-mule");
 
 // (3) we test a few, 
 
-float oneTwo(bool state, int num){
+float testFunction(bool state, int num){
   return 0.1F;
 }
 
 // FunctionTraits<decltype(&oneTwo)> traitsOneTwo(&oneTwo, "oneTwo", "state, num");
 
-OSAP_Port_RPC<decltype(&oneTwo)> rpcOneTwo(&oneTwo, "oneTwo", "state, num");
+OSAP_Port_RPC<decltype(&testFunction)> rpcOneTwo(&testFunction, "testFunction", "state, num");
 
 // void voidTwo(bool state, float num){
 //   state = !state;
@@ -58,6 +58,7 @@ void printToScreen(String msg);
 
 void setup() {
   osap.begin();
+  osap.attachDebugFunction(printToScreen);
   // display setup 
   display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
 

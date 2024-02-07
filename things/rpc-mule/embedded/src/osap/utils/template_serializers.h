@@ -2,6 +2,7 @@
 #define TEMPLATE_SERIALIZERS_H_
 
 #include <Arduino.h>
+#include "../osap.h"
 
 // --------------------------  Key Codes 
 
@@ -9,6 +10,7 @@
 #define TYPEKEY_INT 1
 #define TYPEKEY_BOOL 2
 #define TYPEKEY_FLOAT 3
+#define TYPEKEY_STRING 4 
 
 template<typename T>
 uint8_t getTypeKey(void){
@@ -37,7 +39,8 @@ union chunk_float32 {
 
 // --------------------------  Serializing 
 // TODO: do they write keys, or not ? we could have serialize_tight() and serialize_safe()
-// ... TODO: it's just overloaded function calls anyways, innit ? 
+// TODO: serializers should be length-guarded: serialize(var, buffer, wptr, maxsize)
+// ... they could simply stop writing in those cases 
 
 template<typename T>
 void serialize(T var, uint8_t* buffer, size_t* wptr){}
@@ -59,15 +62,20 @@ template<>inline
 void serialize<float>(float var, uint8_t* buffer, size_t* wptr){
   chunk_float32 chunk;
   chunk.f = var;
-  buffer[(*wptr ++)] = chunk.bytes[0]; 
-  buffer[(*wptr ++)] = chunk.bytes[1]; 
-  buffer[(*wptr ++)] = chunk.bytes[2]; 
-  buffer[(*wptr ++)] = chunk.bytes[3]; 
+  buffer[(*wptr) ++] = chunk.bytes[0]; 
+  buffer[(*wptr) ++] = chunk.bytes[1]; 
+  buffer[(*wptr) ++] = chunk.bytes[2]; 
+  buffer[(*wptr) ++] = chunk.bytes[3]; 
 }
 
 template<>inline 
-void serialize<char*>(char * var, uint8_t* buffer, size_t* wptr){
-  // TODO: author this... and do KEY, LEN, ... chars ?
+void serialize<char*>(char* var, uint8_t* buffer, size_t* wptr){
+  buffer[(*wptr) ++] = TYPEKEY_STRING;
+  size_t len = strlen(var);
+  buffer[(*wptr) ++] = len;
+  // this should copy the string but not its trailing zero, 
+  memcpy(&(buffer[*wptr]), var, len);
+  (*wptr) += len;
 }
 
 // --------------------------  Deserializing 

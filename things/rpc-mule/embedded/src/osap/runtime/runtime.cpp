@@ -114,7 +114,6 @@ void OSAP_Runtime::loop(void){
             relinquishPacketToStack(pck);
             // (2) call the func
             ports[destinationIndex]->onPacket(_payload, payloadLen, &_route, sourceIndex);
-            // that's it ? 
           } else {
             OSAP_ERROR("msg to non-existent port " + String(destinationIndex));
             relinquishPacketToStack(pck);

@@ -6,6 +6,7 @@
 #include "../structure/ports.h"
 #include "../utils/template_serializers.h"
 #include <tuple>
+// #include "../utils/apply.h"
 
 // actually, argnames should share one max-char len
 // since we anyways will probably pack 'em each into one pack ?
@@ -42,6 +43,7 @@ auto deserializeArgs(uint8_t* data, size_t* rptr) {
 // could move to rpc_utes.h ... 
 void argSplitter(const char* input, char output[PRPC_MAX_ARGS][PRPC_ARGNAME_MAX_CHAR]);
 
+uint32_t callCount = 0;
 
 template <typename Func>
 class OSAP_Port_RPC;
@@ -84,7 +86,8 @@ class OSAP_Port_RPC<Ret(*)(Args...)> : public VPort {
             (..., (_payload[wptr++] = getTypeKey<Args>())); 
             // now we want to sendy the names, 
             // which will be str, str..., str 
-            serialize<char *>(_functionName, _payload, &wptr);
+            serialize<char*>(_functionName, _payload, &wptr);
+            // wptr += 1;
             for(uint8_t a = 0; a < _numArgs; a ++){
               serialize<char *>(_argNames[a], _payload, &wptr);
             }
@@ -100,14 +103,35 @@ class OSAP_Port_RPC<Ret(*)(Args...)> : public VPort {
             _payload[wptr ++] = data[1];
             // now we deserialize the args into a tuple, 
             size_t rptr = 2;
-            auto argsTuple = deserializeArgs<Args...>(data, &rptr);
-            // and call the function using std::apply... 
-            Ret result = std::apply(_funcPtr, argsTuple);
-            // and we can serialize the result into the pckt 
+            // testing to see if tuple madness is causing the hangups 
+            // _payload[wptr ++] =  0;
+            // _payload[wptr ++] =  0;
+            // _payload[wptr ++] =  0;
+            // _payload[wptr ++] =  0;
+
+            // this line doesn't cause hangups, 
+            // auto argsTuple = deserializeArgs<Args...>(data, &rptr);
+            argsTuple = deserializeArgs<Args...>(data, &rptr);
+
+            // so, seems as though it might be a stack size issue... 
+            // I could probably move some instantiations around to check, 
+            // but IDK how to actually monitor that 
+
+            // // and call the function using std::apply... 
+            // seems sus; this line causes intermittent hangups 
+            // ..._funcPtr or ...*_funcPtr ? 
+            // Ret result = customApply(_funcPtr, argsTuple);
+            result = std::apply(_funcPtr, argsTuple);
+            // Ret result = _funcPtr(argsTuple, ...);
+
+            // // and we can serialize the result into the pckt 
             serialize<Ret>(result, _payload, &wptr);
             // that'd be it, we can sendy:
             send(_payload, wptr, sourceRoute, sourcePort);
+            // callCount ++;
+            // OSAP_Runtime::debug("called ... " + String(callCount));
           }
+          break;
         default:
           OSAP_Runtime::error("bad onPacket key to PRPC");
           break;
@@ -120,6 +144,11 @@ class OSAP_Port_RPC<Ret(*)(Args...)> : public VPort {
     uint8_t _numArgs = 0;
     char _functionName[PRPC_FUNCNAME_MAX_CHAR];
     char _argNames[PRPC_MAX_ARGS][PRPC_ARGNAME_MAX_CHAR];
+
+    // static allocation for runtime, to minimize stack use 
+    // ... also not working ? 
+    Ret result; 
+    std::tuple<Args...> argsTuple;
 };
 
 
