@@ -48,6 +48,7 @@ uint32_t callCount = 0;
 template <typename Func>
 class OSAP_Port_RPC;
 
+// ---------------------------------------------- Normie Functions (non-void return, args) 
 template <typename Ret, typename... Args>
 class OSAP_Port_RPC<Ret(*)(Args...)> : public VPort {
   public:
@@ -151,6 +152,234 @@ class OSAP_Port_RPC<Ret(*)(Args...)> : public VPort {
     std::tuple<Args...> argsTuple;
 };
 
+
+// ---------------------------------------------- Specialize for void-returners  
+template <typename... Args>
+class OSAP_Port_RPC<void(*)(Args...)> : public VPort {
+  public:
+    // -------------------------------- Constructors 
+    OSAP_Port_RPC(
+      void(*funcPtr)(Args...), const char* functionName, const char* argNames
+    ) : VPort(OSAP_Runtime::getInstance())
+    {
+      // upd8 our type key,
+      typeKey = PTYPEKEY_AUTO_RPC_IMPLEMENTER;
+      // stash names and the functo 
+      _funcPtr = funcPtr;
+      strncpy(_functionName, functionName, PRPC_FUNCNAME_MAX_CHAR);
+      // count args using ... pattern; this is odd to me:
+      ((_numArgs ++, sizeof(Args)), ...);
+      // and then read-while-copying, and throw some error if we don't have 
+      // the right count of args... 
+      argSplitter(argNames, _argNames);
+    }
+  
+    // -------------------------------- OSAP-Facing API
+    // override the packet handler, 
+    void onPacket(uint8_t* data, size_t len, Route* sourceRoute, uint16_t sourcePort) override {
+      switch(data[0]){
+        case PRPC_KEY_SIGREQ:
+          {
+            // write response key and msg id 
+            size_t wptr = 0;
+            _payload[wptr ++] = PRPC_KEY_SIGRES;
+            _payload[wptr ++] = data[1];
+            // write return type, arg-count, args, 
+            _payload[wptr ++] = TYPEKEY_VOID;
+            _payload[wptr ++] = _numArgs;
+            // add a type key to the payload for each arg in Args...
+            // this is a "fold expression" ... 
+            (..., (_payload[wptr++] = getTypeKey<Args>())); 
+            // now we want to sendy the names, 
+            // which will be str, str..., str 
+            serialize<char*>(_functionName, _payload, &wptr);
+            // wptr += 1;
+            for(uint8_t a = 0; a < _numArgs; a ++){
+              serialize<char *>(_argNames[a], _payload, &wptr);
+            }
+            // we are done, ship it back: 
+            send(_payload, wptr, sourceRoute, sourcePort);
+          }
+          break;
+        case PRPC_KEY_FUNCCALL:
+          {
+            // response key and msg id 
+            size_t wptr = 0;
+            _payload[wptr ++] = PRPC_KEY_FUNCRETURN;
+            _payload[wptr ++] = data[1];
+            // now we deserialize the args into a tuple, 
+            size_t rptr = 2;
+            // testing to see if tuple madness is causing the hangups 
+            // _payload[wptr ++] =  0;
+            // _payload[wptr ++] =  0;
+            // _payload[wptr ++] =  0;
+            // _payload[wptr ++] =  0;
+
+            // this line doesn't cause hangups, 
+            // auto argsTuple = deserializeArgs<Args...>(data, &rptr);
+            argsTuple = deserializeArgs<Args...>(data, &rptr);
+
+            // so, seems as though it might be a stack size issue... 
+            // I could probably move some instantiations around to check, 
+            // but IDK how to actually monitor that 
+
+            // // and call the function using std::apply... 
+            // seems sus; this line causes intermittent hangups 
+            // ..._funcPtr or ...*_funcPtr ? 
+            // Ret result = customApply(_funcPtr, argsTuple);
+            //result = 
+            std::apply(_funcPtr, argsTuple);
+            // Ret result = _funcPtr(argsTuple, ...);
+
+            // // and we can serialize the result into the pckt 
+            // serialize<Ret>(result, _payload, &wptr);
+            // that'd be it, we can sendy:
+            send(_payload, wptr, sourceRoute, sourcePort);
+            // callCount ++;
+            // OSAP_Runtime::debug("called ... " + String(callCount));
+          }
+          break;
+        default:
+          OSAP_Runtime::error("bad onPacket key to PRPC");
+          break;
+      }
+    }
+
+  private: 
+    // the pointer, etc... 
+    void (*_funcPtr)(Args...) = nullptr;
+    uint8_t _numArgs = 0;
+    char _functionName[PRPC_FUNCNAME_MAX_CHAR];
+    char _argNames[PRPC_MAX_ARGS][PRPC_ARGNAME_MAX_CHAR];
+
+    // static allocation for runtime, to minimize stack use 
+    // ... also not working ? 
+    // Ret result; 
+    std::tuple<Args...> argsTuple;
+};
+
+
+// ---------------------------------------------- Specialize for no-args functions  
+template <typename Ret>
+class OSAP_Port_RPC<Ret(*)(void)> : public VPort {
+  public:
+    // -------------------------------- Constructors 
+    OSAP_Port_RPC(
+      Ret(*funcPtr)(void), const char* functionName
+    ) : VPort(OSAP_Runtime::getInstance())
+    {
+      // upd8 our type key,
+      typeKey = PTYPEKEY_AUTO_RPC_IMPLEMENTER;
+      // stash names and the functo 
+      _funcPtr = funcPtr;
+      strncpy(_functionName, functionName, PRPC_FUNCNAME_MAX_CHAR);
+    }
+  
+    // -------------------------------- OSAP-Facing API
+    // override the packet handler, 
+    void onPacket(uint8_t* data, size_t len, Route* sourceRoute, uint16_t sourcePort) override {
+      switch(data[0]){
+        case PRPC_KEY_SIGREQ:
+          {
+            // write response key and msg id 
+            size_t wptr = 0;
+            _payload[wptr ++] = PRPC_KEY_SIGRES;
+            _payload[wptr ++] = data[1];
+            // write return type, arg-count, args, 
+            _payload[wptr ++] = getTypeKey<Ret>();
+            _payload[wptr ++] = 0;
+            // then the function name... 
+            serialize<char*>(_functionName, _payload, &wptr);
+            // we are done, ship it back: 
+            send(_payload, wptr, sourceRoute, sourcePort);
+          }
+          break;
+        case PRPC_KEY_FUNCCALL:
+          {
+            // response key and msg id 
+            size_t wptr = 0;
+            _payload[wptr ++] = PRPC_KEY_FUNCRETURN;
+            _payload[wptr ++] = data[1];
+            size_t rptr = 2;
+            result = _funcPtr(); 
+            serialize<Ret>(result, _payload, &wptr);
+            // that'd be it, we can sendy:
+            send(_payload, wptr, sourceRoute, sourcePort);
+          }
+          break;
+        default:
+          OSAP_Runtime::error("bad onPacket key to PRPC");
+          break;
+      }
+    }
+
+  private: 
+    // the pointer, etc... 
+    Ret(*_funcPtr)(void) = nullptr;
+    char _functionName[PRPC_FUNCNAME_MAX_CHAR];
+    Ret result; 
+};
+
+
+// ---------------------------------------------- Specialize for void-void 
+template <>
+class OSAP_Port_RPC<void(*)(void)> : public VPort {
+  public:
+    // -------------------------------- Constructors 
+    OSAP_Port_RPC(
+      void(*funcPtr)(void), const char* functionName
+    ) : VPort(OSAP_Runtime::getInstance())
+    {
+      // upd8 our type key,
+      typeKey = PTYPEKEY_AUTO_RPC_IMPLEMENTER;
+      // stash names and the functo 
+      _funcPtr = funcPtr;
+      strncpy(_functionName, functionName, PRPC_FUNCNAME_MAX_CHAR);
+    }
+  
+    // -------------------------------- OSAP-Facing API
+    // override the packet handler, 
+    void onPacket(uint8_t* data, size_t len, Route* sourceRoute, uint16_t sourcePort) override {
+      switch(data[0]){
+        case PRPC_KEY_SIGREQ:
+          {
+            // write response key and msg id 
+            size_t wptr = 0;
+            _payload[wptr ++] = PRPC_KEY_SIGRES;
+            _payload[wptr ++] = data[1];
+            // write return type, arg-count, args, 
+            _payload[wptr ++] = TYPEKEY_VOID;
+            _payload[wptr ++] = 0;
+            // then the function name... 
+            serialize<char*>(_functionName, _payload, &wptr);
+            // we are done, ship it back: 
+            send(_payload, wptr, sourceRoute, sourcePort);
+          }
+          break;
+        case PRPC_KEY_FUNCCALL:
+          {
+            // response key and msg id 
+            size_t wptr = 0;
+            _payload[wptr ++] = PRPC_KEY_FUNCRETURN;
+            _payload[wptr ++] = data[1];
+            size_t rptr = 2;
+            _funcPtr(); 
+            // serialize<Ret>(result, _payload, &wptr);
+            // that'd be it, we can sendy:
+            send(_payload, wptr, sourceRoute, sourcePort);
+          }
+          break;
+        default:
+          OSAP_Runtime::error("bad onPacket key to PRPC");
+          break;
+      }
+    }
+
+  private: 
+    // the pointer, etc... 
+    void(*_funcPtr)(void) = nullptr;
+    char _functionName[PRPC_FUNCNAME_MAX_CHAR];
+};
 
 // -------------------------- UTES 
 

@@ -21,39 +21,50 @@ OSAP_Port_DeviceNames namePort("rpc-mule");
 
 // TODO
 /*
- - write it up forreal in ts: expose an object and call it to test for hangups, then stress test: 
- - can it work with void return or void args ?
- - can it compile on teensy, d51, d21, d11 ... 
- - is there a simple soln' for no-fancy-compiler 
- - then... got-2 write this shit up and send it someplace, and move modular-things to modular-things.com 
- - do not miss that part of the exercise, ffs ! 
- - ... then onto the bigger skeletor rework since we are making a mess of it with these two types of things 
- - and we aught to get a list of deadlines also ! 
+- can it work with void return or void args ?
+  - can compile, but does the protocol work for this ?
+  - ... pls finish writing up the proto before you bounce along 
+- make a more compelling mule-demo, as a device, for that vidya 
+- can it compile on teensy, d51, d21, d11 ... 
+- is there a simple soln' for no-fancy-compiler 
+- then... got-2 write this shit up and send it someplace, and move modular-things to modular-things.com 
+- do not miss that part of the exercise, ffs ! 
+- ... then onto the bigger skeletor rework since we are making a mess of it with these two types of things 
+- and we aught to get a list of deadlines also ! 
 */
 
-// (3) we test a few, 
+// (3) we test a few, let's make these actually representative... 
 
+// one functo with two args, one return, 
 float testFunction(bool state, int num){
   return 0.1F;
 }
 
-// FunctionTraits<decltype(&oneTwo)> traitsOneTwo(&oneTwo, "oneTwo", "state, num");
-
-OSAP_Port_RPC<decltype(&testFunction)> rpcOneTwo(&testFunction, "testFunction", "state, num");
-
-// void voidTwo(bool state, float num){
-//   state = !state;
-// }
-
-// FunctionTraits<decltype(&voidTwo)> traitsVoidTwo;
+OSAP_Port_RPC<decltype(&testFunction)> rpcMuleOne(&testFunction, "testFunction", "state, num");
 
 
-// bool oneVoid(void){
-//   return true;
-// }
+// no-return, 
+void voidTwo(bool state, float num){
+  state = !state;
+}
 
-// FunctionTraits<decltype(&oneVoid)> traitsOneVoid;
+OSAP_Port_RPC<decltype(&voidTwo)> rpcMuleTwo(&voidTwo, "voidTwo", "state, num");
 
+
+// no-args 
+bool oneVoid(void){
+  return true;
+}
+
+OSAP_Port_RPC<decltype(&oneVoid)> rpcMuleThree(&oneVoid, "oneVoid");
+
+
+// void void 
+void functo(void){
+  // does something, idk, it's a trigger babey 
+}
+
+OSAP_Port_RPC<decltype(&functo)> rpcMuleFour(&functo, "functo");
 
 // (4) we run a demo code to blink an LED, 
 // (that makes sure we aren't hanging the cpu), and 
