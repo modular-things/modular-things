@@ -90,12 +90,32 @@ export default class AutoRPCCaller {
       args
     };
 
-    console.log(this.sig);
+    // console.log(this.sig);
 
-    console.log("TESTYYYYY");
-    // and try this, 
-    this.call(false, 10);
+    // console.log("TESTYYYYY");
+    // // and try this, 
+    // this.call(false, 10);
   }
+
+  // get info... 
+  getName = () => {
+    return this.sig.functionName;
+  }
+
+  getReturnType = () => {
+    return this.sig.returnType;
+  }
+
+  getArgs = () => {
+    return this.sig.args;
+  }
+
+  // get a ref to 'call'
+  getCallPointer = () => {
+    return this.call; 
+  }
+
+  // ... write api-string ? 
 
   // to call the function, we can use ...arg packs 
   call = async (... args: any) => {

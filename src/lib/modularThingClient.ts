@@ -168,17 +168,38 @@ let triggerMapUpdate = async () => {
           // at least one port here has the auto RPC,
           // and we seem already to be assuming everything has some rt.typename, 
           // so we can rollup a thing, but we can just test this first, one caller for each... 
-          let thing = {
-            callers: []
-          };
           // and we'll add them up... 
+          let callers = [] 
           for(let p = 0; p < rt.ports.length; p ++){
             if(rt.ports[p].typeName == "AutoRPCImplementer"){
               let caller = osap.autoRPCCaller(rt.route, p);
               await caller.setup();
-              thing.callers.push(caller);
+              callers.push(caller);
             }
           }
+          // then see if we can't make a new thing... 
+          // each has... .updateName() and .getName() (although, maybe not required) 
+          let thing = {
+            updateName: function(){}, 
+            api: new Array(callers.length),
+          }
+          // and attach each function,
+          for(let c = 0; c < callers.length; c ++){
+            // attach le functione
+            thing[callers[c].getName()] = callers[c].getCallPointer();
+            // and mint an API doc 
+            thing.api[c] = {
+              name: callers[c].getName() + ': ' + callers[c].getReturnType(),
+              args: callers[c].getArgs().map((arg, i) => `${arg.name}: ${arg.type}`),
+            }
+          }
+          console.log(`final thing:`, thing)
+          // then we just do... 
+          let things = global_state.things.value;
+          things[rt.uniqueName] = thing;
+          setThingsState(things);
+          console.log(`did setThingsState with adhoc...`);
+          // and then them functos... 
           console.log(rt);
         } else {
           console.warn(`couldn't find a constructor or any auto-rpc calls for this "${rt.typeName}" thing...`)

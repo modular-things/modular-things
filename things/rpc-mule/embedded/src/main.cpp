@@ -21,9 +21,14 @@ OSAP_Port_DeviceNames namePort("rpc-mule");
 
 // TODO
 /*
+ - write it up forreal in ts: expose an object and call it to test for hangups, then stress test: 
  - can it work with void return or void args ?
  - can it compile on teensy, d51, d21, d11 ... 
  - is there a simple soln' for no-fancy-compiler 
+ - then... got-2 write this shit up and send it someplace, and move modular-things to modular-things.com 
+ - do not miss that part of the exercise, ffs ! 
+ - ... then onto the bigger skeletor rework since we are making a mess of it with these two types of things 
+ - and we aught to get a list of deadlines also ! 
 */
 
 // (3) we test a few, 
