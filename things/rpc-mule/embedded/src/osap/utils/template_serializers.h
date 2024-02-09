@@ -4,6 +4,11 @@
 #include <Arduino.h>
 #include "../osap.h"
 
+// --------------------------  We declare a unit type, for void-passers
+
+struct Unit{};
+constexpr Unit unit{};
+
 // --------------------------  Key Codes 
 
 #define TYPEKEY_VOID 0 
@@ -15,6 +20,10 @@
 template<typename T>
 uint8_t getTypeKey(void){
   return 0;
+}
+template<> inline
+uint8_t getTypeKey<Unit>(void){
+  return TYPEKEY_VOID;
 }
 template<> inline 
 uint8_t getTypeKey<int>(void){

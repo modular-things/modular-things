@@ -34,6 +34,12 @@ OSAP_Port_DeviceNames namePort("rpc-mule");
 */
 
 // (3) we test a few, let's make these actually representative... 
+float getPotentiometerReading(int index){
+  return 0.2F;
+}
+
+OSAP_Port_RPC<decltype(&getPotentiometerReading)> getPotRPC(&getPotentiometerReading, "getPotentiometerReading", "index");
+
 
 // one functo with two args, one return, 
 float testFunction(bool state, int num){
