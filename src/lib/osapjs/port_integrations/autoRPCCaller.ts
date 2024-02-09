@@ -89,12 +89,6 @@ export default class AutoRPCCaller {
       returnType,
       args
     };
-
-    // console.log(this.sig);
-
-    // console.log("TESTYYYYY");
-    // // and try this, 
-    // this.call(false, 10);
   }
 
   // get info... 
@@ -114,8 +108,6 @@ export default class AutoRPCCaller {
   getCallPointer = () => {
     return this.call; 
   }
-
-  // ... write api-string ? 
 
   // to call the function, we can use ...arg packs 
   call = async (... args: any) => {

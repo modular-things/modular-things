@@ -25,7 +25,7 @@ class OSAP_Port_RPC<Ret(*)(Args...)> : public VPort {
     using ResultType = typename ReturnType<Ret>::Type;
 
     // -------------------------------- Constructors 
-    // TODO: finally, we need to specialize the constructor for no-args ... 
+    // base constructor 
     OSAP_Port_RPC(
       Ret(*funcPtr)(Args...), const char* functionName, const char* argNames
     ) : VPort(OSAP_Runtime::getInstance())
@@ -41,6 +41,10 @@ class OSAP_Port_RPC<Ret(*)(Args...)> : public VPort {
       // the right count of args... 
       argSplitter(argNames, _argNames);
     }
+    // deferring constructor for whence we have no args, 
+    OSAP_Port_RPC(
+      Ret(*funcPtr)(Args...), const char* functionName
+    ) : OSAP_Port_RPC(funcPtr, functionName, "") {}
   
     // -------------------------------- OSAP-Facing API
     // override the packet handler, 
