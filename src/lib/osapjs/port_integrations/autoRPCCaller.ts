@@ -129,6 +129,9 @@ export default class AutoRPCCaller {
         case "string":
           if(sigArgType != "string") return this.signatureMismatchError();
           break;
+        default:
+          return this.signatureMismatchError();
+          break;
       }
     }
 
@@ -149,13 +152,14 @@ export default class AutoRPCCaller {
     let res = await this.resolver.request(funcCallDG[1], 'function call');
 
     // then we would un-bottle that, 
-    console.log(funcCallDG.subarray(0, wptr));
-    console.log(`sent dg to implementer, rx'd this res`, res);
+    // console.log(funcCallDG.subarray(0, wptr));
+    // console.log(`sent dg to implementer, rx'd this res`, res);
 
     // check if it's gucci ? 
     // res[0] is the key, res[1] the id, then the data straight up:
     let result = serdes.read[`${this.sig.returnType}`](res, 2);
-    console.log(`deser is`, result)
+    // console.log(`deser is`, result)
+    return result; 
   }
 
 

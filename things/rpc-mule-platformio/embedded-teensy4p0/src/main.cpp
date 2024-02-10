@@ -15,15 +15,13 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 OSAP_Runtime osap;
 
-OSAP_Gateway_USBSerial serLink(&Serial);
+// OSAP_Gateway_USBSerial serLink(&Serial);
 
 OSAP_Port_DeviceNames namePort("rpc-mule");
 
 // TODO
 /*
-- can it work with void return or void args ?
-  - can compile, but does the protocol work for this ?
-  - ... pls finish writing up the proto before you bounce along 
+- test in-situ ... on site 
 - make a more compelling mule-demo, as a device, for that vidya 
 - can it compile on teensy, d51, d21, d11 ... 
 - is there a simple soln' for no-fancy-compiler 
@@ -33,7 +31,7 @@ OSAP_Port_DeviceNames namePort("rpc-mule");
 - and we aught to get a list of deadlines also ! 
 */
 
-// (3) we test a few, let's make these actually representative... 
+// ret-arg, 
 float getPotentiometerReading(int index){
   return 0.2F;
 }
@@ -41,40 +39,30 @@ float getPotentiometerReading(int index){
 OSAP_Port_RPC<decltype(&getPotentiometerReading)> getPotRPC(&getPotentiometerReading, "getPotentiometerReading", "index");
 
 
-// one functo with two args, one return, 
-float testFunction(bool state, int num){
-  return 0.1F;
-}
-
-OSAP_Port_RPC<decltype(&testFunction)> rpcMuleOne(&testFunction, "testFunction", "state, num");
-
-
-// no-return, 
-void voidTwo(bool state, float num){
-  state = !state;
-}
-
-OSAP_Port_RPC<decltype(&voidTwo)> rpcMuleTwo(&voidTwo, "voidTwo", "state, num");
-
-
-// no-args 
-bool oneVoid(void){
+// ret-void 
+bool getButtonState(void){
   return true;
 }
 
-OSAP_Port_RPC<decltype(&oneVoid)> rpcMuleThree(&oneVoid, "oneVoid");
+OSAP_Port_RPC<decltype(&getButtonState)> rpcMuleThree(&getButtonState, "getButtonState");
 
 
 // void void 
-void functo(void){
+void blinkLED(void){
   // does something, idk, it's a trigger babey 
 }
 
-OSAP_Port_RPC<decltype(&functo)> rpcMuleFour(&functo, "functo");
+OSAP_Port_RPC<decltype(&blinkLED)> rpcMuleFour(&blinkLED, "blinkLED");
 
-// (4) we run a demo code to blink an LED, 
-// (that makes sure we aren't hanging the cpu), and 
-// to print those functo-descriptors: 
+
+// void-args... 
+void setBlinkDurations(int state, int num){
+  state = !state;
+}
+
+OSAP_Port_RPC<decltype(&setBlinkDurations)> rpcMuleTwo(&setBlinkDurations, "setBlinkDurations", "red, blue");
+
+
 
 void printToScreen(String msg);
 
@@ -95,8 +83,8 @@ void setup() {
   printToScreen("bonjour");
 
   // other stuff 
-  pinMode(PIN_LED_G, OUTPUT);
-  Serial.begin();
+  // pinMode(PIN_LED_G, OUTPUT);
+  // Serial.begin();
 }
 
 uint32_t lastBlink = 0;
@@ -108,7 +96,7 @@ void loop() {
   osap.loop();
   
   if(lastBlink + intervalBlink < millis()){
-    digitalWrite(PIN_LED_G, !digitalRead(PIN_LED_G));
+    // digitalWrite(PIN_LED_G, !digitalRead(PIN_LED_G));
     lastBlink = millis();
     // let's print the signature, 
     // size_t len = traitsOneTwo.serializeFunctionSignature(sigDump);

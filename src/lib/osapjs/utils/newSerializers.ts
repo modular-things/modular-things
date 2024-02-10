@@ -12,7 +12,7 @@ let keys = {
   void: 0,
   int: 1,
   bool: 2,
-  float32: 3,
+  float: 3,
   string: 4,
 }
 
@@ -30,7 +30,7 @@ let write = {
     value ? dest[offset] = 1 : dest[offset] = 0;
     return 1;
   },
-  float32: function (value: number, dest: Uint8Array, offset: number): number {
+  float: function (value: number, dest: Uint8Array, offset: number): number {
     let tempArr = Float32Array.from([value]);
     let tempBytes = new Uint8Array(tempArr.buffer);
     dest.set(tempBytes, offset);
@@ -51,7 +51,7 @@ let read = {
   bool: function (source: Uint8Array, offset: number): boolean{
     return (source[offset] > 0);
   },
-  float32: function (source: Uint8Array, offset: number): number{
+  float: function (source: Uint8Array, offset: number): number{
     return new Float32Array(source.slice(offset, offset + 4).buffer)[0];
   }
 }

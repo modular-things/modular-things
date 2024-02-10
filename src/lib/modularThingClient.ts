@@ -182,6 +182,7 @@ let triggerMapUpdate = async () => {
           let thing = {
             updateName: function(){}, 
             api: new Array(callers.length),
+            typeName: rt.typeName,
           }
           // and attach each function,
           for(let c = 0; c < callers.length; c ++){

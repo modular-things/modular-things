@@ -34,6 +34,8 @@ You can use the latest modular-things by navigating to [https://modular-things.g
 
 ...modular-things/?file=yourFile.js&panel=devices&panelWidth=70
 
+where file is at `repo/examples/`
+
 --- 
 
 # Writing New Modular-Things

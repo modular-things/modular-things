@@ -13,19 +13,19 @@ OSAP_Port_DeviceNames namePort("stepper");
 
 // ---------------------------------------------- baby needs to serialize fluts 
 
-union chunk_float32 {
+union chunk_float32_stp {
   uint8_t bytes[4];
   float f;
 };
 
 float ts_readFloat32(unsigned char* buf, uint16_t* ptr){
-  chunk_float32 chunk = { .bytes = { buf[(*ptr)], buf[(*ptr) + 1], buf[(*ptr) + 2], buf[(*ptr) + 3] } };
+  chunk_float32_stp chunk = { .bytes = { buf[(*ptr)], buf[(*ptr) + 1], buf[(*ptr) + 2], buf[(*ptr) + 3] } };
   (*ptr) += 4;
   return chunk.f;
 }
 
 void ts_writeFloat32(float val, volatile unsigned char* buf, uint16_t* ptr){
-  chunk_float32 chunk;
+  chunk_float32_stp chunk;
   chunk.f = val;
   buf[(*ptr)] = chunk.bytes[0]; buf[(*ptr) + 1] = chunk.bytes[1]; buf[(*ptr) + 2] = chunk.bytes[2]; buf[(*ptr) + 3] = chunk.bytes[3];
   (*ptr) += 4;
