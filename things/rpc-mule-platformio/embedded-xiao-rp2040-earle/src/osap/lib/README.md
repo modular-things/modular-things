@@ -1,3 +1,0 @@
-## ... Libraries
-
-these should be packaged outside of osap-itself as standalone link-layers, etc, but are-not for the time being... 
