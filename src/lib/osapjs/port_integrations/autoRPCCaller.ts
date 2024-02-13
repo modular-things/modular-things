@@ -71,7 +71,7 @@ export default class AutoRPCCaller {
     let argCount = res[rptr++];
     let args = Array.from({ length: argCount }, () => ({
       type: keyToString(res[rptr ++], serdes.keys),
-      name: ''  
+      name: ''
     }));
     // ... arg typekeys were next, then
     let functionName = serdes.read.string(res, rptr) // string 

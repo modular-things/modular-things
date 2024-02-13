@@ -1,3 +1,4 @@
+await panel.printToScreen("..bonjour", 3)
 
 // we'll map motor positions to notes,
 let notes = [
@@ -6,12 +7,12 @@ let notes = [
 
 // we have some config,
 let motorCurrent = 0.75 
-let motorAccel = 1750
-let motorMaxRate = 190 
+let motorAccel = 2000
+let motorMaxRate = 210 
 
 // let's turn the motor on, resetting state... 
 await bottomMotor.setPosition(0);
-await bottomMotor.setCurrent(0.75);
+await bottomMotor.setCurrent(1.0);
 // the motor records 200 steps / revolution, though under the hood 
 // we have up to 512 microsteps... 
 await bottomMotor.setStepsPerUnit(5);
@@ -52,6 +53,7 @@ for(let i = 0; i < 2560; i ++){
   // now we have closest = [delta][index]
   console.log(`goto note ${notes[closest[1]]}`)
   await bottomMotor.target(positions[closest[1]], motorMaxRate, motorAccel);
+  await panel.printToScreen(`SEL: ${notes[closest[1]]}`, 3)
 
   // await gotoNoteByIndex(closest[1]);
   
@@ -67,7 +69,5 @@ for(let i = 0; i < 2560; i ++){
 await bottomMotor.target(0, motorMaxRate, motorAccel);
 await bottomMotor.awaitMotionEnd();
 await bottomMotor.setCurrent(0);
-
-
 
   

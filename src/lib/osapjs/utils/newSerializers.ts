@@ -35,6 +35,13 @@ let write = {
     let tempBytes = new Uint8Array(tempArr.buffer);
     dest.set(tempBytes, offset);
     return 4;
+  },
+  string: function (value: string, dest: Uint8Array, offset: number): number {
+    let stringStream = stringEncoder.encode(value);
+    dest[offset] = keys.string;
+    dest[offset + 1] = stringStream.length;
+    dest.set(stringStream, offset + 2);
+    return stringStream.length + 2;
   }
 }
 
@@ -45,14 +52,17 @@ let read = {
     let length = source[offset + 1];
     return stringDecoder.decode(source.subarray(offset + 2, offset + 2 + length));
   },
-  int: function (source: Uint8Array, offset: number): number{
+  int: function (source: Uint8Array, offset: number): number {
     return new Int32Array(source.slice(offset, offset + 4).buffer)[0];
   },
-  bool: function (source: Uint8Array, offset: number): boolean{
+  bool: function (source: Uint8Array, offset: number): boolean {
     return (source[offset] > 0);
   },
-  float: function (source: Uint8Array, offset: number): number{
+  float: function (source: Uint8Array, offset: number): number {
     return new Float32Array(source.slice(offset, offset + 4).buffer)[0];
+  },
+  void: function (source: Uint8Array, offset: number): number {
+    return 0;
   }
 }
 

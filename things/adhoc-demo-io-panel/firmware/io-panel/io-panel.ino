@@ -35,7 +35,7 @@ float getPotentiometerReading(void){
   return duty; 
 }
 
-OSAP_Port_RPC<decltype(&getPotentiometerReading)> getPotRPC(&getPotentiometerReading, "getPotentiometerReading", "index");
+OSAP_Port_RPC<decltype(&getPotentiometerReading)> getPotRPC(&getPotentiometerReading, "getPotentiometerReading");
 
 
 bool getButtonState(void){
@@ -61,26 +61,22 @@ void blinkLED(void){
 OSAP_Port_RPC<decltype(&blinkLED)> rpcMuleFour(&blinkLED, "blinkLED");
 
 
-// this one would maybe take the most TODO-ing 
-// but also... people will appreciate the most ? 
-// let's see how it goes 
-// void printToScreen(char* message){
-//   display.clearDisplay();
-//   display.setCursor(0, 0);
-//   display.setTextSize(1);
-//   display.print(message);
-//   display.display();
-// }
-
-// OSAP_Port_RPC<decltype(&printToScreen)> rpcMuleTwo(&printToScreen, "printToScreen", "message");
-
-void printToScreen(String message){
+void printToScreen(String message, int textSize){
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.setTextSize(1);
-  display.print(message);
+  display.setTextSize(textSize);
+  display.println(message);
   display.display();
 }
+
+OSAP_Port_RPC<decltype(&printToScreen)> rpcMuleTwo(&printToScreen, "printToScreen", "message, textSize");
+
+
+void newFunctionLiveDemo(int arg){
+  printToScreen("you sent..." + String(arg), 3);
+}
+
+OSAP_Port_RPC<decltype(&newFunctionLiveDemo)> rpcMuleDemo(&newFunctionLiveDemo, "newFunctionLiveDemo", "intToPrint");
 
 void setup() {
   // setup our LEDs,
@@ -103,7 +99,7 @@ void setup() {
   display.setTextColor(SSD1306_WHITE);
   display.setTextWrap(false);
 
-  printToScreen("bonjour");
+  printToScreen("bonjour", 2);
 
   // finally, setup OSAP,
   osap.begin();

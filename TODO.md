@@ -40,6 +40,10 @@
 
 ## Web Editor
 
+- it still seems possible to have two copies of a program running at once: 
+  - run a long for-loop, using i.e. await delay(10); for 10k cycles, 
+  - while it's running, do 'run' on an edited program, 
+  - watch logs from both overlap... 
 - collapse docs on objects 
 - compat warning
 - typescript types
