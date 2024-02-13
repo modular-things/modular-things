@@ -3,6 +3,6 @@ import preact from '@astrojs/preact'
 
 export default defineConfig({
 	integrations: [ preact() ],
-	site: 'https://modular-things.github.io',
-  base: '/modular-things',
+	site: 'https://modular-things.com',
+  base: '/',
 })

@@ -3,7 +3,7 @@
 use *virtualization* to easily write programs that run across multiple hardware devices
 
 The Modular-Things project is an approach to building modular hardware systems which can be composed in software.
-The underlying technology is a small networking library for packetizing and routing messages across devices ([OSAP](http://osap.tools/)) and a [web-based editor](https://modular-things.github.io/modular-things/) for composing that hardware into functional systems in software. 
+The underlying technology is a small networking library for packetizing and routing messages across devices ([OSAP](http://osap.tools/)) and a [web-based editor](https://modular-things.com/) for composing that hardware into functional systems in software. 
 
 Stated simply our tools let you take hardware devices and add a library to them which allows you to plug that device into a browser-based editor where you can write programs that control it and other devices. Because it's JavaScript in the browser you can also write interfaces in HTML/CSS/JS and import various high-level libraries which interact with and control your physical computing system.
 
@@ -23,7 +23,7 @@ It is based on the [surprising performance of modern USB](log/2022-11_usb-motion
 
 # Installation and Usage 
 
-You can use the latest modular-things by navigating to [https://modular-things.github.io/modular-things/](https://modular-things.github.io/modular-things/), or follow these instructions to run it locally:
+You can use the latest modular-things by navigating to [https://modular-things.com/](https://modular-things.com/), or follow these instructions to run it locally:
 
 * install [node.js](https://nodejs.org/en/) - please use version 16.15.1 or above
 * clone this repo

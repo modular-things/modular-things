@@ -87,7 +87,7 @@ export function init(state) {
     panelWidth = "2"
   }
 
-  const isProduction = window.location.hostname === "modular-things.github.io";
+  const isProduction = window.location.hostname === "modular-things.com";
   if (file) {
     let file_url = file;
     if (!file.startsWith("http"))
