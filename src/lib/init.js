@@ -29,7 +29,7 @@ export function init(state) {
   });
 
   bodyListener("click", ".things-button", () => {
-    window.location.href = "/modular-things/things"
+    window.location.href = "/things"
   })
 
   // bodyListener("click", ".scan-button-trigger", () => { });
